@@ -30,6 +30,9 @@ struct tegra186_bpmp {
 	} mbox;
 };
 
+extern uint64_t bpmp_vpa;
+int tegra_bpmp_guest_init(void);
+
 static inline struct tegra_bpmp *
 mbox_client_to_bpmp(struct mbox_client *client)
 {
@@ -177,7 +180,17 @@ static int tegra186_bpmp_init(struct tegra_bpmp *bpmp)
 	bpmp->priv = priv;
 	priv->parent = bpmp;
 
-	priv->tx.pool = of_gen_pool_get(bpmp->dev->of_node, "shmem", 0);
+#ifdef CONFIG_TEGRA_BPMP_GUEST_PROXY
+	// If virtual-pa node is defined, it means that we are using a virtual BPMP
+	// then we have to initialize the bpmp-guest
+	err = of_property_read_u64(bpmp->dev->of_node, "virtual-pa", &bpmp_vpa);
+	if(!err){
+		printk("BPMP virtual-pa: 0x%llX", bpmp_vpa);	
+		return tegra_bpmp_guest_init();
+	}
+#endif
+ 
+ 	priv->tx.pool = of_gen_pool_get(bpmp->dev->of_node, "shmem", 0);
 	if (!priv->tx.pool) {
 		dev_err(bpmp->dev, "TX shmem pool not found\n");
 		return -EPROBE_DEFER;
@@ -266,6 +279,11 @@ static void tegra186_bpmp_deinit(struct tegra_bpmp *bpmp)
 {
 	struct tegra186_bpmp *priv = bpmp->priv;
 	unsigned int i;
+
+	// If using BPMP guest proxy, do no deinit the module
+	if(bpmp_vpa){
+		return;
+	}
 
 	mbox_free_channel(priv->mbox.channel);
 
