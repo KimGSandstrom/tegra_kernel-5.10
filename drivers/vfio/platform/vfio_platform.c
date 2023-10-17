@@ -15,7 +15,7 @@
 #define DRIVER_AUTHOR   "Antonios Motakis <a.motakis@virtualopensystems.com>"
 #define DRIVER_DESC     "VFIO for platform devices - User Level meta-driver"
 
-static bool reset_required = false;
+static bool reset_required = true;
 module_param(reset_required, bool, 0444);
 MODULE_PARM_DESC(reset_required, "override reset requirement (default: 1)");
 

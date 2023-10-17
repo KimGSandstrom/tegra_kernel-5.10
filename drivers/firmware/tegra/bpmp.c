@@ -328,6 +328,30 @@ static ssize_t tegra_bpmp_channel_write(struct tegra_bpmp_channel *channel,
 	return __tegra_bpmp_channel_write(channel, mrq, flags, data, size);
 }
 
+int virtio_redirect(struct tegra_bpmp *bpmp,
+	struct tegra_bpmp_message *msg)
+{
+	int err = 0;
+
+	// vadikas -- redirect request to virtio module
+	// the tegra_bpmp_transfer_redirect code is in bpmp-virt overlay
+	if (tegra_bpmp_outloud){
+	        printk("tegra_bpmp_transfer_redirect tx: %x tx.size= %ld \n", 
+				msg->mrq, msg->tx.size);
+	        print_hex_dump(KERN_INFO, "tegra_bpmp_transfer_redirect tx:",
+				DUMP_PREFIX_NONE, 16, 1, msg->tx.data, msg->tx.size, false);
+	}
+	err = (*tegra_bpmp_transfer_redirect)(bpmp, msg);
+	
+	if (tegra_bpmp_outloud){
+	        printk("tegra_bpmp_transfer_redirect rx: err=%d\n msg->rx.ret=%d", 
+				err, msg->rx.ret);
+	        print_hex_dump(KERN_INFO, "tegra_bpmp_transfer_redirect rx:" ,
+				DUMP_PREFIX_NONE, 16, 1, msg->rx.data, msg->rx.size, false);
+	}
+	return err; 
+}
+
 int tegra_bpmp_transfer_atomic(struct tegra_bpmp *bpmp,
 			       struct tegra_bpmp_message *msg)
 {
@@ -345,23 +369,8 @@ int tegra_bpmp_transfer_atomic(struct tegra_bpmp *bpmp,
 	spin_lock(&bpmp->atomic_tx_lock);
 
 	// vadikas -- redirect request to virtio module
-	if (tegra_bpmp_transfer_redirect) {
-		if (tegra_bpmp_outloud){
-	        printk("tegra_bpmp_transfer_redirect tx: %x tx.size= %ld \n", 
-				msg->mrq, msg->tx.size);
-	        print_hex_dump(KERN_INFO, "tegra_bpmp_transfer_redirect tx:",
-				DUMP_PREFIX_NONE, 16, 1, msg->tx.data, msg->tx.size, false);
-	    }
-		err = (*tegra_bpmp_transfer_redirect)(bpmp, msg);
-	
-	    if (tegra_bpmp_outloud){
-	        printk("tegra_bpmp_transfer_redirect rx: err=%d\n msg->rx.ret=%d", 
-				err, msg->rx.ret);
-	        print_hex_dump(KERN_INFO, "tegra_bpmp_transfer_redirect rx:" ,
-				DUMP_PREFIX_NONE, 16, 1, msg->rx.data, msg->rx.size, false);
-	    }
-		return err;
-	}
+	if (tegra_bpmp_transfer_redirect)
+		return virtio_redirect(bpmp, msg);
 
 	err = tegra_bpmp_channel_write(channel, msg->mrq, MSG_ACK,
 				       msg->tx.data, msg->tx.size);
@@ -398,24 +407,8 @@ int tegra_bpmp_transfer(struct tegra_bpmp *bpmp,
 	if (!tegra_bpmp_message_valid(msg))
 		return -EINVAL;
 
-	// vadikas -- redirect request to virtio module
-	if (tegra_bpmp_transfer_redirect) {
-		if (tegra_bpmp_outloud){
-	        printk("tegra_bpmp_transfer_redirect tx: %x tx.size= %ld \n", 
-				msg->mrq, msg->tx.size);
-	        print_hex_dump(KERN_INFO, "tegra_bpmp_transfer_redirect tx:",
-				DUMP_PREFIX_NONE, 16, 1, msg->tx.data, msg->tx.size, false);
-	    }
-		err = (*tegra_bpmp_transfer_redirect)(bpmp, msg);
-	
-	    if (tegra_bpmp_outloud){
-	        printk("tegra_bpmp_transfer_redirect rx: err=%d\n msg->rx.ret=%d", 
-				err, msg->rx.ret);
-	        print_hex_dump(KERN_INFO,"tegra_bpmp_transfer_redirect rx:",
-				DUMP_PREFIX_NONE, 16, 1, msg->rx.data, msg->rx.size, false);
-	    }
-		return err;
-	}
+	if (tegra_bpmp_transfer_redirect)
+		return virtio_redirect(bpmp, msg);
 
 	channel = tegra_bpmp_write_threaded(bpmp, msg->mrq, msg->tx.data,
 					    msg->tx.size);
