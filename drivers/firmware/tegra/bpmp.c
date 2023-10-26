@@ -328,7 +328,7 @@ static ssize_t tegra_bpmp_channel_write(struct tegra_bpmp_channel *channel,
 	return __tegra_bpmp_channel_write(channel, mrq, flags, data, size);
 }
 
-int virtio_redirect(struct tegra_bpmp *bpmp,
+int _tegra_bpmp_transfer(struct tegra_bpmp *bpmp,
 	struct tegra_bpmp_message *msg)
 {
 	int err = 0;
@@ -370,7 +370,7 @@ int tegra_bpmp_transfer_atomic(struct tegra_bpmp *bpmp,
 
 	// vadikas -- redirect request to virtio module
 	if (tegra_bpmp_transfer_redirect)
-		return virtio_redirect(bpmp, msg);
+		return _tegra_bpmp_transfer(bpmp, msg);
 
 	err = tegra_bpmp_channel_write(channel, msg->mrq, MSG_ACK,
 				       msg->tx.data, msg->tx.size);
@@ -408,7 +408,7 @@ int tegra_bpmp_transfer(struct tegra_bpmp *bpmp,
 		return -EINVAL;
 
 	if (tegra_bpmp_transfer_redirect)
-		return virtio_redirect(bpmp, msg);
+		return _tegra_bpmp_transfer(bpmp, msg);
 
 	channel = tegra_bpmp_write_threaded(bpmp, msg->mrq, msg->tx.data,
 					    msg->tx.size);
