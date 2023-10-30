@@ -920,6 +920,7 @@ static const struct tegra_pinctrl_soc_data tegra186_pinctrl = {
 
 static int tegra186_pinctrl_probe(struct platform_device *pdev)
 {
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	return tegra_pinctrl_probe(pdev, &tegra186_pinctrl);
 }
 
@@ -940,12 +941,14 @@ static struct platform_driver tegra186_pinctrl_driver = {
 
 static int __init tegra186_pinctrl_init(void)
 {
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	return platform_driver_register(&tegra186_pinctrl_driver);
 }
 postcore_initcall_sync(tegra186_pinctrl_init);
 
 static void __exit tegra186_pinctrl_exit(void)
 {
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	platform_driver_unregister(&tegra186_pinctrl_driver);
 }
 module_exit(tegra186_pinctrl_exit);

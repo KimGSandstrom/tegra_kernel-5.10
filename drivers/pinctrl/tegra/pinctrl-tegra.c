@@ -36,11 +36,13 @@
 
 static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
 {
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	return readl(pmx->regs[bank] + reg);
 }
 
 static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 {
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	writel_relaxed(val, pmx->regs[bank] + reg);
 	/* make sure pinmux register write completed */
 	pmx_readl(pmx, bank, reg);
@@ -50,6 +52,7 @@ static int tegra_pinctrl_get_groups_count(struct pinctrl_dev *pctldev)
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	return pmx->soc->ngroups;
 }
 
@@ -58,6 +61,7 @@ static const char *tegra_pinctrl_get_group_name(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	return pmx->soc->groups[group].name;
 }
 
@@ -68,6 +72,7 @@ static int tegra_pinctrl_get_group_pins(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	*pins = pmx->soc->groups[group].pins;
 	*num_pins = pmx->soc->groups[group].npins;
 
@@ -79,6 +84,7 @@ static void tegra_pinctrl_pin_dbg_show(struct pinctrl_dev *pctldev,
 				       struct seq_file *s,
 				       unsigned offset)
 {
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	seq_printf(s, " %s", dev_name(pctldev->dev));
 }
 #endif
@@ -124,6 +130,8 @@ static int tegra_pinctrl_dt_subnode_to_map(struct pinctrl_dev *pctldev,
 	unsigned reserve;
 	struct property *prop;
 	const char *group;
+
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 
 	ret = of_property_read_string(np, "nvidia,function", &function);
 	if (ret < 0) {
@@ -201,6 +209,8 @@ static int tegra_pinctrl_dt_node_to_map(struct pinctrl_dev *pctldev,
 	struct device_node *np;
 	int ret;
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
+
 	reserved_maps = 0;
 	*map = NULL;
 	*num_maps = 0;
@@ -234,6 +244,7 @@ static int tegra_pinctrl_get_funcs_count(struct pinctrl_dev *pctldev)
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	return pmx->soc->nfunctions;
 }
 
@@ -242,6 +253,7 @@ static const char *tegra_pinctrl_get_func_name(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	return pmx->soc->functions[function].name;
 }
 
@@ -252,6 +264,7 @@ static int tegra_pinctrl_get_func_groups(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	*groups = pmx->soc->functions[function].groups;
 	*num_groups = pmx->soc->functions[function].ngroups;
 
@@ -267,6 +280,7 @@ static int tegra_pinctrl_set_mux(struct pinctrl_dev *pctldev,
 	int i;
 	u32 val;
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	g = &pmx->soc->groups[group];
 
 	if (WARN_ON(g->mux_reg < 0))
@@ -300,6 +314,8 @@ static int tegra_pinctrl_gpio_save_config(struct pinctrl_dev *pctldev,
 	const unsigned *pins;
 	int ret;
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
+
 	for (group = 0; group < pmx->soc->ngroups; ++group) {
 		ret = tegra_pinctrl_get_group_pins(pctldev, group, &pins, &num_pins);
 		if (ret < 0 || num_pins != 1)
@@ -330,6 +346,8 @@ static int tegra_pinctrl_gpio_restore_config(struct pinctrl_dev *pctldev,
 	const unsigned *pins;
 	int ret;
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
+
 	for (group = 0; group < pmx->soc->ngroups; ++group) {
 		ret = tegra_pinctrl_get_group_pins(pctldev, group, &pins, &num_pins);
 		if (ret < 0 || num_pins != 1)
@@ -358,6 +376,8 @@ static const struct tegra_pingroup *tegra_pinctrl_get_group(struct pinctrl_dev *
        const unsigned int *pins;
        int ret;
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
+
        for (group = 0; group < pmx->soc->ngroups; ++group) {
                ret = tegra_pinctrl_get_group_pins(pctldev, group, &pins, &num_pins);
                if (ret < 0)
@@ -383,6 +403,8 @@ static int tegra_pinctrl_gpio_request_enable(struct pinctrl_dev *pctldev,
 	const unsigned int *pins;
 	u32 value;
 	int ret;
+
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 
 	ret = tegra_pinctrl_gpio_save_config(pctldev, range, offset);
 	if (ret)
@@ -415,7 +437,8 @@ static int tegra_pinctrl_gpio_request_enable(struct pinctrl_dev *pctldev,
 static void tegra_pinctrl_gpio_disable_free(struct pinctrl_dev *pctldev,
 					    struct pinctrl_gpio_range *range,
 					    unsigned int offset)
-{
+{		
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	tegra_pinctrl_gpio_restore_config(pctldev, range, offset);
 }
 
@@ -424,6 +447,8 @@ static int tegra_pinctrl_gpio_set_input(struct tegra_pmx *pmx,
 					bool enable)
 {
 	u32 value;
+
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 
 	if (group->einput_bit < 0)
 		return 0;
@@ -449,6 +474,8 @@ static int tegra_pinctrl_gpio_set_tristate(struct tegra_pmx *pmx,
 {
 	u32 value;
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
+
 	if (group->tri_bank < 0 || group->tri_reg < 0 || group->tri_bit < 0)
 		return -EINVAL;
 
@@ -471,6 +498,8 @@ static int tegra_pinctrl_gpio_set_direction(struct pinctrl_dev *pctldev,
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 	const struct tegra_pingroup *group;
 	int ret;
+
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 
 	group = tegra_pinctrl_get_group(pctldev, offset);
 	if (!group)
@@ -507,6 +536,8 @@ static int tegra_pinconf_reg(struct tegra_pmx *pmx,
 			     bool report_err,
 			     s8 *bank, s32 *reg, s8 *bit, s8 *width)
 {
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
+
 	switch (param) {
 	case TEGRA_PINCONF_PARAM_PULL:
 		*bank = g->pupd_bank;
@@ -661,6 +692,7 @@ static int tegra_pinconf_reg(struct tegra_pmx *pmx,
 static int tegra_pinconf_get(struct pinctrl_dev *pctldev,
 			     unsigned pin, unsigned long *config)
 {
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	dev_err(pctldev->dev, "pin_config_get op not supported\n");
 	return -ENOTSUPP;
 }
@@ -669,6 +701,7 @@ static int tegra_pinconf_set(struct pinctrl_dev *pctldev,
 			     unsigned pin, unsigned long *configs,
 			     unsigned num_configs)
 {
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	dev_err(pctldev->dev, "pin_config_set op not supported\n");
 	return -ENOTSUPP;
 }
@@ -684,6 +717,8 @@ static int tegra_pinconf_group_get(struct pinctrl_dev *pctldev,
 	s8 bank, bit, width;
 	s32 reg;
 	u32 val, mask;
+
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 
 	g = &pmx->soc->groups[group];
 
@@ -717,6 +752,8 @@ static int tegra_pinconf_group_set(struct pinctrl_dev *pctldev,
 	s8 bank, bit, width;
 	s32 reg;
 	u32 val, mask;
+
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 
 	g = &pmx->soc->groups[group];
 
@@ -769,11 +806,13 @@ static int tegra_pinconf_group_set(struct pinctrl_dev *pctldev,
 static void tegra_pinconf_dbg_show(struct pinctrl_dev *pctldev,
 				   struct seq_file *s, unsigned offset)
 {
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 }
 
 static const char *strip_prefix(const char *s)
 {
 	const char *comma = strchr(s, ',');
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	if (!comma)
 		return s;
 
@@ -790,6 +829,8 @@ static void tegra_pinconf_group_dbg_show(struct pinctrl_dev *pctldev,
 	s32 reg;
 	u32 val;
 	u8 idx;
+
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 
 	g = &pmx->soc->groups[group];
 
@@ -822,6 +863,8 @@ static void tegra_pinconf_config_dbg_show(struct pinctrl_dev *pctldev,
 	u16 arg = TEGRA_PINCONF_UNPACK_ARG(config);
 	const char *pname = "unknown";
 	int i;
+
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 
 	for (i = 0; i < ARRAY_SIZE(cfg_params); i++) {
 		if (cfg_params[i].param == param) {
@@ -865,6 +908,8 @@ static void tegra_pinctrl_clear_parked_bits(struct tegra_pmx *pmx)
 	const struct tegra_pingroup *g;
 	u32 val;
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
+
 	for (i = 0; i < pmx->soc->ngroups; ++i) {
 		g = &pmx->soc->groups[i];
 		if (g->parked_bitmask > 0) {
@@ -891,6 +936,8 @@ static size_t tegra_pinctrl_get_bank_size(struct device *dev,
 	struct platform_device *pdev = to_platform_device(dev);
 	struct resource *res;
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
+
 	res = platform_get_resource(pdev, IORESOURCE_MEM, bank_id);
 
 	return resource_size(res) / 4;
@@ -903,6 +950,8 @@ static int tegra_pinctrl_suspend(struct device *dev)
 	u32 __iomem *regs;
 	size_t bank_size;
 	unsigned int i, k;
+
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 
 	for (i = 0; i < pmx->nbanks; i++) {
 		bank_size = tegra_pinctrl_get_bank_size(dev, i);
@@ -921,6 +970,8 @@ static int tegra_pinctrl_resume(struct device *dev)
 	u32 __iomem *regs;
 	size_t bank_size;
 	unsigned int i, k;
+
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 
 	for (i = 0; i < pmx->nbanks; i++) {
 		bank_size = tegra_pinctrl_get_bank_size(dev, i);
@@ -961,6 +1012,8 @@ static bool tegra_pinctrl_gpio_node_has_range(struct tegra_pmx *pmx)
 	struct device_node *np;
 	bool has_prop = false;
 
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
+
 	if (of_property_read_bool(dev->of_node, "#gpio-range-cells"))
 		return true;
 
@@ -984,6 +1037,8 @@ int tegra_pinctrl_probe(struct platform_device *pdev,
 	const char **group_pins;
 	int fn, gn, gfn;
 	unsigned long backup_regs_size = 0;
+
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 
 	pmx = devm_kzalloc(&pdev->dev, sizeof(*pmx), GFP_KERNEL);
 	if (!pmx)

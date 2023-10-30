@@ -2249,6 +2249,7 @@ static void tegra20_pinctrl_register_clock_muxes(struct platform_device *pdev)
 
 static int tegra20_pinctrl_probe(struct platform_device *pdev)
 {
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	int err;
 
 	err = tegra_pinctrl_probe(pdev, &tegra20_pinctrl);
@@ -2275,6 +2276,7 @@ static struct platform_driver tegra20_pinctrl_driver = {
 
 static int __init tegra20_pinctrl_init(void)
 {
+	printk(KERN_DEBUG "Driver function %s, file %s", __func__, __FILE__);
 	return platform_driver_register(&tegra20_pinctrl_driver);
 }
 arch_initcall(tegra20_pinctrl_init);
