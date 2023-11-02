@@ -101,17 +101,23 @@ static struct tegra_gpio_info *gpio_info;
 static inline void tegra_gpio_writel(struct tegra_gpio_info *tgi,
 				     u32 val, u32 reg)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	writel_relaxed(val, tgi->regs + reg);
 }
 
 static inline u32 tegra_gpio_readl(struct tegra_gpio_info *tgi, u32 reg)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	return readl_relaxed(tgi->regs + reg);
 }
 
 static unsigned int tegra_gpio_compose(unsigned int bank, unsigned int port,
 				       unsigned int bit)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	return (bank << 5) | ((port & 0x3) << 3) | (bit & 0x7);
 }
 
@@ -119,6 +125,8 @@ static void tegra_gpio_mask_write(struct tegra_gpio_info *tgi, u32 reg,
 				  unsigned int gpio, u32 value)
 {
 	u32 val;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	val = 0x100 << GPIO_BIT(gpio);
 	if (value)
@@ -134,6 +142,8 @@ static void tegra_gpio_save_gpio_state(unsigned int gpio)
 	struct tegra_gpio_bank *bank = &tgi->bank_info[b];
 	u32 mask = BIT(GPIO_BIT(gpio));
 	unsigned long flags;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	spin_lock_irqsave(&bank->gpio_lock[p], flags);
 
@@ -206,11 +216,15 @@ static void tegra_gpio_restore_gpio_state(unsigned int gpio)
 
 static void tegra_gpio_enable(struct tegra_gpio_info *tgi, unsigned int gpio)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	tegra_gpio_mask_write(tgi, GPIO_MSK_CNF(tgi, gpio), gpio, 1);
 }
 
 static int tegra_gpio_request(struct gpio_chip *chip, unsigned int offset)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	tegra_gpio_save_gpio_state(offset);
 	return pinctrl_gpio_request(chip->base + offset);
 }
@@ -225,6 +239,8 @@ static void tegra_gpio_set(struct gpio_chip *chip, unsigned int offset,
 			   int value)
 {
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	tegra_gpio_mask_write(tgi, GPIO_MSK_OUT(tgi, offset), offset, value);
 }
@@ -247,6 +263,8 @@ static int tegra_gpio_direction_input(struct gpio_chip *chip,
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
 	int ret;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	tegra_gpio_mask_write(tgi, GPIO_MSK_OE(tgi, offset), offset, 0);
 	tegra_gpio_enable(tgi, offset);
 
@@ -265,6 +283,8 @@ static int tegra_gpio_direction_output(struct gpio_chip *chip,
 {
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
 	int ret;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	tegra_gpio_set(chip, offset, value);
 	tegra_gpio_mask_write(tgi, GPIO_MSK_OE(tgi, offset), offset, 1);
@@ -285,6 +305,8 @@ static int tegra_gpio_get_direction(struct gpio_chip *chip,
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
 	u32 pin_mask = BIT(GPIO_BIT(offset));
 	u32 cnf, oe;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	cnf = tegra_gpio_readl(tgi, GPIO_CNF(tgi, offset));
 	if (!(cnf & pin_mask))
@@ -337,6 +359,8 @@ static int tegra_gpio_set_config(struct gpio_chip *chip, unsigned int offset,
 {
 	u32 debounce;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (pinconf_to_config_param(config) != PIN_CONFIG_INPUT_DEBOUNCE)
 		return -ENOTSUPP;
 
@@ -347,6 +371,8 @@ static int tegra_gpio_set_config(struct gpio_chip *chip, unsigned int offset,
 static int tegra_gpio_to_irq(struct gpio_chip *chip, unsigned int offset)
 {
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	return irq_find_mapping(tgi->irq_domain, offset);
 }
@@ -616,6 +642,8 @@ static int tegra_dbg_gpio_show(struct seq_file *s, void *unused)
 	x = ' ';
 	y = 'A';
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	seq_printf(s, "Name:Bank:Port CNF OE OUT IN INT_STA INT_ENB INT_LVL\n");
 	for (i = 0; i < tgi->bank_count; i++) {
 		for (j = 0; j < 4; j++) {
@@ -649,6 +677,8 @@ DEFINE_SHOW_ATTRIBUTE(tegra_dbg_gpio);
 
 static void tegra_gpio_debuginit(struct tegra_gpio_info *tgi)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	debugfs_create_file("tegra_gpio", 0444, NULL, tgi,
 			    &tegra_dbg_gpio_fops);
 }
@@ -667,6 +697,8 @@ static int tegra_gpio_probe(struct platform_device *pdev)
 	struct tegra_gpio_bank *bank;
 	unsigned int gpio, i, j;
 	int ret;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	tgi = devm_kzalloc(&pdev->dev, sizeof(*tgi), GFP_KERNEL);
 	if (!tgi)

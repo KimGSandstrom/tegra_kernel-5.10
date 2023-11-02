@@ -278,12 +278,16 @@ static struct tegra_gte_info tegra194_gte_info[] = {
 
 static inline u32 tegra_gte_readl(struct tegra_gpio *tgi, u32 reg)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	return __raw_readl(tgi->gte_regs + reg);
 }
 
 static inline void tegra_gte_writel(struct tegra_gpio *tgi, u32 reg,
 		u32 val)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	__raw_writel(val, tgi->gte_regs + reg);
 }
 
@@ -306,6 +310,8 @@ u64 tegra_gte_read_fifo(struct tegra_gpio *tgi, u32 offset)
 	u32 precv, curcv, xorcv;
 	u32 aon_bits;
 	u32 bit_index = 0;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	/* Check if FIFO is empty */
 	while ((tegra_gte_readl(tgi, GTE_GPIO_TESTATUS) >>
@@ -348,6 +354,8 @@ int tegra_gte_enable_ts(struct tegra_gpio *tgi, u32 offset)
 	u32 val, mask, reg;
 	int i = 0;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (tgi->gte_enable == 1) {
 		dev_err(tgi->gpio.parent, "timestamp is already enabled for gpio\n");
 		return -EINVAL;
@@ -381,6 +389,8 @@ int tegra_gte_disable_ts(struct tegra_gpio *tgi, u32 offset)
 {
 	u32 val, mask;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (tgi->gte_enable == 0) {
 		dev_err(tgi->gpio.parent, "timestamp is already disabled\n");
 		return 0;
@@ -405,6 +415,8 @@ int tegra_gte_disable_ts(struct tegra_gpio *tgi, u32 offset)
 
 int tegra_gte_setup(struct tegra_gpio *tgi)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	tegra_gte_writel(tgi, GTE_GPIO_TECTRL, 0);
 	tgi->gte_enable = 0;
 
@@ -417,6 +429,9 @@ static const struct tegra_gpio_port *
 tegra186_gpio_get_port(struct tegra_gpio *gpio, unsigned int *pin)
 {
 	unsigned int start = 0, i;
+
+	// removed because its repeated too often
+	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	for (i = 0; i < gpio->soc->num_ports; i++) {
 		const struct tegra_gpio_port *port = &gpio->soc->ports[i];
@@ -438,6 +453,9 @@ static void __iomem *tegra186_gpio_get_base(struct tegra_gpio *gpio,
 	const struct tegra_gpio_port *port;
 	unsigned int offset;
 
+	// removed because it is repeated to often
+	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	port = tegra186_gpio_get_port(gpio, &pin);
 	if (!port)
 		return NULL;
@@ -453,6 +471,9 @@ static void __iomem *tegra186_gpio_get_secure(struct tegra_gpio *gpio,
 	const struct tegra_gpio_port *port;
 	unsigned int offset;
 
+	// removed because it is repeated to often
+	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	port = tegra186_gpio_get_port(gpio, &pin);
 	if (!port)
 		return NULL;
@@ -465,6 +486,9 @@ static inline bool gpio_is_accessible(struct tegra_gpio *gpio, u32 pin)
 {
 	void __iomem *secure;
 	u32 val;
+
+	// removed because it's repeated too often
+	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	secure = tegra186_gpio_get_secure(gpio, pin);
 	if (gpio->soc->do_vm_check) {
@@ -491,6 +515,9 @@ static int tegra186_gpio_get_direction(struct gpio_chip *chip,
 	void __iomem *base;
 	u32 value;
 
+	// removed because it is repeated too often
+	//printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (!gpio_is_accessible(gpio, offset))
 		return -EPERM;
 
@@ -512,6 +539,8 @@ static int tegra186_gpio_direction_input(struct gpio_chip *chip,
 	void __iomem *base;
 	u32 value;
 	int ret = 0;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	if (!gpio_is_accessible(gpio, offset))
 		return -EPERM;
@@ -543,6 +572,8 @@ static int tegra186_gpio_direction_output(struct gpio_chip *chip,
 	void __iomem *base;
 	u32 value;
 	int ret = 0;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	if (!gpio_is_accessible(gpio, offset))
 		return -EPERM;
@@ -645,6 +676,8 @@ static int tegra186_gpio_get(struct gpio_chip *chip, unsigned int offset)
 	void __iomem *base;
 	u32 value;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	base = tegra186_gpio_get_base(gpio, offset);
 	if (WARN_ON(base == NULL))
 		return -ENODEV;
@@ -664,6 +697,9 @@ static void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
 	struct tegra_gpio *gpio = gpiochip_get_data(chip);
 	void __iomem *base;
 	u32 value;
+
+	// removed because it executes too often
+	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	if (!gpio_is_accessible(gpio, offset))
 		return;
@@ -688,6 +724,9 @@ static int tegra186_gpio_set_config(struct gpio_chip *chip,
 	struct tegra_gpio *gpio = gpiochip_get_data(chip);
 	u32 debounce, value;
 	void __iomem *base;
+
+	// removed because it executes to often
+	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	base = tegra186_gpio_get_base(gpio, offset);
 	if (base == NULL)
@@ -724,6 +763,8 @@ static int tegra186_gpio_add_pin_ranges(struct gpio_chip *chip)
 	struct device_node *np;
 	unsigned int i, j;
 	int err;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	if (!gpio->soc->pinmux || gpio->soc->num_pin_ranges == 0)
 		return 0;
@@ -767,6 +808,9 @@ static int tegra186_gpio_of_xlate(struct gpio_chip *chip,
 {
 	struct tegra_gpio *gpio = gpiochip_get_data(chip);
 	unsigned int port, pin, i, offset = 0;
+
+	// removed because it executes too often 
+	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	if (WARN_ON(chip->of_gpio_n_cells < 2))
 		return -EINVAL;
@@ -1033,9 +1077,11 @@ static const struct of_device_id tegra186_pmc_of_match[] = {
 
 static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 {
-	struct device *dev = gpio->gpio.parent;
+	// struct device *dev = gpio->gpio.parent;
 	unsigned int i, j;
 	u32 value;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	for (i = 0; i < gpio->soc->num_ports; i++) {
 		const struct tegra_gpio_port *port = &gpio->soc->ports[i];
@@ -1057,8 +1103,9 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 			 * interrupts.
 			 */
 			for (j = 0; j < gpio->num_irqs_per_bank; j++) {
-				dev_dbg(dev, "programming default interrupt routing for port %s\n",
-					port->name);
+				// removed because it executes far too often
+				// dev_dbg(dev, "programming default interrupt routing for port %s\n",
+				//	port->name);
 
 				offset = TEGRA186_GPIO_INT_ROUTE_MAPPING(p, j);
 
@@ -1119,6 +1166,8 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	int ret;
 	int value;
 	void __iomem *base;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	gpio = devm_kzalloc(&pdev->dev, sizeof(*gpio), GFP_KERNEL);
 	if (!gpio)
