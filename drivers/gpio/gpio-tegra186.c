@@ -782,6 +782,8 @@ static int tegra186_gpio_add_pin_ranges(struct gpio_chip *chip)
 		unsigned int pin = gpio->soc->pin_ranges[i].offset, port;
 		const char *group = gpio->soc->pin_ranges[i].group;
 
+		printk(KERN_DEBUG "Debug gpio pins, pin %d, group %p", pin, group);
+
 		port = pin / 8;
 		pin = pin % 8;
 
@@ -1278,6 +1280,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 				return -ENOMEM;
 
 			names[offset + j] = name;
+			// printk(KERN_DEBUG "Debug gpio %s, name=%s", __func__, name);
 		}
 
 		offset += port->pins;
@@ -1391,6 +1394,11 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 
 	if (gpio->use_timestamp)
 		tegra_gte_setup(gpio);
+        printk(KERN_DEBUG "Debug gpio %s, label=%s", __func__, gpio->gpio.label);
+	printk(KERN_DEBUG "Debug gpio %s, initialised gpio at %p", __func__, gpio);
+	printk(KERN_DEBUG "Debug gpio %s, initialised gpio->secure at %p", __func__, gpio->secure);
+	printk(KERN_DEBUG "Debug gpio %s, initialised gpio->base at %p", __func__, gpio->base);
+	printk(KERN_DEBUG "Debug gpio %s, initialised gpio->gte_regs at %p", __func__, gpio->gte_regs);
 
 	return 0;
 }
