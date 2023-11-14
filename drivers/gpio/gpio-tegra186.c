@@ -1079,6 +1079,7 @@ static const struct of_device_id tegra186_pmc_of_match[] = {
 
 static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 {
+	// removed because debug statement was removed
 	// struct device *dev = gpio->gpio.parent;
 	unsigned int i, j;
 	u32 value;
@@ -1156,6 +1157,14 @@ error:
 	return -EINVAL;
 }
 
+// possibly/probably declare this in gpio-tegra.c instead
+// following pattern from bpmp virtualisation
+uint64_t gpio_vpa;
+EXPORT_SYMBOL_GPL(gpio_vpa);
+
+struct tegra_gpio *tegra_gpio_host_device = NULL;
+EXPORT_SYMBOL_GPL(tegra_gpio_host_device);
+
 static int tegra186_gpio_probe(struct platform_device *pdev)
 {
 	unsigned int i, j, offset;
@@ -1182,6 +1191,24 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	gpio->secure = devm_platform_ioremap_resource_byname(pdev, "security");
 	if (IS_ERR(gpio->secure))
 		return PTR_ERR(gpio->secure);
+
+	#ifdef CONFIG_TEGRA_GPIO_GUEST_PROXY
+        // If virtual-pa node is defined, it means that we are using a virtual GPIO
+        // then we have to initialize the gpio-guest
+        err = of_property_read_u64(pdev->dev.of_node, "virtual-pa", &gpio_vpa);
+        if(err){
+		printk(KERN_DEBUG "Error reading GPIO virtual-pa: %d", err);
+                return err;
+        }
+	// TODO will we use gpio_vpa at all?
+
+	// no initialisation needed for 'gpio' in guest
+	printk(KERN_DEBUG "Debug guest GPIO virtual-pa: 0x%llX", gpio_vpa);
+	return 0;
+
+	// TODO: these ifdefs do not define host and guest kernel module code 
+	// but common code in the stock 'tegra186-gpio' 
+	#endif
 
 	/* count the number of banks in the controller */
 	for (i = 0; i < gpio->soc->num_ports; i++)
@@ -1399,6 +1426,14 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	printk(KERN_DEBUG "Debug gpio %s, initialised gpio->secure at %p", __func__, gpio->secure);
 	printk(KERN_DEBUG "Debug gpio %s, initialised gpio->base at %p", __func__, gpio->base);
 	printk(KERN_DEBUG "Debug gpio %s, initialised gpio->gte_regs at %p", __func__, gpio->gte_regs);
+
+	#ifdef CONFIG_TEGRA_GPIO_HOST_PROXY
+	// TODO: these ifdefs do not define host and guest kernel module code 
+	// but common code in the stock 'tegra186-gpio' compiled if config is set
+        // export the tegra_gpio_host_device
+	// TODO: we actually have two gpio chips -- this probe function will be called twice.
+	tegra_gpio_host_device = gpio;
+	#endif
 
 	return 0;
 }
