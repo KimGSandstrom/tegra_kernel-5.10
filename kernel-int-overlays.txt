@@ -3,3 +3,4 @@ nvlink
 nvgpu
 nvgpu-next
 nvidia-t239
+gpio-virt

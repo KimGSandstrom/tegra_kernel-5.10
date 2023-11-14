@@ -1,3 +1,4 @@
 nvidia
 nvlink
 nvgpu
+gpio-virt
