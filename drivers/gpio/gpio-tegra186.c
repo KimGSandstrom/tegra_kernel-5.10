@@ -1817,7 +1817,7 @@ static struct platform_driver tegra186_gpio_driver = {
 	.remove = tegra186_gpio_remove,
 };
 EXPORT_SYMBOL_GPL(tegra186_gpio_driver);
-module_platform_driver(tegra186_gpio_driver);
+builtin_platform_driver(tegra186_gpio_driver);
 
 MODULE_DESCRIPTION("NVIDIA Tegra186 GPIO controller driver");
 MODULE_AUTHOR("Thierry Reding <treding@nvidia.com>");
