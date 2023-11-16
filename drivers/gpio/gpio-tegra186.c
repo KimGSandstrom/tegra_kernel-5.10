@@ -22,8 +22,8 @@
 
 /* security registers */
 #define TEGRA186_GPIO_CTL_SCR 0x0c
-#define  TEGRA186_GPIO_CTL_SCR_SEC_WEN BIT(28)
-#define  TEGRA186_GPIO_CTL_SCR_SEC_REN BIT(27)
+#define TEGRA186_GPIO_CTL_SCR_SEC_WEN BIT(28)
+#define TEGRA186_GPIO_CTL_SCR_SEC_REN BIT(27)
 
 #define TEGRA186_GPIO_INT_ROUTE_MAPPING(p, x) (0x14 + (p) * 0x20 + (x) * 4)
 
@@ -45,29 +45,29 @@
 
 /* control registers */
 #define TEGRA186_GPIO_ENABLE_CONFIG 0x00
-#define  TEGRA186_GPIO_ENABLE_CONFIG_ENABLE BIT(0)
-#define  TEGRA186_GPIO_ENABLE_CONFIG_OUT BIT(1)
-#define  TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_NONE (0x0 << 2)
-#define  TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_LEVEL (0x1 << 2)
-#define  TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_SINGLE_EDGE (0x2 << 2)
-#define  TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_DOUBLE_EDGE (0x3 << 2)
-#define  TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_MASK (0x3 << 2)
-#define  TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_LEVEL BIT(4)
-#define  TEGRA186_GPIO_ENABLE_CONFIG_DEBOUNCE BIT(5)
-#define  TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT BIT(6)
-#define  TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC BIT(7)
+#define TEGRA186_GPIO_ENABLE_CONFIG_ENABLE BIT(0)
+#define TEGRA186_GPIO_ENABLE_CONFIG_OUT BIT(1)
+#define TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_NONE (0x0 << 2)
+#define TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_LEVEL (0x1 << 2)
+#define TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_SINGLE_EDGE (0x2 << 2)
+#define TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_DOUBLE_EDGE (0x3 << 2)
+#define TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_MASK (0x3 << 2)
+#define TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_LEVEL BIT(4)
+#define TEGRA186_GPIO_ENABLE_CONFIG_DEBOUNCE BIT(5)
+#define TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT BIT(6)
+#define TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC BIT(7)
 
 #define TEGRA186_GPIO_DEBOUNCE_CONTROL 0x04
-#define  TEGRA186_GPIO_DEBOUNCE_CONTROL_THRESHOLD(x) ((x) & 0xff)
+#define TEGRA186_GPIO_DEBOUNCE_CONTROL_THRESHOLD(x) ((x) & 0xff)
 
 #define TEGRA186_GPIO_INPUT 0x08
-#define  TEGRA186_GPIO_INPUT_HIGH BIT(0)
+#define TEGRA186_GPIO_INPUT_HIGH BIT(0)
 
 #define TEGRA186_GPIO_OUTPUT_CONTROL 0x0c
-#define  TEGRA186_GPIO_OUTPUT_CONTROL_FLOATED BIT(0)
+#define TEGRA186_GPIO_OUTPUT_CONTROL_FLOATED BIT(0)
 
 #define TEGRA186_GPIO_OUTPUT_VALUE 0x10
-#define  TEGRA186_GPIO_OUTPUT_VALUE_HIGH BIT(0)
+#define TEGRA186_GPIO_OUTPUT_VALUE_HIGH BIT(0)
 
 #define TEGRA186_GPIO_INTERRUPT_CLEAR 0x14
 
@@ -811,7 +811,7 @@ static int tegra186_gpio_of_xlate(struct gpio_chip *chip,
 	struct tegra_gpio *gpio = gpiochip_get_data(chip);
 	unsigned int port, pin, i, offset = 0;
 
-	// removed because it executes too often 
+	// removed because it executes too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	if (WARN_ON(chip->of_gpio_n_cells < 2))
@@ -1162,8 +1162,8 @@ error:
 uint64_t gpio_vpa;
 EXPORT_SYMBOL_GPL(gpio_vpa);
 
-struct tegra_gpio *tegra_gpio_host_device = NULL;
-EXPORT_SYMBOL_GPL(tegra_gpio_host_device);
+struct tegra_gpio *tegra_gpio_host = NULL;
+EXPORT_SYMBOL_GPL(tegra_gpio_host);
 
 static int tegra186_gpio_probe(struct platform_device *pdev)
 {
@@ -1206,8 +1206,8 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	printk(KERN_DEBUG "Debug guest GPIO virtual-pa: 0x%llX", gpio_vpa);
 	return 0;
 
-	// TODO: these ifdefs do not define host and guest kernel module code 
-	// but common code in the stock 'tegra186-gpio' 
+	// TODO: these ifdefs do not define host and guest kernel module code
+	// but common code in the stock 'tegra186-gpio'
 	#endif
 
 	/* count the number of banks in the controller */
@@ -1428,11 +1428,12 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	printk(KERN_DEBUG "Debug gpio %s, initialised gpio->gte_regs at %p", __func__, gpio->gte_regs);
 
 	#ifdef CONFIG_TEGRA_GPIO_HOST_PROXY
-	// TODO: these ifdefs do not define host and guest kernel module code 
-	// but common code in the stock 'tegra186-gpio' compiled if config is set
-        // export the tegra_gpio_host_device
+	// these ifdefs do not define host and guest kernel module code
+	// but common code in the stock 'tegra186-gpio' it is compiled if config is set
+        // export the tegra_gpio_host
 	// TODO: we actually have two gpio chips -- this probe function will be called twice.
-	tegra_gpio_host_device = gpio;
+	tegra_gpio_host = gpio;
+	// no need to copy data -- we are still in kernel space
 	#endif
 
 	return 0;
@@ -1815,6 +1816,7 @@ static struct platform_driver tegra186_gpio_driver = {
 	.probe = tegra186_gpio_probe,
 	.remove = tegra186_gpio_remove,
 };
+EXPORT_SYMBOL_GPL(tegra186_gpio_driver);
 module_platform_driver(tegra186_gpio_driver);
 
 MODULE_DESCRIPTION("NVIDIA Tegra186 GPIO controller driver");
