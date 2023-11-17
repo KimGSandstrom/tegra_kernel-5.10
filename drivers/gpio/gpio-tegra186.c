@@ -231,6 +231,18 @@ struct tegra_gpio {
 	struct tegra_gpio_saved_register *gpio_rval;
 };
 
+// possibly/probably declare this in gpio-tegra.c instead
+// following pattern from bpmp virtualisation
+
+uint64_t gpio_vpa = 0;
+EXPORT_SYMBOL_GPL(gpio_vpa);
+
+static struct tegra_gpio preset_gpio_local;
+
+void * preset_gpio(struct tegra_gpio *get)
+	{ return memcpy(get, &preset_gpio_local, sizeof(struct tegra_gpio)); }
+EXPORT_SYMBOL_GPL(preset_gpio);
+
 /*************************** GTE related code ********************/
 
 struct tegra_gte_info {
@@ -1157,14 +1169,6 @@ error:
 	return -EINVAL;
 }
 
-// possibly/probably declare this in gpio-tegra.c instead
-// following pattern from bpmp virtualisation
-uint64_t gpio_vpa;
-EXPORT_SYMBOL_GPL(gpio_vpa);
-
-struct tegra_gpio *tegra_gpio_host = NULL;
-EXPORT_SYMBOL_GPL(tegra_gpio_host);
-
 static int tegra186_gpio_probe(struct platform_device *pdev)
 {
 	unsigned int i, j, offset;
@@ -1205,6 +1209,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	// no initialisation needed for 'gpio' in guest
 	printk(KERN_DEBUG "Debug guest GPIO virtual-pa: 0x%llX", gpio_vpa);
 	return 0;
+// bug -- this is not guest driver code, this is code in stock driver if guest node is defined
 
 	// TODO: these ifdefs do not define host and guest kernel module code
 	// but common code in the stock 'tegra186-gpio'
@@ -1432,8 +1437,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	// but common code in the stock 'tegra186-gpio' it is compiled if config is set
         // export the tegra_gpio_host
 	// TODO: we actually have two gpio chips -- this probe function will be called twice.
-	tegra_gpio_host = gpio;
-	// no need to copy data -- we are still in kernel space
+	memcpy(&preset_gpio_local,  gpio, sizeof(struct tegra_gpio));
 	#endif
 
 	return 0;
@@ -1816,7 +1820,11 @@ static struct platform_driver tegra186_gpio_driver = {
 	.probe = tegra186_gpio_probe,
 	.remove = tegra186_gpio_remove,
 };
+
+void * cpy_tegra186_gpio_driver(struct platform_driver *cpy)
+	{ return memcpy(cpy, &tegra186_gpio_driver, sizeof(struct platform_driver)); }
 EXPORT_SYMBOL_GPL(tegra186_gpio_driver);
+
 builtin_platform_driver(tegra186_gpio_driver);
 
 MODULE_DESCRIPTION("NVIDIA Tegra186 GPIO controller driver");

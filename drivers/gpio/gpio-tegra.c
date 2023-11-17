@@ -848,6 +848,7 @@ static struct platform_driver tegra_gpio_driver = {
 
 static int __init tegra_gpio_init(void)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	return platform_driver_register(&tegra_gpio_driver);
 }
 subsys_initcall(tegra_gpio_init);
