@@ -22,8 +22,8 @@
 
 /* security registers */
 #define TEGRA186_GPIO_CTL_SCR 0x0c
-#define TEGRA186_GPIO_CTL_SCR_SEC_WEN BIT(28)
-#define TEGRA186_GPIO_CTL_SCR_SEC_REN BIT(27)
+#define  TEGRA186_GPIO_CTL_SCR_SEC_WEN BIT(28)
+#define  TEGRA186_GPIO_CTL_SCR_SEC_REN BIT(27)
 
 #define TEGRA186_GPIO_INT_ROUTE_MAPPING(p, x) (0x14 + (p) * 0x20 + (x) * 4)
 
@@ -45,29 +45,29 @@
 
 /* control registers */
 #define TEGRA186_GPIO_ENABLE_CONFIG 0x00
-#define TEGRA186_GPIO_ENABLE_CONFIG_ENABLE BIT(0)
-#define TEGRA186_GPIO_ENABLE_CONFIG_OUT BIT(1)
-#define TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_NONE (0x0 << 2)
-#define TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_LEVEL (0x1 << 2)
-#define TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_SINGLE_EDGE (0x2 << 2)
-#define TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_DOUBLE_EDGE (0x3 << 2)
-#define TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_MASK (0x3 << 2)
-#define TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_LEVEL BIT(4)
-#define TEGRA186_GPIO_ENABLE_CONFIG_DEBOUNCE BIT(5)
-#define TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT BIT(6)
-#define TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC BIT(7)
+#define  TEGRA186_GPIO_ENABLE_CONFIG_ENABLE BIT(0)
+#define  TEGRA186_GPIO_ENABLE_CONFIG_OUT BIT(1)
+#define  TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_NONE (0x0 << 2)
+#define  TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_LEVEL (0x1 << 2)
+#define  TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_SINGLE_EDGE (0x2 << 2)
+#define  TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_DOUBLE_EDGE (0x3 << 2)
+#define  TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_MASK (0x3 << 2)
+#define  TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_LEVEL BIT(4)
+#define  TEGRA186_GPIO_ENABLE_CONFIG_DEBOUNCE BIT(5)
+#define  TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT BIT(6)
+#define  TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC BIT(7)
 
 #define TEGRA186_GPIO_DEBOUNCE_CONTROL 0x04
-#define TEGRA186_GPIO_DEBOUNCE_CONTROL_THRESHOLD(x) ((x) & 0xff)
+#define  TEGRA186_GPIO_DEBOUNCE_CONTROL_THRESHOLD(x) ((x) & 0xff)
 
 #define TEGRA186_GPIO_INPUT 0x08
-#define TEGRA186_GPIO_INPUT_HIGH BIT(0)
+#define  TEGRA186_GPIO_INPUT_HIGH BIT(0)
 
 #define TEGRA186_GPIO_OUTPUT_CONTROL 0x0c
-#define TEGRA186_GPIO_OUTPUT_CONTROL_FLOATED BIT(0)
+#define  TEGRA186_GPIO_OUTPUT_CONTROL_FLOATED BIT(0)
 
 #define TEGRA186_GPIO_OUTPUT_VALUE 0x10
-#define TEGRA186_GPIO_OUTPUT_VALUE_HIGH BIT(0)
+#define  TEGRA186_GPIO_OUTPUT_VALUE_HIGH BIT(0)
 
 #define TEGRA186_GPIO_INTERRUPT_CLEAR 0x14
 
@@ -237,11 +237,31 @@ struct tegra_gpio {
 uint64_t gpio_vpa = 0;
 EXPORT_SYMBOL_GPL(gpio_vpa);
 
+// a variable and a function to allow proxy drivers to cpy a preset gpio to themselves
+struct semaphore sem_gpio, sem_driver;
+struct semaphore *copy_sem_gpio = &sem_gpio;
+struct semaphore *copy_sem_driver = &sem_driver;
+uint64_t gpio_ready_flag = 0;
+uint64_t driver_ready_flag = 0;
 static struct tegra_gpio preset_gpio_local;
+EXPORT_SYMBOL_GPL(copy_sem_gpio);
+EXPORT_SYMBOL_GPL(copy_sem_driver);
+EXPORT_SYMBOL_GPL(gpio_ready_flag);
+EXPORT_SYMBOL_GPL(driver_ready_flag);
 
-void * preset_gpio(struct tegra_gpio *get)
-	{ return memcpy(get, &preset_gpio_local, sizeof(struct tegra_gpio)); }
-EXPORT_SYMBOL_GPL(preset_gpio);
+void * cpy_preset_gpio(struct tegra_gpio *get)
+{ 
+	void *ret;
+	int err;
+
+	if((err=down_interruptible(copy_sem_gpio)))
+		printk(KERN_DEBUG "Semaphore error %d in %s", err, __func__);
+	ret = memcpy(get, &preset_gpio_local, sizeof(struct tegra_gpio));
+	gpio_ready_flag = 1;
+	up(copy_sem_gpio);
+	return ret;
+}
+EXPORT_SYMBOL_GPL(cpy_preset_gpio);
 
 /*************************** GTE related code ********************/
 
@@ -1426,18 +1446,24 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 
 	if (gpio->use_timestamp)
 		tegra_gte_setup(gpio);
+
         printk(KERN_DEBUG "Debug gpio %s, label=%s", __func__, gpio->gpio.label);
 	printk(KERN_DEBUG "Debug gpio %s, initialised gpio at %p", __func__, gpio);
 	printk(KERN_DEBUG "Debug gpio %s, initialised gpio->secure at %p", __func__, gpio->secure);
 	printk(KERN_DEBUG "Debug gpio %s, initialised gpio->base at %p", __func__, gpio->base);
 	printk(KERN_DEBUG "Debug gpio %s, initialised gpio->gte_regs at %p", __func__, gpio->gte_regs);
 
-	#ifdef CONFIG_TEGRA_GPIO_HOST_PROXY
+	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
 	// these ifdefs do not define host and guest kernel module code
-	// but common code in the stock 'tegra186-gpio' it is compiled if config is set
-        // export the tegra_gpio_host
+	// but common code in the stock 'tegra186-gpio' -- it is compiled if module is set in .config
 	// TODO: we actually have two gpio chips -- this probe function will be called twice.
+	
+	if(down_interruptible(copy_sem_gpio))
+		printk(KERN_DEBUG "Semaphore error %s, file %s", __func__, __FILE__);
 	memcpy(&preset_gpio_local,  gpio, sizeof(struct tegra_gpio));
+	gpio_ready_flag = 1;
+	up(copy_sem_gpio);
+	printk(KERN_DEBUG "Debug gpio preset_gpio exported %s, file %s", __func__, __FILE__);
 	#endif
 
 	return 0;
@@ -1821,10 +1847,23 @@ static struct platform_driver tegra186_gpio_driver = {
 	.remove = tegra186_gpio_remove,
 };
 
-void * cpy_tegra186_gpio_driver(struct platform_driver *cpy)
-	{ return memcpy(cpy, &tegra186_gpio_driver, sizeof(struct platform_driver)); }
-EXPORT_SYMBOL_GPL(tegra186_gpio_driver);
+	// TODO: we actually have two gpio chips
+	// -- the probe function will be called twice.
+void * cpy_tegra186_gpio_driver(struct platform_driver *cpy) {
+	void *ret;
+	int err;
 
+	if((err=down_interruptible(copy_sem_driver)))
+		printk(KERN_DEBUG "Semaphore error %d in %s", err, __func__);
+	ret = memcpy(cpy, &tegra186_gpio_driver, sizeof(struct platform_driver));
+	driver_ready_flag = 1;
+	up(copy_sem_driver);
+	printk(KERN_DEBUG "Debug gpio, &tegra186_gpio_driver exported %s, file %s", __func__, __FILE__);
+	return ret;
+}
+EXPORT_SYMBOL_GPL(cpy_tegra186_gpio_driver);
+
+// module_platform_driver(tegra186_gpio_driver);
 builtin_platform_driver(tegra186_gpio_driver);
 
 MODULE_DESCRIPTION("NVIDIA Tegra186 GPIO controller driver");
