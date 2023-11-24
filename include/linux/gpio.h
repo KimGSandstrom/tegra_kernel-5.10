@@ -63,21 +63,25 @@ struct gpio {
 
 static inline int gpio_get_value(unsigned int gpio)
 {
+	printk(KERN_DEBUG "Debug gpio function %s, in file %s", __func__, __FILE__);
 	return __gpio_get_value(gpio);
 }
 
 static inline void gpio_set_value(unsigned int gpio, int value)
 {
+	printk(KERN_DEBUG "Debug gpio function %s, in file %s", __func__, __FILE__);
 	__gpio_set_value(gpio, value);
 }
 
 static inline int gpio_cansleep(unsigned int gpio)
 {
+	printk(KERN_DEBUG "Debug gpio function %s, in file %s", __func__, __FILE__);
 	return __gpio_cansleep(gpio);
 }
 
 static inline int gpio_to_irq(unsigned int gpio)
 {
+	printk(KERN_DEBUG "Debug gpio function %s, in file %s", __func__, __FILE__);
 	return __gpio_to_irq(gpio);
 }
 
@@ -129,6 +133,7 @@ static inline int gpio_request_array(const struct gpio *array, size_t num)
 
 static inline void gpio_free(unsigned gpio)
 {
+	printk(KERN_DEBUG "Debug gpio function %s, in file %s", __func__, __FILE__);
 	might_sleep();
 
 	/* GPIO can never have been requested */
