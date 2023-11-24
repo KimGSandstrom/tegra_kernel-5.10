@@ -140,6 +140,8 @@ struct gpio_desc *gpiochip_get_desc(struct gpio_chip *gc,
 {
 	struct gpio_device *gdev = gc->gpiodev;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (hwnum >= gdev->ngpio)
 		return ERR_PTR(-EINVAL);
 
@@ -170,6 +172,8 @@ EXPORT_SYMBOL_GPL(desc_to_gpio);
  */
 struct gpio_chip *gpiod_to_chip(const struct gpio_desc *desc)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (!desc || !desc->gdev)
 		return NULL;
 	return desc->gdev->chip;
@@ -213,6 +217,8 @@ int gpiod_get_direction(struct gpio_desc *desc)
 	struct gpio_chip *gc;
 	unsigned offset;
 	int ret;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	gc = gpiod_to_chip(desc);
 	offset = gpio_chip_hwgpio(desc);
@@ -458,6 +464,8 @@ static int gpiochip_add_pin_ranges(struct gpio_chip *gc)
 bool gpiochip_line_is_valid(const struct gpio_chip *gc,
 				unsigned int offset)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	/* No mask means all valid */
 	if (likely(!gc->valid_mask))
 		return true;
@@ -469,6 +477,8 @@ static void gpiodevice_release(struct device *dev)
 {
 	struct gpio_device *gdev = dev_get_drvdata(dev);
 	unsigned long flags;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	spin_lock_irqsave(&gpio_lock, flags);
 	list_del(&gdev->list);
@@ -802,6 +812,8 @@ EXPORT_SYMBOL_GPL(gpiochip_add_data_with_key);
  */
 void *gpiochip_get_data(struct gpio_chip *gc)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	return gc->gpiodev->data;
 }
 EXPORT_SYMBOL_GPL(gpiochip_get_data);
@@ -817,6 +829,8 @@ void gpiochip_remove(struct gpio_chip *gc)
 	struct gpio_device *gdev = gc->gpiodev;
 	unsigned long	flags;
 	unsigned int	i;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	/* FIXME: should the legacy sysfs handling be moved to gpio_device? */
 	gpiochip_sysfs_unregister(gdev);
@@ -874,6 +888,8 @@ struct gpio_chip *gpiochip_find(void *data,
 	struct gpio_device *gdev;
 	struct gpio_chip *gc = NULL;
 	unsigned long flags;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	spin_lock_irqsave(&gpio_lock, flags);
 	list_for_each_entry(gdev, &gpio_devices, list)
@@ -2092,6 +2108,8 @@ int gpiod_request(struct gpio_desc *desc, const char *label)
 	int ret = -EPROBE_DEFER;
 	struct gpio_device *gdev;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	VALIDATE_DESC(desc);
 	gdev = desc->gdev;
 
@@ -2159,6 +2177,8 @@ static bool gpiod_free_commit(struct gpio_desc *desc)
 
 void gpiod_free(struct gpio_desc *desc)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (desc && desc->gdev && gpiod_free_commit(desc)) {
 		module_put(desc->gdev->owner);
 		put_device(&desc->gdev->dev);
@@ -2274,6 +2294,8 @@ EXPORT_SYMBOL_GPL(gpiochip_free_own_desc);
 static int gpio_do_set_config(struct gpio_chip *gc, unsigned int offset,
 			      unsigned long config)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (!gc->set_config)
 		return -ENOTSUPP;
 
@@ -2333,6 +2355,8 @@ int gpiod_direction_input(struct gpio_desc *desc)
 {
 	struct gpio_chip	*gc;
 	int			ret = 0;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	VALIDATE_DESC(desc);
 	gc = desc->gdev->chip;
@@ -2451,6 +2475,8 @@ EXPORT_SYMBOL_GPL(gpiod_direction_output_raw);
 int gpiod_direction_output(struct gpio_desc *desc, int value)
 {
 	int ret;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	VALIDATE_DESC(desc);
 	if (test_bit(FLAG_ACTIVE_LOW, &desc->flags))
@@ -2577,6 +2603,8 @@ EXPORT_SYMBOL_GPL(gpiod_timestamp_read);
 int gpiod_set_config(struct gpio_desc *desc, unsigned long config)
 {
 	struct gpio_chip *gc;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	VALIDATE_DESC(desc);
 	gc = desc->gdev->chip;
@@ -2707,6 +2735,8 @@ static int gpiod_get_raw_value_commit(const struct gpio_desc *desc)
 static int gpio_chip_get_multiple(struct gpio_chip *gc,
 				  unsigned long *mask, unsigned long *bits)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (gc->get_multiple) {
 		return gc->get_multiple(gc, mask, bits);
 	} else if (gc->get) {
@@ -2730,6 +2760,8 @@ int gpiod_get_array_value_complex(bool raw, bool can_sleep,
 				  unsigned long *value_bitmap)
 {
 	int ret, i = 0;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	/*
 	 * Validate array_info against desc_array and its size.
@@ -2858,6 +2890,8 @@ int gpiod_get_value(const struct gpio_desc *desc)
 {
 	int value;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	VALIDATE_DESC(desc);
 	/* Should be using gpiod_get_value_cansleep() */
 	WARN_ON(desc->gdev->chip->can_sleep);
@@ -2918,6 +2952,8 @@ int gpiod_get_array_value(unsigned int array_size,
 			  struct gpio_array *array_info,
 			  unsigned long *value_bitmap)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (!desc_array)
 		return -EINVAL;
 	return gpiod_get_array_value_complex(false, false, array_size,
@@ -3016,6 +3052,8 @@ int gpiod_set_array_value_complex(bool raw, bool can_sleep,
 				  unsigned long *value_bitmap)
 {
 	int i = 0;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	/*
 	 * Validate array_info against desc_array and its size.
@@ -3163,6 +3201,8 @@ static void gpiod_set_value_nocheck(struct gpio_desc *desc, int value)
  */
 void gpiod_set_value(struct gpio_desc *desc, int value)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	VALIDATE_DESC_VOID(desc);
 	/* Should be using gpiod_set_value_cansleep() */
 	WARN_ON(desc->gdev->chip->can_sleep);
@@ -3213,6 +3253,8 @@ int gpiod_set_array_value(unsigned int array_size,
 			  struct gpio_array *array_info,
 			  unsigned long *value_bitmap)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (!desc_array)
 		return -EINVAL;
 	return gpiod_set_array_value_complex(false, false, array_size,
@@ -3240,6 +3282,8 @@ EXPORT_SYMBOL_GPL(gpiod_cansleep);
  */
 int gpiod_set_consumer_name(struct gpio_desc *desc, const char *name)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	VALIDATE_DESC(desc);
 	if (name) {
 		name = kstrdup_const(name, GFP_KERNEL);
@@ -3265,6 +3309,8 @@ int gpiod_to_irq(const struct gpio_desc *desc)
 {
 	struct gpio_chip *gc;
 	int offset;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	/*
 	 * Cannot VALIDATE_DESC() here as gpiod_to_irq() consumer semantics
@@ -3372,6 +3418,8 @@ void gpiochip_disable_irq(struct gpio_chip *gc, unsigned int offset)
 {
 	struct gpio_desc *desc = gpiochip_get_desc(gc, offset);
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (!IS_ERR(desc) &&
 	    !WARN_ON(!test_bit(FLAG_USED_AS_IRQ, &desc->flags)))
 		clear_bit(FLAG_IRQ_IS_ENABLED, &desc->flags);
@@ -3381,6 +3429,8 @@ EXPORT_SYMBOL_GPL(gpiochip_disable_irq);
 void gpiochip_enable_irq(struct gpio_chip *gc, unsigned int offset)
 {
 	struct gpio_desc *desc = gpiochip_get_desc(gc, offset);
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	if (!IS_ERR(desc) &&
 	    !WARN_ON(!test_bit(FLAG_USED_AS_IRQ, &desc->flags))) {
@@ -3397,6 +3447,8 @@ EXPORT_SYMBOL_GPL(gpiochip_enable_irq);
 
 bool gpiochip_line_is_irq(struct gpio_chip *gc, unsigned int offset)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (offset >= gc->ngpio)
 		return false;
 
@@ -3430,6 +3482,8 @@ EXPORT_SYMBOL_GPL(gpiochip_relres_irq);
 
 bool gpiochip_line_is_open_drain(struct gpio_chip *gc, unsigned int offset)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (offset >= gc->ngpio)
 		return false;
 
@@ -3439,6 +3493,8 @@ EXPORT_SYMBOL_GPL(gpiochip_line_is_open_drain);
 
 bool gpiochip_line_is_open_source(struct gpio_chip *gc, unsigned int offset)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (offset >= gc->ngpio)
 		return false;
 
@@ -3448,6 +3504,8 @@ EXPORT_SYMBOL_GPL(gpiochip_line_is_open_source);
 
 bool gpiochip_line_is_persistent(struct gpio_chip *gc, unsigned int offset)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (offset >= gc->ngpio)
 		return false;
 
@@ -3484,6 +3542,8 @@ EXPORT_SYMBOL_GPL(gpiod_get_raw_value_cansleep);
 int gpiod_get_value_cansleep(const struct gpio_desc *desc)
 {
 	int value;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	might_sleep_if(extra_checks);
 	VALIDATE_DESC(desc);
@@ -3542,6 +3602,8 @@ int gpiod_get_array_value_cansleep(unsigned int array_size,
 				   struct gpio_array *array_info,
 				   unsigned long *value_bitmap)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	might_sleep_if(extra_checks);
 	if (!desc_array)
 		return -EINVAL;
@@ -3581,6 +3643,8 @@ EXPORT_SYMBOL_GPL(gpiod_set_raw_value_cansleep);
  */
 void gpiod_set_value_cansleep(struct gpio_desc *desc, int value)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	might_sleep_if(extra_checks);
 	VALIDATE_DESC_VOID(desc);
 	gpiod_set_value_nocheck(desc, value);
@@ -3646,6 +3710,8 @@ int gpiod_set_array_value_cansleep(unsigned int array_size,
 				   struct gpio_array *array_info,
 				   unsigned long *value_bitmap)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	might_sleep_if(extra_checks);
 	if (!desc_array)
 		return -EINVAL;
@@ -3748,6 +3814,8 @@ static struct gpio_desc *gpiod_find(struct device *dev, const char *con_id,
 	struct gpiod_lookup_table *table;
 	struct gpiod_lookup *p;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	table = gpiod_find_lookup_table(dev);
 	if (!table)
 		return desc;
@@ -3813,6 +3881,8 @@ static int platform_gpio_count(struct device *dev, const char *con_id)
 	struct gpiod_lookup *p;
 	unsigned int count = 0;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	table = gpiod_find_lookup_table(dev);
 	if (!table)
 		return -ENOENT;
@@ -3858,6 +3928,8 @@ struct gpio_desc *fwnode_gpiod_get_index(struct fwnode_handle *fwnode,
 	char prop_name[32]; /* 32 is max size of property name */
 	unsigned int i;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	for (i = 0; i < ARRAY_SIZE(gpio_suffixes); i++) {
 		if (con_id)
 			snprintf(prop_name, sizeof(prop_name), "%s-%s",
@@ -3886,6 +3958,8 @@ int gpiod_count(struct device *dev, const char *con_id)
 {
 	int count = -ENOENT;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	if (IS_ENABLED(CONFIG_OF) && dev && dev->of_node)
 		count = of_gpio_get_count(dev, con_id);
 	else if (IS_ENABLED(CONFIG_ACPI) && dev && ACPI_HANDLE(dev))
@@ -3911,6 +3985,8 @@ EXPORT_SYMBOL_GPL(gpiod_count);
 struct gpio_desc *__must_check gpiod_get(struct device *dev, const char *con_id,
 					 enum gpiod_flags flags)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	return gpiod_get_index(dev, con_id, 0, flags);
 }
 EXPORT_SYMBOL_GPL(gpiod_get);
@@ -3950,6 +4026,8 @@ int gpiod_configure_flags(struct gpio_desc *desc, const char *con_id,
 		unsigned long lflags, enum gpiod_flags dflags)
 {
 	int ret;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	if (lflags & GPIO_ACTIVE_LOW)
 		set_bit(FLAG_ACTIVE_LOW, &desc->flags);
@@ -4412,6 +4490,8 @@ void gpiod_put_array(struct gpio_descs *descs)
 {
 	unsigned int i;
 
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+
 	for (i = 0; i < descs->ndescs; i++)
 		gpiod_put(descs->desc[i]);
 
@@ -4422,6 +4502,8 @@ EXPORT_SYMBOL_GPL(gpiod_put_array);
 static int __init gpiolib_dev_init(void)
 {
 	int ret;
+
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	/* Register GPIO sysfs bus */
 	ret = bus_register(&gpio_bus_type);

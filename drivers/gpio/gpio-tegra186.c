@@ -237,37 +237,12 @@ struct tegra_gpio {
 uint64_t gpio_vpa = 0;
 EXPORT_SYMBOL_GPL(gpio_vpa);
 
-// a variable and a function to allow proxy drivers to cpy a preset gpio to themselves
-struct semaphore sem_gpio, sem_driver;
-struct semaphore *copy_sem_gpio = &sem_gpio;
-struct semaphore *copy_sem_driver = &sem_driver;
-uint64_t gpio_ready_flag = 0;
-uint64_t driver_ready_flag = 0;
-static struct tegra_gpio preset_gpio_local[2];
-EXPORT_SYMBOL_GPL(copy_sem_gpio);
-EXPORT_SYMBOL_GPL(copy_sem_driver);
-EXPORT_SYMBOL_GPL(gpio_ready_flag);
-EXPORT_SYMBOL_GPL(driver_ready_flag);
+// structures to synchronise get_tegra186_gpio_driver()
+// it allows proxy drivers to copy preset gpio and driver to themselves
+static DECLARE_COMPLETION(gpio_data_ready);
+static DEFINE_SPINLOCK(gpio_data_lock);
 
-void * get_preset_gpio(struct tegra_gpio *get, int n)
-{ 
-	void *ret;
-	int err;
-	
-	if ( n < 0 || n > 1 ) {
-		printk(KERN_ERR "Debug gpio parameter error in function %s, file %s", __func__, __FILE__);
-		// return -EINVAL;
-	}
-	
-	printk(KERN_DEBUG "Debug getting gpio %d in function %s, file %s", preset_gpio_local->gpio.label[n], __func__, __FILE__);
-	
-	if((err=down_interruptible(copy_sem_gpio)))
-		printk(KERN_DEBUG "Semaphore error %d in %s", err, __func__);
-	ret = memcpy(get, &preset_gpio_local[n], sizeof(struct tegra_gpio));
-	up(copy_sem_gpio);
-	return ret;
-}
-EXPORT_SYMBOL_GPL(get_preset_gpio);
+static struct tegra_gpio preset_gpio_local[2];
 
 /*************************** GTE related code ********************/
 
@@ -1207,7 +1182,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	int ret;
 	int value;
 	void __iomem *base;
-	int n;
+	int n, gpio_ready = 0;
 
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
@@ -1463,16 +1438,28 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
 	// these ifdefs do not define host and guest kernel module code
 	// but common code in the stock 'tegra186-gpio' -- it is compiled if module is set in .config
-	// TODO: we actually have two gpio chips -- this probe function will be called twice.
 	
+	// we actually have two gpio chips -- this probe function will be called twice.
 	// copy set value to ready export
-	if(down_interruptible(copy_sem_gpio))
-		printk(KERN_ERR "Semaphore error %s, file %s", __func__, __FILE__);
-	n = ( gpio->gpio.label = "gpiochip0" ) ? 1 : 2;
-	gpio_ready_flag = gpio_ready_flag | n;
-	memcpy(&preset_gpio_local[n-1],  gpio, sizeof(struct tegra_gpio));
-	up(copy_sem_gpio);
-	printk(KERN_DEBUG "Debug gpio preset_gpio exported %s, file %s", __func__, __FILE__);
+	if ( ! strcmp(gpio->gpio.label,"tegra234-gpio") ) {
+		n = 0;
+		gpio_ready += 1;
+	}
+	else if ( ! strcmp(gpio->gpio.label,"tegra234-gpio-aon") ) {
+		n = 1;
+		gpio_ready += 1;
+	}
+	else { 
+		printk(KERN_ERR "Can't match gpio chip label, in %s, file %s", __func__, __FILE__);
+	}
+	if ( gpio_ready > 2 )
+		printk(KERN_ERR "Found too many chips, in %s, file %s", __func__, __FILE__);
+
+	memcpy(&preset_gpio_local[n],  gpio, sizeof(struct tegra_gpio));
+	if ( gpio_ready == 2 )
+		complete(&gpio_data_ready);
+
+	printk(KERN_DEBUG "Debug gpio preset_gpio %s exported in %s, file %s", gpio->gpio.label, __func__, __FILE__);
 	#endif
 
 	return 0;
@@ -1856,23 +1843,40 @@ static struct platform_driver tegra186_gpio_driver = {
 	.remove = tegra186_gpio_remove,
 };
 
-	// TODO: we actually have two gpio chips
-	// -- the probe function will be called twice.
+// this functon will terminate only when both chips are set up in preset_gpio_local
+// we assume that implies tegra186_gpio_driver is set up
 void * get_tegra186_gpio_driver(struct platform_driver *cpy) {
+	unsigned long flags;
 	void *ret;
-	int err;
-	
-	printk(KERN_DEBUG "Debug getting gpio_driver in function %s, file %s", __func__, __FILE__);
 
-	if((err=down_interruptible(copy_sem_driver)))
-		printk(KERN_DEBUG "Semaphore error %d in %s", err, __func__);
+	printk(KERN_INFO "Copying gpio_driver in function %s, file %s", __func__, __FILE__);
+
+	wait_for_completion(&gpio_data_ready);
+	spin_lock_irqsave(&gpio_data_lock, flags);	// calling spinlock is redundant. No collision would occur.
 	ret = memcpy(cpy, &tegra186_gpio_driver, sizeof(struct platform_driver));
-	driver_ready_flag = 1;
-	up(copy_sem_driver);
-
+	spin_unlock_irqrestore(&gpio_data_lock, flags);
 	return ret;
 }
 EXPORT_SYMBOL_GPL(get_tegra186_gpio_driver);
+
+void * get_preset_gpio(struct tegra_gpio *get)
+{
+	unsigned long flags;
+	void *ret;
+	
+	printk(KERN_DEBUG "Debug probing gpio %s and %s, in function %s, file %s", &preset_gpio_local->gpio.label[0], &preset_gpio_local->gpio.label[1], __func__, __FILE__);
+	
+	wait_for_completion(&gpio_data_ready);
+	spin_lock_irqsave(&gpio_data_lock, flags);
+	// TODO	
+	// instead of memcpy we should transfer this over a char device
+	// in the future the char device can virtualise data between host and qemu guest
+	ret = memcpy(get, preset_gpio_local, sizeof(struct tegra_gpio) * 2);
+	spin_unlock_irqrestore(&gpio_data_lock, flags);
+	return ret;
+}
+EXPORT_SYMBOL_GPL(get_preset_gpio);
+
 
 // module_platform_driver(tegra186_gpio_driver);
 builtin_platform_driver(tegra186_gpio_driver);
