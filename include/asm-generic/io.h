@@ -90,6 +90,7 @@ static inline u16 __raw_readw(const volatile void __iomem *addr)
 #define __raw_readl __raw_readl
 static inline u32 __raw_readl(const volatile void __iomem *addr)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	return *(const volatile u32 __force *)addr;
 }
 #endif
@@ -124,6 +125,7 @@ static inline void __raw_writew(u16 value, volatile void __iomem *addr)
 #define __raw_writel __raw_writel
 static inline void __raw_writel(u32 value, volatile void __iomem *addr)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	*(volatile u32 __force *)addr = value;
 }
 #endif
@@ -296,6 +298,7 @@ static inline void writew_relaxed(u16 value, volatile void __iomem *addr)
 #define writel_relaxed writel_relaxed
 static inline void writel_relaxed(u32 value, volatile void __iomem *addr)
 {
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	__raw_writel(__cpu_to_le32(value), addr);
 }
 #endif

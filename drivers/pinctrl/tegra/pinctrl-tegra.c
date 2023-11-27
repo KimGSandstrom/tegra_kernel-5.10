@@ -36,15 +36,13 @@
 
 static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
 {
-	// removed because it is repeated too often
-	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	return readl(pmx->regs[bank] + reg);
 }
 
 static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 {
-	// removed because it is repeated too often
-	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	writel_relaxed(val, pmx->regs[bank] + reg);
 	/* make sure pinmux register write completed */
 	pmx_readl(pmx, bank, reg);

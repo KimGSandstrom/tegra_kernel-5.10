@@ -140,7 +140,7 @@ struct gpio_desc *gpiochip_get_desc(struct gpio_chip *gc,
 {
 	struct gpio_device *gdev = gc->gpiodev;
 
-	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 
 	if (hwnum >= gdev->ngpio)
 		return ERR_PTR(-EINVAL);
