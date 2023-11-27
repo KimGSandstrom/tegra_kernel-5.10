@@ -34,17 +34,47 @@
 #define EMMC_DPD_PARKING(x)		(x << EMMC_PARKING_BIT)
 #define EMMC_PARKING_SET		0x1FFF
 
+struct tegra_pmx *tegra_gpio_host = NULL;
+EXPORT_SYMBOL_GPL(tegra_gpio_host);
+
+int (*tegra_gpio_readl_redirect)(void __iomem *) = NULL;
+int (*tegra_gpio_writel_redirect)(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg) = NULL;
+int tegra_gpio_outloud = 0;
+uint64_t gpio_vpa = 0;
+
+EXPORT_SYMBOL_GPL(tegra_gpio_readl_redirect);
+EXPORT_SYMBOL_GPL(tegra_gpio_writel_redirect);
+EXPORT_SYMBOL_GPL(tegra_gpio_outloud);
+EXPORT_SYMBOL_GPL(gpio_vpa);
+
+#define EXTREME_VERBOSE
+
 static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
 {
-	// removed because it is repeated too often
-	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#ifdef EXTREME_VERBOSE
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
+
+	// redirect request to virtio module
+	if (tegra_gpio_readl_redirect)
+		return tegra_gpio_readl_redirect(pmx->regs[bank] + reg);
+
 	return readl(pmx->regs[bank] + reg);
 }
 
 static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 {
-	// removed because it is repeated too often
-	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#ifdef EXTREME_VERBOSE
+	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
+
+	// redirect request to virtio module
+	if (tegra_gpio_writel_redirect && tegra_gpio_readl_redirect) {
+		tegra_gpio_writel_redirect(val, pmx->regs[bank] + reg);
+		/* make sure pinmux register write completed */
+		return tegra_gpio_readl_redirect(pmx->regs[bank] + reg);
+	}
+
 	writel_relaxed(val, pmx->regs[bank] + reg);
 	/* make sure pinmux register write completed */
 	pmx_readl(pmx, bank, reg);
@@ -54,8 +84,10 @@ static int tegra_pinctrl_get_groups_count(struct pinctrl_dev *pctldev)
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
+	#ifdef EXTREME_VERBOSE
 	// printk removed because it is executed to often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	return pmx->soc->ngroups;
 }
 
@@ -64,8 +96,10 @@ static const char *tegra_pinctrl_get_group_name(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
+	#ifdef EXTREME_VERBOSE
 	// printk removed because it is executed to often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	return pmx->soc->groups[group].name;
 }
 
@@ -76,8 +110,10 @@ static int tegra_pinctrl_get_group_pins(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
+	#ifdef EXTREME_VERBOSE
 	// printk removed because it is executed to often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	*pins = pmx->soc->groups[group].pins;
 	*num_pins = pmx->soc->groups[group].npins;
 
@@ -89,7 +125,9 @@ static void tegra_pinctrl_pin_dbg_show(struct pinctrl_dev *pctldev,
 				       struct seq_file *s,
 				       unsigned offset)
 {
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	seq_printf(s, " %s", dev_name(pctldev->dev));
 }
 #endif
@@ -136,7 +174,9 @@ static int tegra_pinctrl_dt_subnode_to_map(struct pinctrl_dev *pctldev,
 	struct property *prop;
 	const char *group;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	ret = of_property_read_string(np, "nvidia,function", &function);
 	if (ret < 0) {
@@ -214,7 +254,9 @@ static int tegra_pinctrl_dt_node_to_map(struct pinctrl_dev *pctldev,
 	struct device_node *np;
 	int ret;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	reserved_maps = 0;
 	*map = NULL;
@@ -249,8 +291,10 @@ static int tegra_pinctrl_get_funcs_count(struct pinctrl_dev *pctldev)
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
+	#ifdef EXTREME_VERBOSE
 	// printk removed because it is executed to often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	return pmx->soc->nfunctions;
 }
 
@@ -259,8 +303,10 @@ static const char *tegra_pinctrl_get_func_name(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
+	#ifdef EXTREME_VERBOSE
 	// printk removed because it is executed to often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	return pmx->soc->functions[function].name;
 }
 
@@ -271,7 +317,9 @@ static int tegra_pinctrl_get_func_groups(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	*groups = pmx->soc->functions[function].groups;
 	*num_groups = pmx->soc->functions[function].ngroups;
 
@@ -287,7 +335,9 @@ static int tegra_pinctrl_set_mux(struct pinctrl_dev *pctldev,
 	int i;
 	u32 val;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	g = &pmx->soc->groups[group];
 
 	if (WARN_ON(g->mux_reg < 0))
@@ -321,7 +371,9 @@ static int tegra_pinctrl_gpio_save_config(struct pinctrl_dev *pctldev,
 	const unsigned *pins;
 	int ret;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	for (group = 0; group < pmx->soc->ngroups; ++group) {
 		ret = tegra_pinctrl_get_group_pins(pctldev, group, &pins, &num_pins);
@@ -353,7 +405,9 @@ static int tegra_pinctrl_gpio_restore_config(struct pinctrl_dev *pctldev,
 	const unsigned *pins;
 	int ret;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	for (group = 0; group < pmx->soc->ngroups; ++group) {
 		ret = tegra_pinctrl_get_group_pins(pctldev, group, &pins, &num_pins);
@@ -383,7 +437,9 @@ static const struct tegra_pingroup *tegra_pinctrl_get_group(struct pinctrl_dev *
        const unsigned int *pins;
        int ret;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
        for (group = 0; group < pmx->soc->ngroups; ++group) {
                ret = tegra_pinctrl_get_group_pins(pctldev, group, &pins, &num_pins);
@@ -411,7 +467,9 @@ static int tegra_pinctrl_gpio_request_enable(struct pinctrl_dev *pctldev,
 	u32 value;
 	int ret;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	ret = tegra_pinctrl_gpio_save_config(pctldev, range, offset);
 	if (ret)
@@ -445,7 +503,9 @@ static void tegra_pinctrl_gpio_disable_free(struct pinctrl_dev *pctldev,
 					    struct pinctrl_gpio_range *range,
 					    unsigned int offset)
 {		
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	tegra_pinctrl_gpio_restore_config(pctldev, range, offset);
 }
 
@@ -455,7 +515,9 @@ static int tegra_pinctrl_gpio_set_input(struct tegra_pmx *pmx,
 {
 	u32 value;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	if (group->einput_bit < 0)
 		return 0;
@@ -481,7 +543,9 @@ static int tegra_pinctrl_gpio_set_tristate(struct tegra_pmx *pmx,
 {
 	u32 value;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	if (group->tri_bank < 0 || group->tri_reg < 0 || group->tri_bit < 0)
 		return -EINVAL;
@@ -506,7 +570,9 @@ static int tegra_pinctrl_gpio_set_direction(struct pinctrl_dev *pctldev,
 	const struct tegra_pingroup *group;
 	int ret;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	group = tegra_pinctrl_get_group(pctldev, offset);
 	if (!group)
@@ -543,7 +609,9 @@ static int tegra_pinconf_reg(struct tegra_pmx *pmx,
 			     bool report_err,
 			     s8 *bank, s32 *reg, s8 *bit, s8 *width)
 {
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	switch (param) {
 	case TEGRA_PINCONF_PARAM_PULL:
@@ -699,7 +767,9 @@ static int tegra_pinconf_reg(struct tegra_pmx *pmx,
 static int tegra_pinconf_get(struct pinctrl_dev *pctldev,
 			     unsigned pin, unsigned long *config)
 {
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	dev_err(pctldev->dev, "pin_config_get op not supported\n");
 	return -ENOTSUPP;
 }
@@ -708,7 +778,9 @@ static int tegra_pinconf_set(struct pinctrl_dev *pctldev,
 			     unsigned pin, unsigned long *configs,
 			     unsigned num_configs)
 {
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	dev_err(pctldev->dev, "pin_config_set op not supported\n");
 	return -ENOTSUPP;
 }
@@ -725,7 +797,9 @@ static int tegra_pinconf_group_get(struct pinctrl_dev *pctldev,
 	s32 reg;
 	u32 val, mask;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	g = &pmx->soc->groups[group];
 
@@ -760,7 +834,9 @@ static int tegra_pinconf_group_set(struct pinctrl_dev *pctldev,
 	s32 reg;
 	u32 val, mask;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	g = &pmx->soc->groups[group];
 
@@ -813,13 +889,17 @@ static int tegra_pinconf_group_set(struct pinctrl_dev *pctldev,
 static void tegra_pinconf_dbg_show(struct pinctrl_dev *pctldev,
 				   struct seq_file *s, unsigned offset)
 {
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 }
 
 static const char *strip_prefix(const char *s)
 {
 	const char *comma = strchr(s, ',');
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	if (!comma)
 		return s;
 
@@ -837,7 +917,9 @@ static void tegra_pinconf_group_dbg_show(struct pinctrl_dev *pctldev,
 	u32 val;
 	u8 idx;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	g = &pmx->soc->groups[group];
 
@@ -871,7 +953,9 @@ static void tegra_pinconf_config_dbg_show(struct pinctrl_dev *pctldev,
 	const char *pname = "unknown";
 	int i;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	for (i = 0; i < ARRAY_SIZE(cfg_params); i++) {
 		if (cfg_params[i].param == param) {
@@ -915,7 +999,9 @@ static void tegra_pinctrl_clear_parked_bits(struct tegra_pmx *pmx)
 	const struct tegra_pingroup *g;
 	u32 val;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	for (i = 0; i < pmx->soc->ngroups; ++i) {
 		g = &pmx->soc->groups[i];
@@ -943,7 +1029,9 @@ static size_t tegra_pinctrl_get_bank_size(struct device *dev,
 	struct platform_device *pdev = to_platform_device(dev);
 	struct resource *res;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, bank_id);
 
@@ -958,7 +1046,9 @@ static int tegra_pinctrl_suspend(struct device *dev)
 	size_t bank_size;
 	unsigned int i, k;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	for (i = 0; i < pmx->nbanks; i++) {
 		bank_size = tegra_pinctrl_get_bank_size(dev, i);
@@ -978,7 +1068,9 @@ static int tegra_pinctrl_resume(struct device *dev)
 	size_t bank_size;
 	unsigned int i, k;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	for (i = 0; i < pmx->nbanks; i++) {
 		bank_size = tegra_pinctrl_get_bank_size(dev, i);
@@ -1019,7 +1111,9 @@ static bool tegra_pinctrl_gpio_node_has_range(struct tegra_pmx *pmx)
 	struct device_node *np;
 	bool has_prop = false;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	if (of_property_read_bool(dev->of_node, "#gpio-range-cells"))
 		return true;
@@ -1035,24 +1129,50 @@ static bool tegra_pinctrl_gpio_node_has_range(struct tegra_pmx *pmx)
 	return has_prop;
 }
 
+int my_tegra_pinctrl_probe(struct platform_device *pdev,
+			const struct tegra_pinctrl_soc_data *soc_data)
+{
+}
+
 int tegra_pinctrl_probe(struct platform_device *pdev,
 			const struct tegra_pinctrl_soc_data *soc_data)
 {
 	struct tegra_pmx *pmx;
 	struct resource *res;
-	int i;
+	int err, i;
 	const char **group_pins;
 	int fn, gn, gfn;
 	unsigned long backup_regs_size = 0;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	pmx = devm_kzalloc(&pdev->dev, sizeof(*pmx), GFP_KERNEL);
 	if (!pmx)
 		return -ENOMEM;
 
+	// we can set tegra_gpio_host as soon as we have the pointer
+	tegra_gpio_host = pmx;
+
 	pmx->dev = &pdev->dev;
 	pmx->soc = soc_data;
+
+// TODO: not sure this code segment goes exactly here
+// either in tegra_pinctrl_probe in drivers/pinctrl/tegra/pinctrl-tegra.c
+// or tegra186_gpio_probe in drivers/gpio/gpio-tegra186.c 
+	#ifdef CONFIG_TEGRA_GPIO_GUEST_PROXY
+	// If virtual-pa node is defined, it means that we are using a virtual GPIO
+	// then we have to initialise the gpio-guest
+// TODO still bpmp vars here
+	err = of_property_read_u64(bpmp->dev->of_node, "virtual-pa", &gpio_vpa);
+	if(!err){
+		#ifdef EXTREME_VERBOSE
+		printk("GPIO virtual-pa: 0x%llX", gpio_vpa);
+		#endif	
+		return tegra_gpio_guest_init();
+	}
+	#endif
 
 	/*
 	 * Each mux group will appear in 4 functions' list of groups.

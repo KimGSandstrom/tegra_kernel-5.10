@@ -1874,7 +1874,9 @@ static const struct tegra_pinctrl_soc_data tegra194_pinctrl = {
 
 static int tegra194_pinctrl_probe(struct platform_device *pdev)
 {
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	return tegra_pinctrl_probe(pdev, &tegra194_pinctrl);
 }
 
@@ -1893,7 +1895,9 @@ static struct platform_driver tegra194_pinctrl_driver = {
 
 static int __init tegra194_pinctrl_init(void)
 {
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	return platform_driver_register(&tegra194_pinctrl_driver);
 }
 arch_initcall(tegra194_pinctrl_init);

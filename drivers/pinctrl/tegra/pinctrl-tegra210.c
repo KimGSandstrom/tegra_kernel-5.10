@@ -1751,7 +1751,9 @@ static int tegra210_pinctrl_probe(struct platform_device *pdev)
 	struct tegra_pingroup *g;
 	int i;
 
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 
 	soc = of_device_get_match_data(&pdev->dev);
 	if (soc->lpdr_support) {
@@ -1795,7 +1797,9 @@ static struct platform_driver tegra210_pinctrl_driver = {
 
 static int __init tegra210_pinctrl_init(void)
 {
+	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	#endif
 	return platform_driver_register(&tegra210_pinctrl_driver);
 }
 arch_initcall(tegra210_pinctrl_init);
