@@ -37,10 +37,11 @@
 struct tegra_pmx *tegra_gpio_host = NULL;
 EXPORT_SYMBOL_GPL(tegra_gpio_host);
 
-int (*tegra_gpio_readl_redirect)(void __iomem *) = NULL;
-int (*tegra_gpio_writel_redirect)(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg) = NULL;
+u32 (*tegra_gpio_readl_redirect)(void __iomem *) = NULL;
+void (*tegra_gpio_writel_redirect)(u32, void __iomem *) = NULL;
 int tegra_gpio_outloud = 0;
 uint64_t gpio_vpa = 0;
+extern int tegra_gpio_guest_init(void);
 
 EXPORT_SYMBOL_GPL(tegra_gpio_readl_redirect);
 EXPORT_SYMBOL_GPL(tegra_gpio_writel_redirect);
@@ -72,7 +73,8 @@ static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 	if (tegra_gpio_writel_redirect && tegra_gpio_readl_redirect) {
 		tegra_gpio_writel_redirect(val, pmx->regs[bank] + reg);
 		/* make sure pinmux register write completed */
-		return tegra_gpio_readl_redirect(pmx->regs[bank] + reg);
+		tegra_gpio_readl_redirect(pmx->regs[bank] + reg);
+		return;
 	}
 
 	writel_relaxed(val, pmx->regs[bank] + reg);
@@ -1132,6 +1134,7 @@ static bool tegra_pinctrl_gpio_node_has_range(struct tegra_pmx *pmx)
 int my_tegra_pinctrl_probe(struct platform_device *pdev,
 			const struct tegra_pinctrl_soc_data *soc_data)
 {
+	return 0;
 }
 
 int tegra_pinctrl_probe(struct platform_device *pdev,
@@ -1158,14 +1161,13 @@ int tegra_pinctrl_probe(struct platform_device *pdev,
 	pmx->dev = &pdev->dev;
 	pmx->soc = soc_data;
 
+	#ifdef CONFIG_TEGRA_GPIO_GUEST_PROXY
 // TODO: not sure this code segment goes exactly here
 // either in tegra_pinctrl_probe in drivers/pinctrl/tegra/pinctrl-tegra.c
 // or tegra186_gpio_probe in drivers/gpio/gpio-tegra186.c 
-	#ifdef CONFIG_TEGRA_GPIO_GUEST_PROXY
 	// If virtual-pa node is defined, it means that we are using a virtual GPIO
 	// then we have to initialise the gpio-guest
-// TODO still bpmp vars here
-	err = of_property_read_u64(bpmp->dev->of_node, "virtual-pa", &gpio_vpa);
+	err = of_property_read_u64(pmx->dev->of_node, "virtual-pa", &gpio_vpa);
 	if(!err){
 		#ifdef EXTREME_VERBOSE
 		printk("GPIO virtual-pa: 0x%llX", gpio_vpa);

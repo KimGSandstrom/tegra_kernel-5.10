@@ -236,6 +236,7 @@ struct tegra_gpio {
 
 uint64_t gpio_vpa = 0;
 EXPORT_SYMBOL_GPL(gpio_vpa);
+extern int tegra_gpio_guest_init(void);
 
 // structures to synchronise get_tegra186_gpio_driver()
 // it allows proxy drivers to copy preset gpio and driver to themselves
@@ -1158,7 +1159,6 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 			 * interrupts.
 			 */
 			for (j = 0; j < gpio->num_irqs_per_bank; j++) {
-				removed because it executes far too often
 				dev_dbg(dev, "programming default interrupt routing for port %s\n",
 					port->name);
 
@@ -1245,19 +1245,12 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	#ifdef CONFIG_TEGRA_GPIO_GUEST_PROXY
         // If virtual-pa node is defined, it means that we are using a virtual GPIO
         // then we have to initialize the gpio-guest
-        err = of_property_read_u64(pdev->dev.of_node, "virtual-pa", &gpio_vpa);
-        if(err){
-		printk(KERN_ERR "Error reading GPIO virtual-pa: %d", err);
-                return err;
-        }
-
-	// no initialisation needed for 'gpio' in guest
-	#ifdef EXTREME_VERBOSE
-	printk(KERN_DEBUG "Debug guest GPIO virtual-pa: 0x%llX", gpio_vpa);
-	#endif
-	return 0;
-	// these ifdefs do not define host and guest kernel module code
-	// but common code in the altered "stock" driver 'gpio-tegra186.c'
+	if(!err){
+		#ifdef EXTREME_VERBOSE
+		printk("GPIO virtual-pa: 0x%llX", gpio_vpa);
+		#endif	
+		return tegra_gpio_guest_init();
+	}
 	#endif
 
 	/* count the number of banks in the controller */
