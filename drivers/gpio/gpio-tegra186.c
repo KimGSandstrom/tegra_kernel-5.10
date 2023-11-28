@@ -551,7 +551,7 @@ static int tegra186_gpio_get_direction(struct gpio_chip *chip,
 
 	#ifdef EXTREME_VERBOSE
 	// removed because it is repeated too often
-	//printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
+	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
 	if (!gpio_is_accessible(gpio, offset))
@@ -1221,7 +1221,6 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	int ret;
 	int value;
 	void __iomem *base;
-	int n, gpio_ready = 0;
 
 	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
@@ -1239,16 +1238,14 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	if (IS_ERR(gpio->secure))
 		return PTR_ERR(gpio->secure);
 
+	#ifdef CONFIG_TEGRA_GPIO_GUEST_PROXY
 // TODO: not sure this code segment goes exactly here
 // either in tegra_pinctrl_probe in drivers/pinctrl/tegra/pinctrl-tegra.c
 // or tegra186_gpio_probe in drivers/gpio/gpio-tegra186.c 
-	#ifdef CONFIG_TEGRA_GPIO_GUEST_PROXY
         // If virtual-pa node is defined, it means that we are using a virtual GPIO
         // then we have to initialize the gpio-guest
 	if(!err){
-		#ifdef EXTREME_VERBOSE
 		printk("GPIO virtual-pa: 0x%llX", gpio_vpa);
-		#endif	
 		return tegra_gpio_guest_init();
 	}
 	#endif
@@ -1482,19 +1479,18 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	#ifdef EXTREME_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, initialised gpio->gte_regs at %p", __func__, gpio->gte_regs);
 	#endif
-
+/*
 	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
 	// these ifdefs do not define host and guest kernel module code
 	// but common code in the stock 'tegra186-gpio' -- it is compiled if module is set in .config
 	
 	// we actually have two gpio chips -- this probe function will be called twice.
 	// copy set value to ready export
+
 	if ( ! strcmp(gpio->gpio.label,"tegra234-gpio") ) {
-		n = 0;
 		gpio_ready += 1;
 	}
 	else if ( ! strcmp(gpio->gpio.label,"tegra234-gpio-aon") ) {
-		n = 1;
 		gpio_ready += 1;
 	}
 	else { 
@@ -1515,7 +1511,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	printk(KERN_DEBUG "Debug gpio preset_gpio %s exported in %s, file %s", gpio->gpio.label, __func__, __FILE__);
 	#endif
 	#endif
-
+*/
 	return 0;
 }
 

@@ -40,13 +40,12 @@ EXPORT_SYMBOL_GPL(tegra_gpio_host);
 u32 (*tegra_gpio_readl_redirect)(void __iomem *) = NULL;
 void (*tegra_gpio_writel_redirect)(u32, void __iomem *) = NULL;
 int tegra_gpio_outloud = 0;
-uint64_t gpio_vpa = 0;
+extern uint64_t gpio_vpa;
 extern int tegra_gpio_guest_init(void);
 
 EXPORT_SYMBOL_GPL(tegra_gpio_readl_redirect);
 EXPORT_SYMBOL_GPL(tegra_gpio_writel_redirect);
 EXPORT_SYMBOL_GPL(tegra_gpio_outloud);
-EXPORT_SYMBOL_GPL(gpio_vpa);
 
 #define EXTREME_VERBOSE
 
