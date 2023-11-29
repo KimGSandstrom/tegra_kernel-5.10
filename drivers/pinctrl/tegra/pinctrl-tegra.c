@@ -34,18 +34,18 @@
 #define EMMC_DPD_PARKING(x)		(x << EMMC_PARKING_BIT)
 #define EMMC_PARKING_SET		0x1FFF
 
-struct tegra_pmx *tegra_gpio_host = NULL;
-EXPORT_SYMBOL_GPL(tegra_gpio_host);
+struct tegra_pmx *pmx_host = NULL;
+EXPORT_SYMBOL_GPL(pmx_host);
 
-u32 (*tegra_gpio_readl_redirect)(void __iomem *) = NULL;
-void (*tegra_gpio_writel_redirect)(u32, void __iomem *) = NULL;
-int tegra_gpio_outloud = 0;
+u32 (*pmx_readl_redirect)(void __iomem *) = NULL;
+void (*pmx_writel_redirect)(u32, void __iomem *) = NULL;
+int pmx_outloud = 0;
 extern uint64_t gpio_vpa;
-extern int tegra_gpio_guest_init(void);
+extern int pmx_guest_init(void);
 
-EXPORT_SYMBOL_GPL(tegra_gpio_readl_redirect);
-EXPORT_SYMBOL_GPL(tegra_gpio_writel_redirect);
-EXPORT_SYMBOL_GPL(tegra_gpio_outloud);
+EXPORT_SYMBOL_GPL(pmx_readl_redirect);
+EXPORT_SYMBOL_GPL(pmx_writel_redirect);
+EXPORT_SYMBOL_GPL(pmx_outloud);
 
 #define EXTREME_VERBOSE
 
@@ -56,8 +56,8 @@ static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
 	#endif
 
 	// redirect request to virtio module
-	if (tegra_gpio_readl_redirect)
-		return tegra_gpio_readl_redirect(pmx->regs[bank] + reg);
+	if (pmx_readl_redirect)
+		return pmx_readl_redirect(pmx->regs[bank] + reg);
 
 	return readl(pmx->regs[bank] + reg);
 }
@@ -69,10 +69,10 @@ static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 	#endif
 
 	// redirect request to virtio module
-	if (tegra_gpio_writel_redirect && tegra_gpio_readl_redirect) {
-		tegra_gpio_writel_redirect(val, pmx->regs[bank] + reg);
+	if (pmx_writel_redirect && tegra_gpio_readl_redirect) {
+		pmx_writel_redirect(val, pmx->regs[bank] + reg);
 		/* make sure pinmux register write completed */
-		tegra_gpio_readl_redirect(pmx->regs[bank] + reg);
+		pmx_readl_redirect(pmx->regs[bank] + reg);
 		return;
 	}
 
@@ -1154,8 +1154,8 @@ int tegra_pinctrl_probe(struct platform_device *pdev,
 	if (!pmx)
 		return -ENOMEM;
 
-	// we can set tegra_gpio_host as soon as we have the pointer
-	tegra_gpio_host = pmx;
+	// we can set pmx_host as soon as we have the pointer
+	pmx_host = pmx;
 
 	pmx->dev = &pdev->dev;
 	pmx->soc = soc_data;
@@ -1171,7 +1171,7 @@ int tegra_pinctrl_probe(struct platform_device *pdev,
 		#ifdef EXTREME_VERBOSE
 		printk("GPIO virtual-pa: 0x%llX", gpio_vpa);
 		#endif	
-		return tegra_gpio_guest_init();
+		return pmx_guest_init();
 	}
 	#endif
 
