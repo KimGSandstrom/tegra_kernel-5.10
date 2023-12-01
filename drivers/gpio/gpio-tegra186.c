@@ -237,6 +237,7 @@ struct tegra_gpio {
 uint64_t gpio_vpa = 0;
 EXPORT_SYMBOL_GPL(gpio_vpa);
 extern int tegra_gpio_guest_init(void);
+extern int (*pmx_guest_init)(void);
 
 // structures to synchronise get_tegra186_gpio_driver()
 // it allows proxy drivers to copy preset gpio and driver to themselves
@@ -1239,14 +1240,19 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 		return PTR_ERR(gpio->secure);
 
 	#ifdef CONFIG_TEGRA_GPIO_GUEST_PROXY
-// TODO: not sure this code segment goes exactly here
-// either in tegra_pinctrl_probe in drivers/pinctrl/tegra/pinctrl-tegra.c
-// or tegra186_gpio_probe in drivers/gpio/gpio-tegra186.c 
-        // If virtual-pa node is defined, it means that we are using a virtual GPIO
-        // then we have to initialize the gpio-guest
+
+	// TODO: not sure this code segment goes exactly here
+	// either in tegra_pinctrl_probe in drivers/pinctrl/tegra/pinctrl-tegra.c
+	// or tegra186_gpio_probe in drivers/gpio/gpio-tegra186.c
+
+	// If virtual-pa node is defined, it means that we are using a virtual GPIO
+	// then we have to initialise the gpio-guest
+	err = of_property_read_u64(pdev->dev.of_node, "virtual-pa", &gpio_vpa);
 	if(!err){
+		#ifdef EXTREME_VERBOSE
 		printk("GPIO virtual-pa: 0x%llX", gpio_vpa);
-		return tegra_gpio_guest_init();
+		#endif	
+		return pmx_guest_init();
 	}
 	#endif
 

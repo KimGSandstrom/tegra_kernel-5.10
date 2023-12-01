@@ -34,18 +34,14 @@
 #define EMMC_DPD_PARKING(x)		(x << EMMC_PARKING_BIT)
 #define EMMC_PARKING_SET		0x1FFF
 
-struct tegra_pmx *pmx_host = NULL;
-EXPORT_SYMBOL_GPL(pmx_host);
+struct tegra_pmx *tegra_pmx_host = NULL;
+EXPORT_SYMBOL_GPL(tegra_pmx_host);
 
 u32 (*pmx_readl_redirect)(void __iomem *) = NULL;
 void (*pmx_writel_redirect)(u32, void __iomem *) = NULL;
 int pmx_outloud = 0;
 extern uint64_t gpio_vpa;
 extern int pmx_guest_init(void);
-
-EXPORT_SYMBOL_GPL(pmx_readl_redirect);
-EXPORT_SYMBOL_GPL(pmx_writel_redirect);
-EXPORT_SYMBOL_GPL(pmx_outloud);
 
 #define EXTREME_VERBOSE
 
@@ -69,7 +65,7 @@ static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 	#endif
 
 	// redirect request to virtio module
-	if (pmx_writel_redirect && tegra_gpio_readl_redirect) {
+	if (pmx_writel_redirect && pmx_readl_redirect) {
 		pmx_writel_redirect(val, pmx->regs[bank] + reg);
 		/* make sure pinmux register write completed */
 		pmx_readl_redirect(pmx->regs[bank] + reg);
@@ -80,6 +76,12 @@ static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 	/* make sure pinmux register write completed */
 	pmx_readl(pmx, bank, reg);
 }
+
+EXPORT_SYMBOL_GPL(pmx_readl_redirect);
+EXPORT_SYMBOL_GPL(pmx_writel_redirect);
+EXPORT_SYMBOL_GPL(pmx_readl);
+EXPORT_SYMBOL_GPL(pmx_writel);
+EXPORT_SYMBOL_GPL(pmx_outloud);
 
 static int tegra_pinctrl_get_groups_count(struct pinctrl_dev *pctldev)
 {
@@ -1154,16 +1156,15 @@ int tegra_pinctrl_probe(struct platform_device *pdev,
 	if (!pmx)
 		return -ENOMEM;
 
-	// we can set pmx_host as soon as we have the pointer
-	pmx_host = pmx;
-
 	pmx->dev = &pdev->dev;
 	pmx->soc = soc_data;
 
 	#ifdef CONFIG_TEGRA_GPIO_GUEST_PROXY
-// TODO: not sure this code segment goes exactly here
-// either in tegra_pinctrl_probe in drivers/pinctrl/tegra/pinctrl-tegra.c
-// or tegra186_gpio_probe in drivers/gpio/gpio-tegra186.c 
+
+	// TODO: not sure this code segment goes exactly here
+	// either in tegra_pinctrl_probe in drivers/pinctrl/tegra/pinctrl-tegra.c
+	// or tegra186_gpio_probe in drivers/gpio/gpio-tegra186.c
+
 	// If virtual-pa node is defined, it means that we are using a virtual GPIO
 	// then we have to initialise the gpio-guest
 	err = of_property_read_u64(pmx->dev->of_node, "virtual-pa", &gpio_vpa);
@@ -1174,6 +1175,10 @@ int tegra_pinctrl_probe(struct platform_device *pdev,
 		return pmx_guest_init();
 	}
 	#endif
+
+	// we can set tegra_pmx_host as soon as we have the pointer
+	// this is set only in the host
+	tegra_pmx_host = pmx;
 
 	/*
 	 * Each mux group will appear in 4 functions' list of groups.
