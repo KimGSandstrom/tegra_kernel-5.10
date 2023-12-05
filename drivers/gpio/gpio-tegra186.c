@@ -1239,6 +1239,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	if (IS_ERR(gpio->secure))
 		return PTR_ERR(gpio->secure);
 
+	/* using code in pinctrl-tegra.c instead
 	#ifdef CONFIG_TEGRA_GPIO_GUEST_PROXY
 
 	#ifdef GPIO_VERBOSE
@@ -1259,6 +1260,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 		return tegra_gpio_guest_init();
 	}
 	#endif
+	*/
 
 	/* count the number of banks in the controller */
 	for (i = 0; i < gpio->soc->num_ports; i++)
