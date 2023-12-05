@@ -101,7 +101,7 @@ static struct tegra_gpio_info *gpio_info;
 static inline void tegra_gpio_writel(struct tegra_gpio_info *tgi,
 				     u32 val, u32 reg)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -110,7 +110,7 @@ static inline void tegra_gpio_writel(struct tegra_gpio_info *tgi,
 
 static inline u32 tegra_gpio_readl(struct tegra_gpio_info *tgi, u32 reg)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -120,7 +120,7 @@ static inline u32 tegra_gpio_readl(struct tegra_gpio_info *tgi, u32 reg)
 static unsigned int tegra_gpio_compose(unsigned int bank, unsigned int port,
 				       unsigned int bit)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -132,7 +132,7 @@ static void tegra_gpio_mask_write(struct tegra_gpio_info *tgi, u32 reg,
 {
 	u32 val;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -151,7 +151,7 @@ static void tegra_gpio_save_gpio_state(unsigned int gpio)
 	u32 mask = BIT(GPIO_BIT(gpio));
 	unsigned long flags;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -226,7 +226,7 @@ static void tegra_gpio_restore_gpio_state(unsigned int gpio)
 
 static void tegra_gpio_enable(struct tegra_gpio_info *tgi, unsigned int gpio)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -235,7 +235,7 @@ static void tegra_gpio_enable(struct tegra_gpio_info *tgi, unsigned int gpio)
 
 static int tegra_gpio_request(struct gpio_chip *chip, unsigned int offset)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -254,7 +254,7 @@ static void tegra_gpio_set(struct gpio_chip *chip, unsigned int offset,
 {
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -279,7 +279,7 @@ static int tegra_gpio_direction_input(struct gpio_chip *chip,
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -302,7 +302,7 @@ static int tegra_gpio_direction_output(struct gpio_chip *chip,
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -326,7 +326,7 @@ static int tegra_gpio_get_direction(struct gpio_chip *chip,
 	u32 pin_mask = BIT(GPIO_BIT(offset));
 	u32 cnf, oe;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -381,7 +381,7 @@ static int tegra_gpio_set_config(struct gpio_chip *chip, unsigned int offset,
 {
 	u32 debounce;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -396,7 +396,7 @@ static int tegra_gpio_to_irq(struct gpio_chip *chip, unsigned int offset)
 {
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -668,7 +668,7 @@ static int tegra_dbg_gpio_show(struct seq_file *s, void *unused)
 	x = ' ';
 	y = 'A';
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -705,7 +705,7 @@ DEFINE_SHOW_ATTRIBUTE(tegra_dbg_gpio);
 
 static void tegra_gpio_debuginit(struct tegra_gpio_info *tgi)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -728,7 +728,7 @@ static int tegra_gpio_probe(struct platform_device *pdev)
 	unsigned int gpio, i, j;
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -880,7 +880,7 @@ static struct platform_driver tegra_gpio_driver = {
 
 static int __init tegra_gpio_init(void)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 	return platform_driver_register(&tegra_gpio_driver);

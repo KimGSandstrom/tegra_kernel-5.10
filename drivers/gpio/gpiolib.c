@@ -140,7 +140,7 @@ struct gpio_desc *gpiochip_get_desc(struct gpio_chip *gc,
 {
 	struct gpio_device *gdev = gc->gpiodev;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -174,7 +174,7 @@ EXPORT_SYMBOL_GPL(desc_to_gpio);
  */
 struct gpio_chip *gpiod_to_chip(const struct gpio_desc *desc)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -222,7 +222,7 @@ int gpiod_get_direction(struct gpio_desc *desc)
 	unsigned offset;
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -470,7 +470,7 @@ static int gpiochip_add_pin_ranges(struct gpio_chip *gc)
 bool gpiochip_line_is_valid(const struct gpio_chip *gc,
 				unsigned int offset)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -486,7 +486,7 @@ static void gpiodevice_release(struct device *dev)
 	struct gpio_device *gdev = dev_get_drvdata(dev);
 	unsigned long flags;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -822,7 +822,7 @@ EXPORT_SYMBOL_GPL(gpiochip_add_data_with_key);
  */
 void *gpiochip_get_data(struct gpio_chip *gc)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -842,7 +842,7 @@ void gpiochip_remove(struct gpio_chip *gc)
 	unsigned long	flags;
 	unsigned int	i;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -903,7 +903,7 @@ struct gpio_chip *gpiochip_find(void *data,
 	struct gpio_chip *gc = NULL;
 	unsigned long flags;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2124,7 +2124,7 @@ int gpiod_request(struct gpio_desc *desc, const char *label)
 	int ret = -EPROBE_DEFER;
 	struct gpio_device *gdev;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2195,7 +2195,7 @@ static bool gpiod_free_commit(struct gpio_desc *desc)
 
 void gpiod_free(struct gpio_desc *desc)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2314,7 +2314,7 @@ EXPORT_SYMBOL_GPL(gpiochip_free_own_desc);
 static int gpio_do_set_config(struct gpio_chip *gc, unsigned int offset,
 			      unsigned long config)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2378,7 +2378,7 @@ int gpiod_direction_input(struct gpio_desc *desc)
 	struct gpio_chip	*gc;
 	int			ret = 0;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2500,7 +2500,7 @@ int gpiod_direction_output(struct gpio_desc *desc, int value)
 {
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2630,7 +2630,7 @@ int gpiod_set_config(struct gpio_desc *desc, unsigned long config)
 {
 	struct gpio_chip *gc;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2763,7 +2763,7 @@ static int gpiod_get_raw_value_commit(const struct gpio_desc *desc)
 static int gpio_chip_get_multiple(struct gpio_chip *gc,
 				  unsigned long *mask, unsigned long *bits)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2791,7 +2791,7 @@ int gpiod_get_array_value_complex(bool raw, bool can_sleep,
 {
 	int ret, i = 0;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2922,7 +2922,7 @@ int gpiod_get_value(const struct gpio_desc *desc)
 {
 	int value;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2986,7 +2986,7 @@ int gpiod_get_array_value(unsigned int array_size,
 			  struct gpio_array *array_info,
 			  unsigned long *value_bitmap)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3089,7 +3089,7 @@ int gpiod_set_array_value_complex(bool raw, bool can_sleep,
 {
 	int i = 0;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3239,7 +3239,7 @@ static void gpiod_set_value_nocheck(struct gpio_desc *desc, int value)
  */
 void gpiod_set_value(struct gpio_desc *desc, int value)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3293,7 +3293,7 @@ int gpiod_set_array_value(unsigned int array_size,
 			  struct gpio_array *array_info,
 			  unsigned long *value_bitmap)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3324,7 +3324,7 @@ EXPORT_SYMBOL_GPL(gpiod_cansleep);
  */
 int gpiod_set_consumer_name(struct gpio_desc *desc, const char *name)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3354,7 +3354,7 @@ int gpiod_to_irq(const struct gpio_desc *desc)
 	struct gpio_chip *gc;
 	int offset;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3464,7 +3464,7 @@ void gpiochip_disable_irq(struct gpio_chip *gc, unsigned int offset)
 {
 	struct gpio_desc *desc = gpiochip_get_desc(gc, offset);
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3478,7 +3478,7 @@ void gpiochip_enable_irq(struct gpio_chip *gc, unsigned int offset)
 {
 	struct gpio_desc *desc = gpiochip_get_desc(gc, offset);
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3497,7 +3497,7 @@ EXPORT_SYMBOL_GPL(gpiochip_enable_irq);
 
 bool gpiochip_line_is_irq(struct gpio_chip *gc, unsigned int offset)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3534,7 +3534,7 @@ EXPORT_SYMBOL_GPL(gpiochip_relres_irq);
 
 bool gpiochip_line_is_open_drain(struct gpio_chip *gc, unsigned int offset)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3547,7 +3547,7 @@ EXPORT_SYMBOL_GPL(gpiochip_line_is_open_drain);
 
 bool gpiochip_line_is_open_source(struct gpio_chip *gc, unsigned int offset)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3560,7 +3560,7 @@ EXPORT_SYMBOL_GPL(gpiochip_line_is_open_source);
 
 bool gpiochip_line_is_persistent(struct gpio_chip *gc, unsigned int offset)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3601,7 +3601,7 @@ int gpiod_get_value_cansleep(const struct gpio_desc *desc)
 {
 	int value;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3662,7 +3662,7 @@ int gpiod_get_array_value_cansleep(unsigned int array_size,
 				   struct gpio_array *array_info,
 				   unsigned long *value_bitmap)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3705,7 +3705,7 @@ EXPORT_SYMBOL_GPL(gpiod_set_raw_value_cansleep);
  */
 void gpiod_set_value_cansleep(struct gpio_desc *desc, int value)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3774,7 +3774,7 @@ int gpiod_set_array_value_cansleep(unsigned int array_size,
 				   struct gpio_array *array_info,
 				   unsigned long *value_bitmap)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3880,7 +3880,7 @@ static struct gpio_desc *gpiod_find(struct device *dev, const char *con_id,
 	struct gpiod_lookup_table *table;
 	struct gpiod_lookup *p;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3949,7 +3949,7 @@ static int platform_gpio_count(struct device *dev, const char *con_id)
 	struct gpiod_lookup *p;
 	unsigned int count = 0;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -3998,7 +3998,7 @@ struct gpio_desc *fwnode_gpiod_get_index(struct fwnode_handle *fwnode,
 	char prop_name[32]; /* 32 is max size of property name */
 	unsigned int i;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -4030,7 +4030,7 @@ int gpiod_count(struct device *dev, const char *con_id)
 {
 	int count = -ENOENT;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -4059,7 +4059,7 @@ EXPORT_SYMBOL_GPL(gpiod_count);
 struct gpio_desc *__must_check gpiod_get(struct device *dev, const char *con_id,
 					 enum gpiod_flags flags)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -4103,7 +4103,7 @@ int gpiod_configure_flags(struct gpio_desc *desc, const char *con_id,
 {
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -4568,7 +4568,7 @@ void gpiod_put_array(struct gpio_descs *descs)
 {
 	unsigned int i;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -4583,7 +4583,7 @@ static int __init gpiolib_dev_init(void)
 {
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 

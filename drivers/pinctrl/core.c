@@ -101,7 +101,7 @@ struct pinctrl_dev *get_pinctrl_dev_from_devname(const char *devname)
 {
 	struct pinctrl_dev *pctldev;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because prints too often 
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -128,7 +128,7 @@ struct pinctrl_dev *get_pinctrl_dev_from_of_node(struct device_node *np)
 {
 	struct pinctrl_dev *pctldev;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it prints too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -155,7 +155,7 @@ int pin_get_from_name(struct pinctrl_dev *pctldev, const char *name)
 {
 	unsigned i, pin;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -182,7 +182,7 @@ const char *pin_get_name(struct pinctrl_dev *pctldev, const unsigned pin)
 {
 	const struct pin_desc *desc;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -204,7 +204,7 @@ static void pinctrl_free_pindescs(struct pinctrl_dev *pctldev,
 {
 	int i;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -229,7 +229,7 @@ static int pinctrl_register_one_pin(struct pinctrl_dev *pctldev,
 {
 	struct pin_desc *pindesc;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -275,7 +275,7 @@ static int pinctrl_register_pins(struct pinctrl_dev *pctldev,
 	unsigned i;
 	int ret = 0;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -306,7 +306,7 @@ static inline int gpio_to_pin(struct pinctrl_gpio_range *range,
 				unsigned int gpio)
 {
 	unsigned int offset = gpio - range->base;
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -330,7 +330,7 @@ pinctrl_match_gpio_range(struct pinctrl_dev *pctldev, unsigned gpio)
 {
 	struct pinctrl_gpio_range *range;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -369,7 +369,7 @@ static bool pinctrl_ready_for_gpio_range(unsigned gpio)
 	struct pinctrl_gpio_range *range = NULL;
 	struct gpio_chip *chip = gpio_to_chip(gpio);
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -420,7 +420,7 @@ static int pinctrl_get_device_gpio_range(unsigned gpio,
 {
 	struct pinctrl_dev *pctldev;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -456,7 +456,7 @@ static int pinctrl_get_device_gpio_range(unsigned gpio,
 void pinctrl_add_gpio_range(struct pinctrl_dev *pctldev,
 			    struct pinctrl_gpio_range *range)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -473,7 +473,7 @@ void pinctrl_add_gpio_ranges(struct pinctrl_dev *pctldev,
 {
 	int i;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -488,7 +488,7 @@ struct pinctrl_dev *pinctrl_find_and_add_gpio_range(const char *devname,
 {
 	struct pinctrl_dev *pctldev;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -515,7 +515,7 @@ int pinctrl_get_group_pins(struct pinctrl_dev *pctldev, const char *pin_group,
 	const struct pinctrl_ops *pctlops = pctldev->desc->pctlops;
 	int gs;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -537,7 +537,7 @@ pinctrl_find_gpio_range_from_pin_nolock(struct pinctrl_dev *pctldev,
 {
 	struct pinctrl_gpio_range *range;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -571,7 +571,7 @@ pinctrl_find_gpio_range_from_pin(struct pinctrl_dev *pctldev,
 {
 	struct pinctrl_gpio_range *range;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -592,7 +592,7 @@ EXPORT_SYMBOL_GPL(pinctrl_find_gpio_range_from_pin);
 void pinctrl_remove_gpio_range(struct pinctrl_dev *pctldev,
 			       struct pinctrl_gpio_range *range)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -625,7 +625,7 @@ const char *pinctrl_generic_get_group_name(struct pinctrl_dev *pctldev,
 {
 	struct group_desc *group;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -653,7 +653,7 @@ int pinctrl_generic_get_group_pins(struct pinctrl_dev *pctldev,
 {
 	struct group_desc *group;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -683,7 +683,7 @@ struct group_desc *pinctrl_generic_get_group(struct pinctrl_dev *pctldev,
 {
 	struct group_desc *group;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -733,7 +733,7 @@ int pinctrl_generic_add_group(struct pinctrl_dev *pctldev, const char *name,
 	struct group_desc *group;
 	int selector;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -776,7 +776,7 @@ int pinctrl_generic_remove_group(struct pinctrl_dev *pctldev,
 {
 	struct group_desc *group;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -831,7 +831,7 @@ int pinctrl_get_group_selector(struct pinctrl_dev *pctldev,
 	unsigned ngroups = pctlops->get_groups_count(pctldev);
 	unsigned group_selector = 0;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -863,7 +863,7 @@ bool pinctrl_gpio_can_use_line(unsigned gpio)
 	bool result;
 	int pin;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -904,7 +904,7 @@ int pinctrl_gpio_request(unsigned gpio)
 	int ret;
 	int pin;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -944,7 +944,7 @@ void pinctrl_gpio_free(unsigned gpio)
 	int ret;
 	int pin;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -970,7 +970,7 @@ static int pinctrl_gpio_direction(unsigned gpio, bool input)
 	int ret;
 	int pin;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1001,7 +1001,7 @@ static int pinctrl_gpio_direction(unsigned gpio, bool input)
  */
 int pinctrl_gpio_direction_input(unsigned gpio)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1020,7 +1020,7 @@ EXPORT_SYMBOL_GPL(pinctrl_gpio_direction_input);
  */
 int pinctrl_gpio_direction_output(unsigned gpio)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1045,7 +1045,7 @@ int pinctrl_gpio_set_config(unsigned gpio, unsigned long config)
 	struct pinctrl_dev *pctldev;
 	int ret, pin;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -1067,7 +1067,7 @@ static struct pinctrl_state *find_state(struct pinctrl *p,
 {
 	struct pinctrl_state *state;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1084,7 +1084,7 @@ static struct pinctrl_state *create_state(struct pinctrl *p,
 {
 	struct pinctrl_state *state;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1108,7 +1108,7 @@ static int add_setting(struct pinctrl *p, struct pinctrl_dev *pctldev,
 	struct pinctrl_setting *setting;
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1175,7 +1175,7 @@ static struct pinctrl *find_pinctrl(struct device *dev)
 {
 	struct pinctrl *p;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1203,7 +1203,7 @@ static struct pinctrl *create_pinctrl(struct device *dev,
 	const struct pinctrl_map *map;
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1291,7 +1291,7 @@ struct pinctrl *pinctrl_get(struct device *dev)
 {
 	struct pinctrl *p;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1318,7 +1318,7 @@ EXPORT_SYMBOL_GPL(pinctrl_get);
 static void pinctrl_free_setting(bool disable_setting,
 				 struct pinctrl_setting *setting)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1343,7 +1343,7 @@ static void pinctrl_free(struct pinctrl *p, bool inlist)
 	struct pinctrl_state *state, *n1;
 	struct pinctrl_setting *setting, *n2;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1375,7 +1375,7 @@ static void pinctrl_release(struct kref *kref)
 {
 	struct pinctrl *p = container_of(kref, struct pinctrl, users);
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1389,7 +1389,7 @@ static void pinctrl_release(struct kref *kref)
  */
 void pinctrl_put(struct pinctrl *p)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1408,7 +1408,7 @@ struct pinctrl_state *pinctrl_lookup_state(struct pinctrl *p,
 {
 	struct pinctrl_state *state;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1431,7 +1431,7 @@ EXPORT_SYMBOL_GPL(pinctrl_lookup_state);
 static void pinctrl_link_add(struct pinctrl_dev *pctldev,
 			     struct device *consumer)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1453,7 +1453,7 @@ static int pinctrl_commit_state(struct pinctrl *p, struct pinctrl_state *state)
 	struct pinctrl_state *old_state = p->state;
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1505,7 +1505,7 @@ static int pinctrl_commit_state(struct pinctrl *p, struct pinctrl_state *state)
 unapply_new_state:
 	dev_err(p->dev, "Error applying setting, reverse things back\n");
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -1537,7 +1537,7 @@ unapply_new_state:
  */
 int pinctrl_select_state(struct pinctrl *p, struct pinctrl_state *state)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1565,7 +1565,7 @@ struct pinctrl *devm_pinctrl_get(struct device *dev)
 {
 	struct pinctrl **ptr, *p;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// printk removed because it triggers far to often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1590,7 +1590,7 @@ static int devm_pinctrl_match(struct device *dev, void *res, void *data)
 {
 	struct pinctrl **p = res;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// printk removed because it triggers far to often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1608,7 +1608,7 @@ static int devm_pinctrl_match(struct device *dev, void *res, void *data)
  */
 void devm_pinctrl_put(struct pinctrl *p)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// printk removed because it triggers far to often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1631,7 +1631,7 @@ int pinctrl_register_mappings(const struct pinctrl_map *maps,
 	int i, ret;
 	struct pinctrl_maps *maps_node;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -1703,7 +1703,7 @@ void pinctrl_unregister_mappings(const struct pinctrl_map *map)
 {
 	struct pinctrl_maps *maps_node;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -1726,7 +1726,7 @@ EXPORT_SYMBOL_GPL(pinctrl_unregister_mappings);
  */
 int pinctrl_force_sleep(struct pinctrl_dev *pctldev)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -1742,7 +1742,7 @@ EXPORT_SYMBOL_GPL(pinctrl_force_sleep);
  */
 int pinctrl_force_default(struct pinctrl_dev *pctldev)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -1765,7 +1765,7 @@ int pinctrl_init_done(struct device *dev)
 	struct dev_pin_info *pins = dev->pins;
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// printk removed because it triggers far to often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1795,7 +1795,7 @@ static int pinctrl_select_bound_state(struct device *dev,
 	struct dev_pin_info *pins = dev->pins;
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1815,7 +1815,7 @@ static int pinctrl_select_bound_state(struct device *dev,
  */
 int pinctrl_select_default_state(struct device *dev)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1835,7 +1835,7 @@ EXPORT_SYMBOL_GPL(pinctrl_select_default_state);
  */
 int pinctrl_pm_select_default_state(struct device *dev)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1863,7 +1863,7 @@ EXPORT_SYMBOL_GPL(pinctrl_pm_select_sleep_state);
  */
 int pinctrl_pm_select_idle_state(struct device *dev)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1889,7 +1889,7 @@ static int pinctrl_pins_show(struct seq_file *s, void *what)
 	int gpio_num;
 #endif
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1948,7 +1948,7 @@ static int pinctrl_groups_show(struct seq_file *s, void *what)
 	const struct pinctrl_ops *ops = pctldev->desc->pctlops;
 	unsigned ngroups, selector = 0;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -1998,7 +1998,7 @@ static int pinctrl_gpioranges_show(struct seq_file *s, void *what)
 	struct pinctrl_dev *pctldev = s->private;
 	struct pinctrl_gpio_range *range;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2035,7 +2035,7 @@ static int pinctrl_devices_show(struct seq_file *s, void *what)
 {
 	struct pinctrl_dev *pctldev;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2072,7 +2072,7 @@ static inline const char *map_type(enum pinctrl_map_type type)
 		"CONFIGS_GROUP",
 	};
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2088,7 +2088,7 @@ static int pinctrl_maps_show(struct seq_file *s, void *what)
 	int i;
 	const struct pinctrl_map *map;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2130,7 +2130,7 @@ static int pinctrl_show(struct seq_file *s, void *what)
 	struct pinctrl_state *state;
 	struct pinctrl_setting *setting;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2181,7 +2181,7 @@ static void pinctrl_init_device_debugfs(struct pinctrl_dev *pctldev)
 	struct dentry *device_root;
 	const char *debugfs_name;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -2222,7 +2222,7 @@ static void pinctrl_init_device_debugfs(struct pinctrl_dev *pctldev)
 
 static void pinctrl_remove_device_debugfs(struct pinctrl_dev *pctldev)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2231,7 +2231,7 @@ static void pinctrl_remove_device_debugfs(struct pinctrl_dev *pctldev)
 
 static void pinctrl_init_debugfs(void)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2254,7 +2254,7 @@ static void pinctrl_init_debugfs(void)
 
 static void pinctrl_init_device_debugfs(struct pinctrl_dev *pctldev)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2262,7 +2262,7 @@ static void pinctrl_init_device_debugfs(struct pinctrl_dev *pctldev)
 
 static void pinctrl_init_debugfs(void)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2270,7 +2270,7 @@ static void pinctrl_init_debugfs(void)
 
 static void pinctrl_remove_device_debugfs(struct pinctrl_dev *pctldev)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2282,7 +2282,7 @@ static int pinctrl_check_ops(struct pinctrl_dev *pctldev)
 {
 	const struct pinctrl_ops *ops = pctldev->desc->pctlops;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -2308,7 +2308,7 @@ pinctrl_init_controller(struct pinctrl_desc *pctldesc, struct device *dev,
 	struct pinctrl_dev *pctldev;
 	int ret;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2378,7 +2378,7 @@ out_err:
 
 static int pinctrl_claim_hogs(struct pinctrl_dev *pctldev)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -2423,7 +2423,7 @@ int pinctrl_enable(struct pinctrl_dev *pctldev)
 {
 	int error;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2466,7 +2466,7 @@ struct pinctrl_dev *pinctrl_register(struct pinctrl_desc *pctldesc,
 	struct pinctrl_dev *pctldev;
 	int error;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2498,7 +2498,7 @@ int pinctrl_register_and_init(struct pinctrl_desc *pctldesc,
 {
 	struct pinctrl_dev *p;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2528,7 +2528,7 @@ void pinctrl_unregister(struct pinctrl_dev *pctldev)
 {
 	struct pinctrl_gpio_range *range, *n;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2566,7 +2566,7 @@ static void devm_pinctrl_dev_release(struct device *dev, void *res)
 {
 	struct pinctrl_dev *pctldev = *(struct pinctrl_dev **)res;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2577,7 +2577,7 @@ static int devm_pinctrl_dev_match(struct device *dev, void *res, void *data)
 {
 	struct pctldev **r = res;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2604,7 +2604,7 @@ struct pinctrl_dev *devm_pinctrl_register(struct device *dev,
 {
 	struct pinctrl_dev **ptr, *pctldev;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
@@ -2645,7 +2645,7 @@ int devm_pinctrl_register_and_init(struct device *dev,
 	struct pinctrl_dev **ptr;
 	int error;
 
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2673,7 +2673,7 @@ EXPORT_SYMBOL_GPL(devm_pinctrl_register_and_init);
  */
 void devm_pinctrl_unregister(struct device *dev, struct pinctrl_dev *pctldev)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
@@ -2684,7 +2684,7 @@ EXPORT_SYMBOL_GPL(devm_pinctrl_unregister);
 
 static int __init pinctrl_init(void)
 {
-	#ifdef EXTREME_VERBOSE
+	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio %s, file %s", __func__, __FILE__);
 	#endif
 
