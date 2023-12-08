@@ -234,9 +234,11 @@ struct tegra_gpio {
 // possibly/probably declare this in gpio-tegra.c instead
 // following pattern from bpmp virtualisation
 
-uint64_t gpio_vpa = 0;
+extern uint64_t gpio_vpa;
 EXPORT_SYMBOL_GPL(gpio_vpa);
 extern int (*tegra_gpio_guest_init)(void);
+
+#define GPIO_VERBOSE
 
 /* this portion of code comes from copydrivers branch
 // structures to synchronise get_tegra186_gpio_driver()
@@ -1239,12 +1241,12 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	if (IS_ERR(gpio->secure))
 		return PTR_ERR(gpio->secure);
 
-	/* using code in pinctrl-tegra.c instead
-	#ifdef CONFIG_TEGRA_GPIO_GUEST_PROXY
-
 	#ifdef GPIO_VERBOSE
 	printk(KERN_DEBUG "Debug gpio ALTERNATIVE-2 %s, file %s", __func__, __FILE__);
 	#endif
+
+	/* using code in pinctrl-tegra.c instead
+	#ifdef CONFIG_TEGRA_GPIO_GUEST_PROXY
 
 	// TODO: not sure this code segment goes exactly here
 	// either in tegra_pinctrl_probe in drivers/pinctrl/tegra/pinctrl-tegra.c

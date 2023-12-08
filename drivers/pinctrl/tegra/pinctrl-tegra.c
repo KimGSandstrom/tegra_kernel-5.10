@@ -40,7 +40,7 @@ EXPORT_SYMBOL_GPL(tegra_pmx_host);
 u32 (*pmx_readl_redirect)(void __iomem *) = NULL;
 void (*pmx_writel_redirect)(u32, void __iomem *) = NULL;
 int pmx_outloud = 0;
-extern uint64_t gpio_vpa;
+uint64_t gpio_vpa;
 extern int (*tegra_gpio_guest_init)(void);
 
 #define GPIO_VERBOSE
@@ -1171,7 +1171,12 @@ int tegra_pinctrl_probe(struct platform_device *pdev,
 
 	// If virtual-pa node is defined, it means that we are using a virtual GPIO
 	// then we have to initialise the gpio-guest
+	#ifndef FAKE_GUEST
 	err = of_property_read_u64(pmx->dev->of_node, "virtual-pa", &gpio_vpa);
+	#else
+	err=0;
+	memset(&gpio_vpa, 0, sizeof(uint64_t));
+	#endif
 	if(!err){
 		#ifdef GPIO_VERBOSE
 		printk("GPIO virtual-pa: 0x%llX", gpio_vpa);
