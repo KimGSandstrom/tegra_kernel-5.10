@@ -195,25 +195,25 @@ struct tegra186_pin_range {
 
 struct tegra_gpio_soc {
 	const struct tegra_gpio_port *ports;
-	unsigned int num_ports;
-	const char *name;
-	unsigned int instance;
-	unsigned int num_irqs_per_bank;
-	bool is_hw_ts_sup;
-	bool do_vm_check;
-	const struct tegra186_pin_range *pin_ranges;
-	unsigned int num_pin_ranges;
-	const char *pinmux;
-	const struct tegra_gte_info *gte_info;
-	int gte_npins;
-};
+    unsigned int num_ports;
+    const char *name;
+    unsigned int instance;
+    unsigned int num_irqs_per_bank;
+    bool is_hw_ts_sup;
+    bool do_vm_check;
+    const struct tegra186_pin_range *pin_ranges;
+    unsigned int num_pin_ranges;
+    const char *pinmux;
+    const struct tegra_gte_info *gte_info;
+    int gte_npins;
+  };
 
-struct tegra_gpio_saved_register {
-	bool restore_needed;
-	u32 val;
-	u32 conf;
-	u32 out;
-};
+  struct tegra_gpio_saved_register {
+    bool restore_needed;
+    u32 val;
+    u32 conf;
+    u32 out;
+  };
 
 struct tegra_gpio {
 	struct gpio_chip gpio;
@@ -240,6 +240,9 @@ struct tegra_gpio *tegra_gpio_host = NULL;
 EXPORT_SYMBOL_GPL(tegra_gpio_host);
 uint64_t gpio_vpa = 0;
 int tegra_gpio_guest_init(void);
+
+void (*tegra186_gpio_set_redirect)(const char *, unsigned int, int) = NULL;
+EXPORT_SYMBOL_GPL(tegra186_gpio_set_redirect);
 
 /* this portion of code comes from copydrivers branch
 // structures to synchronise get_tegra186_gpio_driver()
@@ -276,7 +279,7 @@ static struct tegra_gte_info tegra194_gte_info[] = {
 	[11] = {0,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_11},
 	[12] = {26, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_12},
 	[13] = {25, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_13},
-	[14] = {24, 2, NV_ AON_GTE_SLICE2_IRQ_GPIO_14},
+	[14] = {24, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_14},
 	[15] = {23, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_15},
 	[16] = {22, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_16},
 	[17] = {21, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_17},
@@ -737,7 +740,7 @@ static int tegra186_gpio_get(struct gpio_chip *chip, unsigned int offset)
 	return value & BIT(0);
 }
 
-static void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
+void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
 			      int level)
 {
 	struct tegra_gpio *gpio = gpiochip_get_data(chip);
@@ -745,9 +748,13 @@ static void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
 	u32 value;
 
 	#ifdef GPIO_VERBOSE
-	// removed because it executes too often
-	// printk(KERN_DEBUG "GPIO %s, file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "GPIO %s, file %s", __func__, __FILE__);
 	#endif
+
+	// redirect request to virtio module
+	if (tegra186_gpio_set_redirect) {
+		return tegra186_gpio_set_redirect(gpio->gpio.label, offset, level);
+	}
 
 	if (!gpio_is_accessible(gpio, offset))
 		return;
@@ -764,6 +771,7 @@ static void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
 
 	writel(value, base + TEGRA186_GPIO_OUTPUT_VALUE);
 }
+EXPORT_SYMBOL_GPL(tegra186_gpio_set);
 
 static int tegra186_gpio_set_config(struct gpio_chip *chip,
 				    unsigned int offset,

@@ -51,10 +51,11 @@ inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
 	printk(KERN_DEBUG "GPIO %s, file %s", __func__, __FILE__);
 	#endif
 
+  /* pmx version removed
 	// redirect request to virtio module
 	if (pmx_readl_redirect)
 		return pmx_readl_redirect(pmx->regs[bank] + reg);
-
+  */
 	return readl(pmx->regs[bank] + reg);
 }
 
@@ -64,13 +65,15 @@ inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 	printk(KERN_DEBUG "GPIO %s, file %s", __func__, __FILE__);
 	#endif
 
+  /* pmx version removed
 	// redirect request to virtio module
 	if (pmx_writel_redirect && pmx_readl_redirect) {
 		pmx_writel_redirect(val, pmx->regs[bank] + reg);
-		/* make sure pinmux register write completed */
-		pmx_readl_redirect(pmx->regs[bank] + reg);
+		// make sure pinmux register write completed
+		pmx_readl_redirect(pmx->regs[bank] + reg);
 		return;
 	}
+  */
 
 	writel_relaxed(val, pmx->regs[bank] + reg);
 	/* make sure pinmux register write completed */
