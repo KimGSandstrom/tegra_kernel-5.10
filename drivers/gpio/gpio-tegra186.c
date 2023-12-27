@@ -236,8 +236,9 @@ struct tegra_gpio {
 // possibly/probably declare this in gpio-tegra.c instead
 // following pattern from bpmp virtualisation
 
-struct tegra_gpio *tegra_gpio_host = NULL;
-EXPORT_SYMBOL_GPL(tegra_gpio_host);
+static int gpio_chip_count = 0;
+struct gpio_chip *tegra_gpio_hosts[2] = {NULL, NULL};
+EXPORT_SYMBOL_GPL(tegra_gpio_hosts);
 uint64_t gpio_vpa = 0;
 int tegra_gpio_guest_init(void);
 
@@ -752,9 +753,15 @@ void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
 	#endif
 
 	// redirect request to virtio module
+	// redirect functin is used in Guest VM
 	if (tegra186_gpio_set_redirect) {
 		return tegra186_gpio_set_redirect(gpio->gpio.label, offset, level);
 	}
+	
+	#ifdef GPIO_VERBOSE
+	// if in host dump parameters for debuging
+	printk(KERN_DEBUG "GPIO parqameters: Chip %s, Offset %d, Level %d", gpio->gpio.label, offset, level);
+	#endif
 
 	if (!gpio_is_accessible(gpio, offset))
 		return;
@@ -1261,34 +1268,29 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	// If virtual-pa node is defined, it means that we are using a virtual GPIO
 	// then we have to initialise the gpio-guest
 	err = of_property_read_u64(pdev->dev.of_node, "virtual-pa", &gpio_vpa);
-// err = 0;
-// gpio_vpa=0x090c1000;
 	if(!err){
 		printk("GPIO virtual-pa: 0x%llx", gpio_vpa);
 		ret = tegra_gpio_guest_init();
-		gpio = tegra_gpio_host;
 		return ret;
 	}
 	else {
 		// we can set tegra_gpio_host as soon as we have the pointer
 		// this is set only in the host
-		tegra_gpio_host = gpio;
+		// note theat we can have several gpiochips
+		if (gpio_chip_count == 2) {
+			printk(KERN_ERR "GPIO *ERROR* maximum chip count is exceeded in func %s, file %s", __func__, __FILE__);
+		}
+		tegra_gpio_hosts[gpio_chip_count++] = &gpio->gpio;
 	}
-	#ifdef GPIO_VERBOSE
-        printk(KERN_DEBUG "GPIO Guest should not execute this line -- gpio_vpa = %llx | %s, file %s", gpio_vpa, __func__, __FILE__);
-        #endif
 
+	#ifdef GPIO_VERBOSE
 	BUG_ON(gpio_vpa != 0);
 	#endif
+	#endif
 
-//  TODO: Error here! Guest's code should not reach these lines 
-//  "security" is a register. We should not have to read register data in guest.
-//
 	gpio->secure = devm_platform_ioremap_resource_byname(pdev, "security");
 	if (IS_ERR(gpio->secure)) {
-	#ifdef GPIO_VERBOSE
 		printk(KERN_ERR "GPIO *ERROR* devm_platform_ioremap_resource_byname pdev->name = \"%s\" in func %s, file %s", pdev->name, __func__, __FILE__);
-	#endif
 		return PTR_ERR(gpio->secure);
 	}
 
@@ -1591,7 +1593,7 @@ static const struct dev_pm_ops tegra_gpio_pm = {
 #define TEGRA_GPIO_PM		&tegra_gpio_pm
 #else
 #define TEGRA_GPIO_PM		NULL
-    #endif
+#endif
 
 static int tegra186_gpio_remove(struct platform_device *pdev)
 {

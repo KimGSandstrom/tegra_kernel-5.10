@@ -41,7 +41,7 @@ EXPORT_SYMBOL_GPL(tegra_pmx_host);
 
 u32 (*pmx_readl_redirect)(void __iomem *) = NULL;
 void (*pmx_writel_redirect)(u32, void __iomem *) = NULL;
-int pmx_outloud = 0;
+int gpio_outloud = 0;
 extern uint64_t gpio_vpa;
 int tegra_gpio_guest_init(void);
 
@@ -80,11 +80,13 @@ inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 	pmx_readl(pmx, bank, reg);
 }
 
+// pmx is not used for pasthrough i this version
 EXPORT_SYMBOL_GPL(pmx_readl_redirect);
 EXPORT_SYMBOL_GPL(pmx_writel_redirect);
 EXPORT_SYMBOL_GPL(pmx_readl);
 EXPORT_SYMBOL_GPL(pmx_writel);
-EXPORT_SYMBOL_GPL(pmx_outloud);
+
+EXPORT_SYMBOL_GPL(gpio_outloud);
 
 static int tegra_pinctrl_get_groups_count(struct pinctrl_dev *pctldev)
 {
