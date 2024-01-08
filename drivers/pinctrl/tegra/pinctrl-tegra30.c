@@ -2485,7 +2485,7 @@ static const struct tegra_pinctrl_soc_data tegra30_pinctrl = {
 static int tegra30_pinctrl_probe(struct platform_device *pdev)
 {
     #ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
     #endif
 	return tegra_pinctrl_probe(pdev, &tegra30_pinctrl);
 }
@@ -2506,7 +2506,7 @@ static struct platform_driver tegra30_pinctrl_driver = {
 static int __init tegra30_pinctrl_init(void)
 {
     #ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
     #endif
 	return platform_driver_register(&tegra30_pinctrl_driver);
 }

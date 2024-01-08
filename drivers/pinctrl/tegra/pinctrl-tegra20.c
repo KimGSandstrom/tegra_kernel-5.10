@@ -2252,7 +2252,7 @@ static void tegra20_pinctrl_register_clock_muxes(struct platform_device *pdev)
 static int tegra20_pinctrl_probe(struct platform_device *pdev)
 {
     #ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
     #endif
 	int err;
 
@@ -2281,7 +2281,7 @@ static struct platform_driver tegra20_pinctrl_driver = {
 static int __init tegra20_pinctrl_init(void)
 {
     #ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
     #endif
 	return platform_driver_register(&tegra20_pinctrl_driver);
 }

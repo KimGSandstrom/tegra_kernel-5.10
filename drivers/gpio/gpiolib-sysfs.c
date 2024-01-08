@@ -489,6 +489,10 @@ static ssize_t export_store(struct class *class,
 	struct gpio_chip	*gc;
 	int			offset;
 
+	#ifdef GPIO_VERBOSE
+	printk(KERN_DEBUG "GPIO %s, label=%s -- file %s", __func__, label, __FILE__);
+	#endif
+	
 	status = kstrtol(buf, 0, &gpio);
 
 	/* If buf is not a number then try to find by name */

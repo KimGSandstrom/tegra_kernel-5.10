@@ -923,7 +923,7 @@ static const struct tegra_pinctrl_soc_data tegra186_pinctrl = {
 static int tegra186_pinctrl_probe(struct platform_device *pdev)
 {
     #ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
     #endif
 	return tegra_pinctrl_probe(pdev, &tegra186_pinctrl);
 }
@@ -946,7 +946,7 @@ static struct platform_driver tegra186_pinctrl_driver = {
 static int __init tegra186_pinctrl_init(void)
 {
     #ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
     #endif
 	return platform_driver_register(&tegra186_pinctrl_driver);
 }
@@ -955,7 +955,7 @@ postcore_initcall_sync(tegra186_pinctrl_init);
 static void __exit tegra186_pinctrl_exit(void)
 {
     #ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
     #endif
 	platform_driver_unregister(&tegra186_pinctrl_driver);
 }
