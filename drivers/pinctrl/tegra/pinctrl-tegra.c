@@ -69,9 +69,10 @@ static int tegra_pinctrl_get_groups_count(struct pinctrl_dev *pctldev)
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
-	#endif
+	// #ifdef GPIO_VERBOSE
+	// printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
+	// #endif
+	
 	return pmx->soc->ngroups;
 }
 
@@ -80,9 +81,10 @@ static const char *tegra_pinctrl_get_group_name(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
-	#endif
+	// #ifdef GPIO_VERBOSE
+	// printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
+	// #endif
+	
 	return pmx->soc->groups[group].name;
 }
 
@@ -93,9 +95,10 @@ static int tegra_pinctrl_get_group_pins(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
-	#ifdef GPIO_VERBOSE
+	// #ifdef GPIO_VERBOSE
 	// printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
-	#endif
+	// #endif
+	
 	*pins = pmx->soc->groups[group].pins;
 	*num_pins = pmx->soc->groups[group].npins;
 
@@ -107,9 +110,9 @@ static void tegra_pinctrl_pin_dbg_show(struct pinctrl_dev *pctldev,
 				       struct seq_file *s,
 				       unsigned offset)
 {
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
-	#endif
+	// #ifdef GPIO_VERBOSE
+	// printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
+	// #endif
 	
 	seq_printf(s, " %s", dev_name(pctldev->dev));
 }
@@ -286,9 +289,9 @@ static const char *tegra_pinctrl_get_func_name(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
-	#endif
+	// #ifdef GPIO_VERBOSE
+	// printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
+	// #endif
 	
 	return pmx->soc->functions[function].name;
 }
@@ -300,9 +303,9 @@ static int tegra_pinctrl_get_func_groups(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
-	#endif
+	// #ifdef GPIO_VERBOSE
+	// printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
+	// #endif
 	
 	*groups = pmx->soc->functions[function].groups;
 	*num_groups = pmx->soc->functions[function].ngroups;
@@ -319,9 +322,9 @@ static int tegra_pinctrl_set_mux(struct pinctrl_dev *pctldev,
 	int i;
 	u32 val;
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, device %s -- file %s", __func__, pmx->dev->init_name, __FILE__);
-	#endif
+	// #ifdef GPIO_VERBOSE
+	// printk(KERN_DEBUG "GPIO %s, device %s -- file %s", __func__, pmx->dev->init_name, __FILE__);
+	// #endif
 	
 	g = &pmx->soc->groups[group];
 

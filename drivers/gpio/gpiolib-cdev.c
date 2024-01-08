@@ -2112,7 +2112,7 @@ static long gpio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	void __user *ip = (void __user *)arg;
 
 	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, cmd=%d -- file %s", __func__, cmd, __FILE__);
+	printk(KERN_DEBUG "GPIO %s, cmd=0x%x, user_pointer=0x%p -- file %s", __func__, cmd, ip, __FILE__);
 	#endif
 	
 	/* We fail any subsequent ioctl():s when the chip is gone */
@@ -2278,6 +2278,10 @@ static ssize_t lineinfo_watch_read(struct file *file, char __user *buf,
 	return bytes_read;
 }
 
+// XXX this one seems top level -- file handle is problematic
+// gpio_device should provide sufficient data
+// we are saving data in extern struct gpio_device *proxy_host_gpio_dev[MAX_CHIPS];
+
 /**
  * gpio_chrdev_open() - open the chardev for ioctl operations
  * @inode: inode for this chardev
@@ -2319,7 +2323,7 @@ static int gpio_chrdev_open(struct inode *inode, struct file *file)
 
 	get_device(&gdev->dev);
 	file->private_data = cdev;
-
+// XXX here is one problem with inode, file
 	ret = nonseekable_open(inode, file);
 	if (ret)
 		goto out_unregister_notifier;
@@ -2348,7 +2352,7 @@ static int gpio_chrdev_release(struct inode *inode, struct file *file)
 	struct gpio_device *gdev = cdev->gdev;
 
 	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO Probe %s -- file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
 	#endif
 
 	bitmap_free(cdev->watched_lines);
@@ -2398,7 +2402,7 @@ int gpiolib_cdev_register(struct gpio_device *gdev, dev_t devt)
 void gpiolib_cdev_unregister(struct gpio_device *gdev)
 {
 	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO Probe %s -- file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
 	#endif
 	
 	cdev_device_del(&gdev->chrdev, &gdev->dev);

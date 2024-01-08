@@ -472,9 +472,9 @@ tegra186_gpio_get_port(struct tegra_gpio *gpio, unsigned int *pin)
 {
 	unsigned int start = 0, i;
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, chip %s -- file %s", __func__, gpio->gpio.label, __FILE__);
-	#endif
+	// #ifdef GPIO_VERBOSE
+	// printk(KERN_DEBUG "GPIO %s, chip %s -- file %s", __func__, gpio->gpio.label, __FILE__);
+	// #endif
 
 	for (i = 0; i < gpio->soc->num_ports; i++) {
 		const struct tegra_gpio_port *port = &gpio->soc->ports[i];
@@ -496,9 +496,9 @@ static void __iomem *tegra186_gpio_get_base(struct tegra_gpio *gpio,
 	const struct tegra_gpio_port *port;
 	unsigned int offset;
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, chip %s -- file %s", __func__, gpio->gpio.label, __FILE__);
-	#endif
+	// #ifdef GPIO_VERBOSE
+	// printk(KERN_DEBUG "GPIO %s, chip %s -- file %s", __func__, gpio->gpio.label, __FILE__);
+	// #endif
 
 	port = tegra186_gpio_get_port(gpio, &pin);
 	if (!port)
@@ -515,9 +515,9 @@ static void __iomem *tegra186_gpio_get_secure(struct tegra_gpio *gpio,
 	const struct tegra_gpio_port *port;
 	unsigned int offset;
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, chip %s -- file %s", __func__, gpio->gpio.label, __FILE__);
-	#endif
+	// #ifdef GPIO_VERBOSE
+	// printk(KERN_DEBUG "GPIO %s, chip %s -- file %s", __func__, gpio->gpio.label, __FILE__);
+	// #endif
 
 	port = tegra186_gpio_get_port(gpio, &pin);
 	if (!port)
@@ -1217,9 +1217,9 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 	unsigned int i, j;
 	u32 value;
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, chip %s -- file %s", __func__, gpio->gpio.label, __FILE__);
-	#endif
+	// #ifdef GPIO_VERBOSE
+	// printk(KERN_DEBUG "GPIO %s, chip %s -- file %s", __func__, gpio->gpio.label, __FILE__);
+	// #endif
 
 	for (i = 0; i < gpio->soc->num_ports; i++) {
 		const struct tegra_gpio_port *port = &gpio->soc->ports[i];
@@ -1339,10 +1339,13 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 		// this is set only in the host
 		// note theat we can have several gpiochips
 		if (gpio_chip_count >= 2) {
-			printk(KERN_ERR "GPIO *ERROR* maximum chip count is exceeded in func %s -- file %s", __func__, __FILE__);
+			printk(KERN_ERR "GPIO %s, *ERROR* maximum chip count is exceeded (%d) -- file %s", __func__, gpio_chip_count, __FILE__);
 		}
-		// BUG pointer does not preserve data
-		tegra_gpio_hosts[gpio_chip_count++] = &gpio->gpio;
+		else {
+			// BUG? pointer does not preserve data?
+			tegra_gpio_hosts[gpio_chip_count] = &gpio->gpio;
+		}
+		gpio_chip_count++;
 	}
 	BUG_ON(gpio_vpa != 0);
 	

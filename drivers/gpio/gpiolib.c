@@ -323,9 +323,9 @@ struct gpio_desc *gpio_name_to_desc(const char * const name)
 	struct gpio_device *gdev;
 	unsigned long flags;
 
-    #ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
-    #endif
+    // #ifdef GPIO_VERBOSE
+	// printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
+    // #endif
 
 	if (!name)
 		return NULL;
@@ -554,6 +554,10 @@ static void gpiodevice_release(struct device *dev)
 #define gcdev_unregister(gdev)		device_del(&(gdev)->dev)
     #endif
 
+static int gpio_dev_count = 0;
+struct gpio_device *proxy_host_gpio_dev[2] = {NULL, NULL};
+EXPORT_SYMBOL_GPL(proxy_host_gpio_dev);
+
 static int gpiochip_setup_dev(struct gpio_device *gdev)
 {
 	int ret;
@@ -562,7 +566,15 @@ static int gpiochip_setup_dev(struct gpio_device *gdev)
 	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
     #endif
 
+	// store GPIO char device for use by proxy host driver (In guest this is redundant)
+	if (gpio_dev_count == 2) {
+		printk(KERN_ERR "GPIO %s, error, found more than two devices -- file %s", __func__, __FILE__);
+		}
+	proxy_host_gpio_dev[gpio_dev_count++] = gdev;
+	// we continue to populate gdev
+	
 	ret = gcdev_register(gdev, gpio_devt);
+
 	if (ret)
 		return ret;
 
@@ -2355,6 +2367,15 @@ void gpiod_free(struct gpio_desc *desc)
 void gpiod_free_by_name(const char *name)
 {
 	struct gpio_desc *gd = gpio_name_to_desc(name);
+	if ( ! gd ) {
+		printk(KERN_ERR "GPIO %s, gpio_desc=%p -- file %s", __func__, gd, __FILE__);
+		return;
+	}
+	
+    #ifdef GPIO_VERBOSE
+	printk(KERN_DEBUG "GPIO %s, label=%s -- file %s", __func__, gd->label, __FILE__);
+    #endif
+    
 	gpiod_free(gd);
 }
 EXPORT_SYMBOL_GPL(gpiod_free_by_name);
@@ -2377,7 +2398,7 @@ const char *gpiochip_is_requested(struct gpio_chip *gc, unsigned offset)
 	struct gpio_desc *desc;
 
     #ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
+	printk(KERN_DEBUG "GPIO %s, label=%s -- file %s", __func__, gc->label, __FILE__);
     #endif
 
 	if (offset >= gc->ngpio)
