@@ -32,9 +32,8 @@
 #include <trace/events/gpio.h>
 
 #define GPIO_VERBOSE
-#define GPIO_HOST_VERBOSE    1
 
-#if GPIO_HOST_VERBOSE
+#ifdef GPIO_VERBOSE
 #define deb_info(...)     printk(KERN_INFO __VA_ARGS__)
 #define deb_debug(...)    printk(KERN_DEBUG __VA_ARGS__)
 #else
@@ -117,9 +116,7 @@ struct gpio_desc *gpio_to_desc(unsigned gpio)
 	struct gpio_device *gdev;
 	unsigned long flags;
 	
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	spin_lock_irqsave(&gpio_lock, flags);
 
@@ -155,9 +152,7 @@ struct gpio_desc *gpiochip_get_desc(struct gpio_chip *gc,
 {
 	struct gpio_device *gdev = gc->gpiodev;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s HW Number %u -- file %s", __func__, hwnum, __FILE__);
-    #endif
 
 	if (hwnum >= gdev->ngpio)
 		return ERR_PTR(-EINVAL);
@@ -189,9 +184,7 @@ EXPORT_SYMBOL_GPL(desc_to_gpio);
  */
 struct gpio_chip *gpiod_to_chip(const struct gpio_desc *desc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!desc || !desc->gdev)
 		return NULL;
@@ -237,9 +230,7 @@ int gpiod_get_direction(struct gpio_desc *desc)
 	unsigned offset;
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, name=%s, label=%s -- file %s", __func__, desc->name, desc->label, __FILE__);
-    #endif
 
 	gc = gpiod_to_chip(desc);
 	offset = gpio_chip_hwgpio(desc);
@@ -280,9 +271,7 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 {
 	struct gpio_device *prev, *next;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (list_empty(&gpio_devices)) {
 		/* initial entry in list */
@@ -332,9 +321,7 @@ struct gpio_desc *gpio_name_to_desc(const char * const name)
 	struct gpio_device *gdev;
 	unsigned long flags;
 
-    // #ifdef GPIO_VERBOSE
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    // #endif
 
 	if (!name)
 		return NULL;
@@ -375,9 +362,7 @@ static int gpiochip_set_desc_names(struct gpio_chip *gc)
 	struct gpio_device *gdev = gc->gpiodev;
 	int i;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	/* First check all names if they are unique */
 	for (i = 0; i != gc->ngpio; ++i) {
@@ -414,9 +399,7 @@ static int devprop_gpiochip_set_names(struct gpio_chip *chip)
 	int ret, i;
 	int count;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	count = fwnode_property_string_array_count(fwnode, "gpio-line-names");
 	if (count < 0)
@@ -452,9 +435,7 @@ static unsigned long *gpiochip_allocate_mask(struct gpio_chip *gc)
 {
 	unsigned long *p;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	p = bitmap_alloc(gc->ngpio, GFP_KERNEL);
 	if (!p)
@@ -468,9 +449,7 @@ static unsigned long *gpiochip_allocate_mask(struct gpio_chip *gc)
 
 static int gpiochip_alloc_valid_mask(struct gpio_chip *gc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!(of_gpio_need_valid_mask(gc) || gc->init_valid_mask))
 		return 0;
@@ -484,9 +463,7 @@ static int gpiochip_alloc_valid_mask(struct gpio_chip *gc)
 
 static int gpiochip_init_valid_mask(struct gpio_chip *gc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (gc->init_valid_mask)
 		return gc->init_valid_mask(gc,
@@ -498,9 +475,7 @@ static int gpiochip_init_valid_mask(struct gpio_chip *gc)
 
 static void gpiochip_free_valid_mask(struct gpio_chip *gc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	bitmap_free(gc->valid_mask);
 	gc->valid_mask = NULL;
@@ -508,9 +483,7 @@ static void gpiochip_free_valid_mask(struct gpio_chip *gc)
 
 static int gpiochip_add_pin_ranges(struct gpio_chip *gc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (gc->add_pin_ranges)
 		return gc->add_pin_ranges(gc);
@@ -521,9 +494,7 @@ static int gpiochip_add_pin_ranges(struct gpio_chip *gc)
 bool gpiochip_line_is_valid(const struct gpio_chip *gc,
 				unsigned int offset)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, chip %s, offset=%u -- file %s", __func__, gc->label, offset, __FILE__);
-    #endif
 
 	/* No mask means all valid */
 	if (likely(!gc->valid_mask))
@@ -537,9 +508,7 @@ static void gpiodevice_release(struct device *dev)
 	struct gpio_device *gdev = dev_get_drvdata(dev);
 	unsigned long flags;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	spin_lock_irqsave(&gpio_lock, flags);
 	list_del(&gdev->list);
@@ -571,9 +540,7 @@ static int gpiochip_setup_dev(struct gpio_device *gdev)
 {
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	// store GPIO char device for use by proxy host driver (In guest this is redundant)
 	if (gpio_dev_count == 2) {
@@ -609,9 +576,7 @@ static void gpiochip_machine_hog(struct gpio_chip *gc, struct gpiod_hog *hog)
 	struct gpio_desc *desc;
 	int rv;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	desc = gpiochip_get_desc(gc, hog->chip_hwnum);
 	if (IS_ERR(desc)) {
@@ -633,9 +598,7 @@ static void machine_gpiochip_add(struct gpio_chip *gc)
 {
 	struct gpiod_hog *hog;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&gpio_machine_hogs_mutex);
 
@@ -652,9 +615,7 @@ static void gpiochip_setup_devs(void)
 	struct gpio_device *gdev;
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	list_for_each_entry(gdev, &gpio_devices, list) {
 		ret = gpiochip_setup_dev(gdev);
@@ -675,9 +636,7 @@ int gpiochip_add_data_with_key(struct gpio_chip *gc, void *data,
 	int		base = gc->base;
 	struct gpio_device *gdev;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	/*
 	 * First: allocate and populate the internal stat container, and
@@ -905,9 +864,7 @@ EXPORT_SYMBOL_GPL(gpiochip_add_data_with_key);
  */
 void *gpiochip_get_data(struct gpio_chip *gc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	return gc->gpiodev->data;
 }
@@ -925,9 +882,7 @@ void gpiochip_remove(struct gpio_chip *gc)
 	unsigned long	flags;
 	unsigned int	i;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	/* FIXME: should the legacy sysfs handling be moved to gpio_device? */
 	gpiochip_sysfs_unregister(gdev);
@@ -986,9 +941,7 @@ struct gpio_chip *gpiochip_find(void *data,
 	struct gpio_chip *gc = NULL;
 	unsigned long flags;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	spin_lock_irqsave(&gpio_lock, flags);
 	list_for_each_entry(gdev, &gpio_devices, list)
@@ -1012,9 +965,7 @@ static int gpiochip_match_name(struct gpio_chip *gc, void *data)
 
 struct gpio_chip *find_chip_by_name(const char *name)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	return gpiochip_find((void *)name, gpiochip_match_name);
 }
@@ -1030,9 +981,7 @@ static int gpiochip_irqchip_init_hw(struct gpio_chip *gc)
 {
 	struct gpio_irq_chip *girq = &gc->irq;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!girq->init_hw)
 		return 0;
@@ -1044,9 +993,7 @@ static int gpiochip_irqchip_init_valid_mask(struct gpio_chip *gc)
 {
 	struct gpio_irq_chip *girq = &gc->irq;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!girq->init_valid_mask)
 		return 0;
@@ -1062,9 +1009,7 @@ static int gpiochip_irqchip_init_valid_mask(struct gpio_chip *gc)
 
 static void gpiochip_irqchip_free_valid_mask(struct gpio_chip *gc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	bitmap_free(gc->irq.valid_mask);
 	gc->irq.valid_mask = NULL;
@@ -1073,9 +1018,7 @@ static void gpiochip_irqchip_free_valid_mask(struct gpio_chip *gc)
 bool gpiochip_irqchip_irq_valid(const struct gpio_chip *gc,
 				unsigned int offset)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!gpiochip_line_is_valid(gc, offset))
 		return false;
@@ -1102,9 +1045,7 @@ static void gpiochip_set_cascaded_irqchip(struct gpio_chip *gc,
 	struct gpio_irq_chip *girq = &gc->irq;
 	struct device *dev = &gc->gpiodev->dev;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!girq->domain) {
 		chip_err(gc, "called %s before setting up irqchip\n",
@@ -1390,9 +1331,7 @@ void *gpiochip_populate_parent_fwspec_twocell(struct gpio_chip *gc,
 {
 	struct irq_fwspec *fwspec;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	fwspec = kmalloc(sizeof(*fwspec), GFP_KERNEL);
 	if (!fwspec)
@@ -1413,9 +1352,7 @@ void *gpiochip_populate_parent_fwspec_fourcell(struct gpio_chip *gc,
 {
 	struct irq_fwspec *fwspec;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	fwspec = kmalloc(sizeof(*fwspec), GFP_KERNEL);
 	if (!fwspec)
@@ -1462,9 +1399,7 @@ int gpiochip_irq_map(struct irq_domain *d, unsigned int irq,
 	struct gpio_chip *gc = d->host_data;
 	int ret = 0;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!gpiochip_irqchip_irq_valid(gc, hwirq))
 		return -ENXIO;
@@ -1957,9 +1892,7 @@ static inline void gpiochip_irqchip_free_valid_mask(struct gpio_chip *gc)
  */
 int gpiochip_generic_request(struct gpio_chip *gc, unsigned offset)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, chip %s, offset=%u -- file %s", __func__, gc->label, offset, __FILE__);
-	#endif
 
     #ifdef CONFIG_PINCTRL
 	if (list_empty(&gc->gpiodev->pin_ranges))
@@ -1970,17 +1903,6 @@ int gpiochip_generic_request(struct gpio_chip *gc, unsigned offset)
 }
 EXPORT_SYMBOL_GPL(gpiochip_generic_request);
 
-int gpiochip_generic_request_by_name(const char *name, unsigned offset)
-{
-	struct gpio_chip *chip = find_chip_by_name(name);
-	if (chip) { return gpiochip_generic_request(chip, offset); }
-	else {
-		pr_err("GPIO cannot find chip by name, %s", name);
-		return -ENODEV;
-	}
-}
-EXPORT_SYMBOL_GPL(gpiochip_generic_request_by_name);
-
 /**
  * gpiochip_generic_free() - free the gpio function from a pin
  * @gc: the gpiochip to request the gpio function for
@@ -1988,6 +1910,8 @@ EXPORT_SYMBOL_GPL(gpiochip_generic_request_by_name);
  */
 void gpiochip_generic_free(struct gpio_chip *gc, unsigned offset)
 {
+ 	deb_debug("GPIO %s, chip %s, offset=%u -- file %s", __func__, gc->label, offset, __FILE__);
+ 	
     #ifdef CONFIG_PINCTRL
 	if (list_empty(&gc->gpiodev->pin_ranges))
 		return;
@@ -2006,9 +1930,7 @@ EXPORT_SYMBOL_GPL(gpiochip_generic_free);
 int gpiochip_generic_config(struct gpio_chip *gc, unsigned offset,
 			    unsigned long config)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	return pinctrl_gpio_set_config(gc->gpiodev->base + offset, config);
 }
@@ -2036,9 +1958,7 @@ int gpiochip_add_pingroup_range(struct gpio_chip *gc,
 	struct gpio_device *gdev = gc->gpiodev;
 	int ret;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	pin_range = kzalloc(sizeof(*pin_range), GFP_KERNEL);
 	if (!pin_range) {
@@ -2098,9 +2018,7 @@ int gpiochip_add_pin_range(struct gpio_chip *gc, const char *pinctl_name,
 	struct gpio_device *gdev = gc->gpiodev;
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	pin_range = kzalloc(sizeof(*pin_range), GFP_KERNEL);
 	if (!pin_range) {
@@ -2143,9 +2061,7 @@ void gpiochip_remove_pin_ranges(struct gpio_chip *gc)
 	struct gpio_pin_range *pin_range, *tmp;
 	struct gpio_device *gdev = gc->gpiodev;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
     
 	list_for_each_entry_safe(pin_range, tmp, &gdev->pin_ranges, node) {
 		list_del(&pin_range->node);
@@ -2170,9 +2086,7 @@ static int gpiod_request_commit(struct gpio_desc *desc, const char *label)
 	bool			hogged = false;
 	unsigned		offset;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, label=%s -- file %s", __func__, label, __FILE__);
-	#endif
 
 	if (label) {
 		/* Free desc->label if already allocated. */
@@ -2279,9 +2193,7 @@ int gpiod_request(struct gpio_desc *desc, const char *label)
 	int ret = -EPROBE_DEFER;
 	struct gpio_device *gdev;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, label=%s -- file %s", __func__, label, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	gdev = desc->gdev;
@@ -2299,13 +2211,7 @@ int gpiod_request(struct gpio_desc *desc, const char *label)
 
 	return ret;
 }
-
-int gpiod_request_by_name(const char *label)
-{
-	struct gpio_desc *desc = gpio_name_to_desc(label);
-	return gpiod_request(desc, label);
-}
-EXPORT_SYMBOL_GPL(gpiod_request_by_name);
+EXPORT_SYMBOL_GPL(gpiod_request);
 
 static bool gpiod_free_commit(struct gpio_desc *desc)
 {
@@ -2313,9 +2219,7 @@ static bool gpiod_free_commit(struct gpio_desc *desc)
 	unsigned long		flags;
 	struct gpio_chip	*gc;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
     
 	might_sleep();
 
@@ -2361,9 +2265,7 @@ static bool gpiod_free_commit(struct gpio_desc *desc)
 
 void gpiod_free(struct gpio_desc *desc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (desc && desc->gdev && gpiod_free_commit(desc)) {
 		module_put(desc->gdev->owner);
@@ -2372,22 +2274,7 @@ void gpiod_free(struct gpio_desc *desc)
 		WARN_ON(extra_checks);
 	}
 }
-
-void gpiod_free_by_name(const char *name)
-{
-	struct gpio_desc *gd = gpio_name_to_desc(name);
-	if ( ! gd ) {
-		pr_err("GPIO %s, gpio_desc=%p -- file %s", __func__, gd, __FILE__);
-		return;
-	}
-	
-    #ifdef GPIO_VERBOSE
-	deb_debug("GPIO %s, label=%s -- file %s", __func__, gd->label, __FILE__);
-    #endif
-    
-	gpiod_free(gd);
-}
-EXPORT_SYMBOL_GPL(gpiod_free_by_name);
+EXPORT_SYMBOL_GPL(gpiod_free);
 
 /**
  * gpiochip_is_requested - return string iff signal was requested
@@ -2406,9 +2293,7 @@ const char *gpiochip_is_requested(struct gpio_chip *gc, unsigned offset)
 {
 	struct gpio_desc *desc;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, label=%s -- file %s", __func__, gc->label, __FILE__);
-    #endif
 
 	if (offset >= gc->ngpio)
 		return NULL;
@@ -2453,9 +2338,7 @@ struct gpio_desc *gpiochip_request_own_desc(struct gpio_chip *gc,
 	struct gpio_desc *desc = gpiochip_get_desc(gc, hwnum);
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (IS_ERR(desc)) {
 		chip_err(gc, "failed to get GPIO descriptor\n");
@@ -2504,9 +2387,7 @@ EXPORT_SYMBOL_GPL(gpiochip_free_own_desc);
 static int gpio_do_set_config(struct gpio_chip *gc, unsigned int offset,
 			      unsigned long config)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!gc->set_config)
 		return -ENOTSUPP;
@@ -2520,9 +2401,7 @@ static int gpio_set_config(struct gpio_desc *desc, enum pin_config_param mode)
 	unsigned long config;
 	unsigned arg;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	switch (mode) {
 	case PIN_CONFIG_BIAS_PULL_DOWN:
@@ -2543,9 +2422,7 @@ static int gpio_set_bias(struct gpio_desc *desc)
 	int bias = 0;
 	int ret = 0;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (test_bit(FLAG_BIAS_DISABLE, &desc->flags))
 		bias = PIN_CONFIG_BIAS_DISABLE;
@@ -2576,9 +2453,7 @@ int gpiod_direction_input(struct gpio_desc *desc)
 	struct gpio_chip	*gc;
 	int			ret = 0;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	gc = desc->gdev->chip;
@@ -2627,9 +2502,7 @@ static int gpiod_direction_output_raw_commit(struct gpio_desc *desc, int value)
 	int val = !!value;
 	int ret = 0;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	/*
 	 * It's OK not to specify .direction_output() if the gpiochip is
@@ -2681,9 +2554,7 @@ static int gpiod_direction_output_raw_commit(struct gpio_desc *desc, int value)
  */
 int gpiod_direction_output_raw(struct gpio_desc *desc, int value)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	return gpiod_direction_output_raw_commit(desc, value);
@@ -2706,9 +2577,7 @@ int gpiod_direction_output(struct gpio_desc *desc, int value)
 {
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	if (test_bit(FLAG_ACTIVE_LOW, &desc->flags))
@@ -2781,9 +2650,7 @@ int gpiod_timestamp_control(struct gpio_desc *desc, int enable)
 {
 	struct gpio_chip *chip;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	chip = desc->gdev->chip;
@@ -2812,9 +2679,7 @@ int gpiod_timestamp_read(struct gpio_desc *desc, u64 *ts)
 	u64 gpio_ts;
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	chip = desc->gdev->chip;
@@ -2844,9 +2709,7 @@ int gpiod_set_config(struct gpio_desc *desc, unsigned long config)
 {
 	struct gpio_chip *gc;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	gc = desc->gdev->chip;
@@ -2868,9 +2731,7 @@ int gpiod_set_debounce(struct gpio_desc *desc, unsigned debounce)
 {
 	unsigned long config;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	config = pinconf_to_config_packed(PIN_CONFIG_INPUT_DEBOUNCE, debounce);
 	return gpiod_set_config(desc, config);
@@ -2892,9 +2753,7 @@ int gpiod_set_transitory(struct gpio_desc *desc, bool transitory)
 	int gpio;
 	int rc;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	/*
@@ -2930,9 +2789,7 @@ EXPORT_SYMBOL_GPL(gpiod_set_transitory);
  */
 int gpiod_is_active_low(const struct gpio_desc *desc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	return test_bit(FLAG_ACTIVE_LOW, &desc->flags);
@@ -2945,9 +2802,7 @@ EXPORT_SYMBOL_GPL(gpiod_is_active_low);
  */
 void gpiod_toggle_active_low(struct gpio_desc *desc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC_VOID(desc);
 	change_bit(FLAG_ACTIVE_LOW, &desc->flags);
@@ -2982,9 +2837,7 @@ static int gpiod_get_raw_value_commit(const struct gpio_desc *desc)
 	int offset;
 	int value;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	gc = desc->gdev->chip;
 	offset = gpio_chip_hwgpio(desc);
@@ -2997,9 +2850,7 @@ static int gpiod_get_raw_value_commit(const struct gpio_desc *desc)
 static int gpio_chip_get_multiple(struct gpio_chip *gc,
 				  unsigned long *mask, unsigned long *bits)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (gc->get_multiple) {
 		return gc->get_multiple(gc, mask, bits);
@@ -3025,9 +2876,7 @@ int gpiod_get_array_value_complex(bool raw, bool can_sleep,
 {
 	int ret, i = 0;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	/*
 	 * Validate array_info against desc_array and its size.
@@ -3135,9 +2984,7 @@ int gpiod_get_array_value_complex(bool raw, bool can_sleep,
  */
 int gpiod_get_raw_value(const struct gpio_desc *desc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	/* Should be using gpiod_get_raw_value_cansleep() */
@@ -3160,9 +3007,7 @@ int gpiod_get_value(const struct gpio_desc *desc)
 {
 	int value;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	/* Should be using gpiod_get_value_cansleep() */
@@ -3198,9 +3043,7 @@ int gpiod_get_raw_array_value(unsigned int array_size,
 			      struct gpio_array *array_info,
 			      unsigned long *value_bitmap)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!desc_array)
 		return -EINVAL;
@@ -3228,9 +3071,7 @@ int gpiod_get_array_value(unsigned int array_size,
 			  struct gpio_array *array_info,
 			  unsigned long *value_bitmap)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!desc_array)
 		return -EINVAL;
@@ -3251,9 +3092,7 @@ static void gpio_set_open_drain_value_commit(struct gpio_desc *desc, bool value)
 	struct gpio_chip *gc = desc->gdev->chip;
 	int offset = gpio_chip_hwgpio(desc);
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (value) {
 		ret = gc->direction_input(gc, offset);
@@ -3280,9 +3119,7 @@ static void gpio_set_open_source_value_commit(struct gpio_desc *desc, bool value
 	struct gpio_chip *gc = desc->gdev->chip;
 	int offset = gpio_chip_hwgpio(desc);
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (value) {
 		ret = gc->direction_output(gc, offset, 1);
@@ -3302,9 +3139,7 @@ static void gpiod_set_raw_value_commit(struct gpio_desc *desc, bool value)
 {
 	struct gpio_chip	*gc;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	gc = desc->gdev->chip;
 	trace_gpio_value(desc_to_gpio(desc), 0, value);
@@ -3324,9 +3159,7 @@ static void gpiod_set_raw_value_commit(struct gpio_desc *desc, bool value)
 static void gpio_chip_set_multiple(struct gpio_chip *gc,
 				   unsigned long *mask, unsigned long *bits)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (gc->set_multiple) {
 		gc->set_multiple(gc, mask, bits);
@@ -3347,9 +3180,7 @@ int gpiod_set_array_value_complex(bool raw, bool can_sleep,
 {
 	int i = 0;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	/*
 	 * Validate array_info against desc_array and its size.
@@ -3456,9 +3287,7 @@ int gpiod_set_array_value_complex(bool raw, bool can_sleep,
  */
 void gpiod_set_raw_value(struct gpio_desc *desc, int value)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC_VOID(desc);
 	/* Should be using gpiod_set_raw_value_cansleep() */
@@ -3478,9 +3307,7 @@ EXPORT_SYMBOL_GPL(gpiod_set_raw_value);
  */
 static void gpiod_set_value_nocheck(struct gpio_desc *desc, int value)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (test_bit(FLAG_ACTIVE_LOW, &desc->flags))
 		value = !value;
@@ -3505,9 +3332,7 @@ static void gpiod_set_value_nocheck(struct gpio_desc *desc, int value)
  */
 void gpiod_set_value(struct gpio_desc *desc, int value)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC_VOID(desc);
 	/* Should be using gpiod_set_value_cansleep() */
@@ -3534,9 +3359,7 @@ int gpiod_set_raw_array_value(unsigned int array_size,
 			      struct gpio_array *array_info,
 			      unsigned long *value_bitmap)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!desc_array)
 		return -EINVAL;
@@ -3563,9 +3386,7 @@ int gpiod_set_array_value(unsigned int array_size,
 			  struct gpio_array *array_info,
 			  unsigned long *value_bitmap)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!desc_array)
 		return -EINVAL;
@@ -3582,9 +3403,7 @@ EXPORT_SYMBOL_GPL(gpiod_set_array_value);
  */
 int gpiod_cansleep(const struct gpio_desc *desc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	return desc->gdev->chip->can_sleep;
@@ -3598,9 +3417,7 @@ EXPORT_SYMBOL_GPL(gpiod_cansleep);
  */
 int gpiod_set_consumer_name(struct gpio_desc *desc, const char *name)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	VALIDATE_DESC(desc);
 	if (name) {
@@ -3628,9 +3445,7 @@ int gpiod_to_irq(const struct gpio_desc *desc)
 	struct gpio_chip *gc;
 	int offset;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	/*
 	 * Cannot VALIDATE_DESC() here as gpiod_to_irq() consumer semantics
@@ -3667,9 +3482,7 @@ int gpiochip_lock_as_irq(struct gpio_chip *gc, unsigned int offset)
 {
 	struct gpio_desc *desc;
 	
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	desc = gpiochip_get_desc(gc, offset);
 	if (IS_ERR(desc))
@@ -3725,9 +3538,7 @@ void gpiochip_unlock_as_irq(struct gpio_chip *gc, unsigned int offset)
 {
 	struct gpio_desc *desc;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	desc = gpiochip_get_desc(gc, offset);
 	if (IS_ERR(desc))
@@ -3746,9 +3557,7 @@ void gpiochip_disable_irq(struct gpio_chip *gc, unsigned int offset)
 {
 	struct gpio_desc *desc = gpiochip_get_desc(gc, offset);
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!IS_ERR(desc) &&
 	    !WARN_ON(!test_bit(FLAG_USED_AS_IRQ, &desc->flags)))
@@ -3760,9 +3569,7 @@ void gpiochip_enable_irq(struct gpio_chip *gc, unsigned int offset)
 {
 	struct gpio_desc *desc = gpiochip_get_desc(gc, offset);
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!IS_ERR(desc) &&
 	    !WARN_ON(!test_bit(FLAG_USED_AS_IRQ, &desc->flags))) {
@@ -3779,9 +3586,7 @@ EXPORT_SYMBOL_GPL(gpiochip_enable_irq);
 
 bool gpiochip_line_is_irq(struct gpio_chip *gc, unsigned int offset)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (offset >= gc->ngpio)
 		return false;
@@ -3816,9 +3621,7 @@ EXPORT_SYMBOL_GPL(gpiochip_relres_irq);
 
 bool gpiochip_line_is_open_drain(struct gpio_chip *gc, unsigned int offset)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (offset >= gc->ngpio)
 		return false;
@@ -3829,9 +3632,7 @@ EXPORT_SYMBOL_GPL(gpiochip_line_is_open_drain);
 
 bool gpiochip_line_is_open_source(struct gpio_chip *gc, unsigned int offset)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (offset >= gc->ngpio)
 		return false;
@@ -3842,9 +3643,7 @@ EXPORT_SYMBOL_GPL(gpiochip_line_is_open_source);
 
 bool gpiochip_line_is_persistent(struct gpio_chip *gc, unsigned int offset)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (offset >= gc->ngpio)
 		return false;
@@ -3864,9 +3663,7 @@ EXPORT_SYMBOL_GPL(gpiochip_line_is_persistent);
  */
 int gpiod_get_raw_value_cansleep(const struct gpio_desc *desc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	might_sleep_if(extra_checks);
 	VALIDATE_DESC(desc);
@@ -3887,9 +3684,7 @@ int gpiod_get_value_cansleep(const struct gpio_desc *desc)
 {
 	int value;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	might_sleep_if(extra_checks);
 	VALIDATE_DESC(desc);
@@ -3922,9 +3717,7 @@ int gpiod_get_raw_array_value_cansleep(unsigned int array_size,
 				       struct gpio_array *array_info,
 				       unsigned long *value_bitmap)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	might_sleep_if(extra_checks);
 	if (!desc_array)
@@ -3952,9 +3745,7 @@ int gpiod_get_array_value_cansleep(unsigned int array_size,
 				   struct gpio_array *array_info,
 				   unsigned long *value_bitmap)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	might_sleep_if(extra_checks);
 	if (!desc_array)
@@ -3977,9 +3768,7 @@ EXPORT_SYMBOL_GPL(gpiod_get_array_value_cansleep);
  */
 void gpiod_set_raw_value_cansleep(struct gpio_desc *desc, int value)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	might_sleep_if(extra_checks);
 	VALIDATE_DESC_VOID(desc);
@@ -3999,9 +3788,7 @@ EXPORT_SYMBOL_GPL(gpiod_set_raw_value_cansleep);
  */
 void gpiod_set_value_cansleep(struct gpio_desc *desc, int value)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	might_sleep_if(extra_checks);
 	VALIDATE_DESC_VOID(desc);
@@ -4026,9 +3813,7 @@ int gpiod_set_raw_array_value_cansleep(unsigned int array_size,
 				       struct gpio_array *array_info,
 				       unsigned long *value_bitmap)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	might_sleep_if(extra_checks);
 	if (!desc_array)
@@ -4047,9 +3832,7 @@ void gpiod_add_lookup_tables(struct gpiod_lookup_table **tables, size_t n)
 {
 	unsigned int i;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&gpio_lookup_lock);
 
@@ -4076,9 +3859,7 @@ int gpiod_set_array_value_cansleep(unsigned int array_size,
 				   struct gpio_array *array_info,
 				   unsigned long *value_bitmap)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	might_sleep_if(extra_checks);
 	if (!desc_array)
@@ -4095,9 +3876,7 @@ EXPORT_SYMBOL_GPL(gpiod_set_array_value_cansleep);
  */
 void gpiod_add_lookup_table(struct gpiod_lookup_table *table)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&gpio_lookup_lock);
 
@@ -4113,9 +3892,7 @@ EXPORT_SYMBOL_GPL(gpiod_add_lookup_table);
  */
 void gpiod_remove_lookup_table(struct gpiod_lookup_table *table)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&gpio_lookup_lock);
 
@@ -4134,9 +3911,7 @@ void gpiod_add_hogs(struct gpiod_hog *hogs)
 	struct gpio_chip *gc;
 	struct gpiod_hog *hog;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&gpio_machine_hogs_mutex);
 
@@ -4161,9 +3936,7 @@ static struct gpiod_lookup_table *gpiod_find_lookup_table(struct device *dev)
 	const char *dev_id = dev ? dev_name(dev) : NULL;
 	struct gpiod_lookup_table *table;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&gpio_lookup_lock);
 
@@ -4198,9 +3971,7 @@ static struct gpio_desc *gpiod_find(struct device *dev, const char *con_id,
 	struct gpiod_lookup_table *table;
 	struct gpiod_lookup *p;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	table = gpiod_find_lookup_table(dev);
 	if (!table)
@@ -4267,9 +4038,7 @@ static int platform_gpio_count(struct device *dev, const char *con_id)
 	struct gpiod_lookup *p;
 	unsigned int count = 0;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	table = gpiod_find_lookup_table(dev);
 	if (!table)
@@ -4316,9 +4085,7 @@ struct gpio_desc *fwnode_gpiod_get_index(struct fwnode_handle *fwnode,
 	char prop_name[32]; /* 32 is max size of property name */
 	unsigned int i;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	for (i = 0; i < ARRAY_SIZE(gpio_suffixes); i++) {
 		if (con_id)
@@ -4348,9 +4115,7 @@ int gpiod_count(struct device *dev, const char *con_id)
 {
 	int count = -ENOENT;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (IS_ENABLED(CONFIG_OF) && dev && dev->of_node)
 		count = of_gpio_get_count(dev, con_id);
@@ -4377,9 +4142,7 @@ EXPORT_SYMBOL_GPL(gpiod_count);
 struct gpio_desc *__must_check gpiod_get(struct device *dev, const char *con_id,
 					 enum gpiod_flags flags)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	return gpiod_get_index(dev, con_id, 0, flags);
 }
@@ -4421,9 +4184,7 @@ int gpiod_configure_flags(struct gpio_desc *desc, const char *con_id,
 {
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (lflags & GPIO_ACTIVE_LOW)
 		set_bit(FLAG_ACTIVE_LOW, &desc->flags);
@@ -4595,9 +4356,7 @@ struct gpio_desc *fwnode_get_named_gpiod(struct fwnode_handle *fwnode,
 	struct gpio_desc *desc = ERR_PTR(-ENODEV);
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!fwnode)
 		return ERR_PTR(-EINVAL);
@@ -4656,9 +4415,7 @@ struct gpio_desc *__must_check gpiod_get_index_optional(struct device *dev,
 {
 	struct gpio_desc *desc;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	desc = gpiod_get_index(dev, con_id, index, flags);
 	if (IS_ERR(desc)) {
@@ -4686,9 +4443,7 @@ int gpiod_hog(struct gpio_desc *desc, const char *name,
 	int hwnum;
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	gc = gpiod_to_chip(desc);
 	hwnum = gpio_chip_hwgpio(desc);
@@ -4721,9 +4476,7 @@ static void gpiochip_free_hogs(struct gpio_chip *gc)
 {
 	int id;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	for (id = 0; id < gc->ngpio; id++) {
 		if (test_bit(FLAG_IS_HOGGED, &gc->gpiodev->descs[id].flags))
@@ -4753,9 +4506,7 @@ struct gpio_descs *__must_check gpiod_get_array(struct device *dev,
 	struct gpio_chip *gc;
 	int count, bitmap_size;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	count = gpiod_count(dev, con_id);
 	if (count < 0)
@@ -4877,9 +4628,7 @@ struct gpio_descs *__must_check gpiod_get_array_optional(struct device *dev,
 {
 	struct gpio_descs *descs;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	descs = gpiod_get_array(dev, con_id, flags);
 	if (PTR_ERR(descs) == -ENOENT)
@@ -4897,9 +4646,7 @@ EXPORT_SYMBOL_GPL(gpiod_get_array_optional);
  */
 void gpiod_put(struct gpio_desc *desc)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (desc)
 		gpiod_free(desc);
@@ -4914,9 +4661,7 @@ void gpiod_put_array(struct gpio_descs *descs)
 {
 	unsigned int i;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	for (i = 0; i < descs->ndescs; i++)
 		gpiod_put(descs->desc[i]);
@@ -4929,9 +4674,7 @@ static int __init gpiolib_dev_init(void)
 {
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	/* Register GPIO sysfs bus */
 	ret = bus_register(&gpio_bus_type);
@@ -5085,4 +4828,4 @@ static int __init gpiolib_debugfs_init(void)
 }
 subsys_initcall(gpiolib_debugfs_init);
 
-    #endif	/* DEBUG_FS */
+    #endif     /* DEBUG_FS */

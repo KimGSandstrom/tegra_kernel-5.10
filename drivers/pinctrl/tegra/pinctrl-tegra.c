@@ -35,9 +35,8 @@
 #define EMMC_PARKING_SET		0x1FFF
 
 #define GPIO_VERBOSE
-#define GPIO_HOST_VERBOSE    1
 
-#if GPIO_HOST_VERBOSE
+#ifdef GPIO_VERBOSE
 #define deb_info(...)     printk(KERN_INFO __VA_ARGS__)
 #define deb_debug(...)    printk(KERN_DEBUG __VA_ARGS__)
 #else
@@ -48,18 +47,14 @@
 
 static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	return readl(pmx->regs[bank] + reg);
 }
 
 static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	writel_relaxed(val, pmx->regs[bank] + reg);
 	/* make sure pinmux register write completed */
@@ -70,9 +65,7 @@ static int tegra_pinctrl_get_groups_count(struct pinctrl_dev *pctldev)
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
-	// #ifdef GPIO_VERBOSE
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	// #endif
 	
 	return pmx->soc->ngroups;
 }
@@ -82,9 +75,7 @@ static const char *tegra_pinctrl_get_group_name(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
-	// #ifdef GPIO_VERBOSE
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	// #endif
 	
 	return pmx->soc->groups[group].name;
 }
@@ -96,9 +87,7 @@ static int tegra_pinctrl_get_group_pins(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
-	// #ifdef GPIO_VERBOSE
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	// #endif
 	
 	*pins = pmx->soc->groups[group].pins;
 	*num_pins = pmx->soc->groups[group].npins;
@@ -111,13 +100,11 @@ static void tegra_pinctrl_pin_dbg_show(struct pinctrl_dev *pctldev,
 				       struct seq_file *s,
 				       unsigned offset)
 {
-	// #ifdef GPIO_VERBOSE
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	// #endif
 	
 	seq_printf(s, " %s", dev_name(pctldev->dev));
 }
-	#endif
+       #endif
 
 static const struct cfg_param {
 	const char *property;
@@ -161,9 +148,7 @@ static int tegra_pinctrl_dt_subnode_to_map(struct pinctrl_dev *pctldev,
 	struct property *prop;
 	const char *group;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	ret = of_property_read_string(np, "nvidia,function", &function);
 	if (ret < 0) {
@@ -241,9 +226,7 @@ static int tegra_pinctrl_dt_node_to_map(struct pinctrl_dev *pctldev,
 	struct device_node *np;
 	int ret;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	reserved_maps = 0;
 	*map = NULL;
@@ -278,9 +261,7 @@ static int tegra_pinctrl_get_funcs_count(struct pinctrl_dev *pctldev)
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	
 	return pmx->soc->nfunctions;
 }
@@ -290,9 +271,7 @@ static const char *tegra_pinctrl_get_func_name(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
-	// #ifdef GPIO_VERBOSE
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	// #endif
 	
 	return pmx->soc->functions[function].name;
 }
@@ -304,9 +283,7 @@ static int tegra_pinctrl_get_func_groups(struct pinctrl_dev *pctldev,
 {
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
-	// #ifdef GPIO_VERBOSE
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	// #endif
 	
 	*groups = pmx->soc->functions[function].groups;
 	*num_groups = pmx->soc->functions[function].ngroups;
@@ -323,9 +300,7 @@ static int tegra_pinctrl_set_mux(struct pinctrl_dev *pctldev,
 	int i;
 	u32 val;
 
-	// #ifdef GPIO_VERBOSE
 	// deb_debug("GPIO %s, device %s -- file %s", __func__, pmx->dev->init_name, __FILE__);
-	// #endif
 	
 	g = &pmx->soc->groups[group];
 
@@ -360,9 +335,7 @@ static int tegra_pinctrl_gpio_save_config(struct pinctrl_dev *pctldev,
 	const unsigned *pins;
 	int ret;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, device %s -- file %s", __func__, pmx->dev->init_name,__FILE__);
-	#endif
 
 	for (group = 0; group < pmx->soc->ngroups; ++group) {
 		ret = tegra_pinctrl_get_group_pins(pctldev, group, &pins, &num_pins);
@@ -394,9 +367,7 @@ static int tegra_pinctrl_gpio_restore_config(struct pinctrl_dev *pctldev,
 	const unsigned *pins;
 	int ret;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, device %s -- file %s", __func__, pmx->dev->init_name, __FILE__);
-	#endif
 
 	for (group = 0; group < pmx->soc->ngroups; ++group) {
 		ret = tegra_pinctrl_get_group_pins(pctldev, group, &pins, &num_pins);
@@ -426,9 +397,7 @@ static const struct tegra_pingroup *tegra_pinctrl_get_group(struct pinctrl_dev *
        const unsigned int *pins;
        int ret;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
        for (group = 0; group < pmx->soc->ngroups; ++group) {
                ret = tegra_pinctrl_get_group_pins(pctldev, group, &pins, &num_pins);
@@ -456,9 +425,7 @@ static int tegra_pinctrl_gpio_request_enable(struct pinctrl_dev *pctldev,
 	u32 value;
 	int ret;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, device %s -- file %s", __func__, pmx->dev->init_name, __FILE__);
-	#endif
 
 	ret = tegra_pinctrl_gpio_save_config(pctldev, range, offset);
 	if (ret)
@@ -492,9 +459,7 @@ static void tegra_pinctrl_gpio_disable_free(struct pinctrl_dev *pctldev,
 					    struct pinctrl_gpio_range *range,
 					    unsigned int offset)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	
 	tegra_pinctrl_gpio_restore_config(pctldev, range, offset);
 }
@@ -505,9 +470,7 @@ static int tegra_pinctrl_gpio_set_input(struct tegra_pmx *pmx,
 {
 	u32 value;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	if (group->einput_bit < 0)
 		return 0;
@@ -533,9 +496,7 @@ static int tegra_pinctrl_gpio_set_tristate(struct tegra_pmx *pmx,
 {
 	u32 value;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	if (group->tri_bank < 0 || group->tri_reg < 0 || group->tri_bit < 0)
 		return -EINVAL;
@@ -560,9 +521,7 @@ static int tegra_pinctrl_gpio_set_direction(struct pinctrl_dev *pctldev,
 	const struct tegra_pingroup *group;
 	int ret;
 
-	#ifdef GPIO_VERBOSE
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
+	deb_debug("GPIO %s, Offset=%d -- file %s", __func__, offset, __FILE__);
 
 	group = tegra_pinctrl_get_group(pctldev, offset);
 	if (!group)
@@ -599,9 +558,7 @@ static int tegra_pinconf_reg(struct tegra_pmx *pmx,
 			     bool report_err,
 			     s8 *bank, s32 *reg, s8 *bit, s8 *width)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	switch (param) {
 	case TEGRA_PINCONF_PARAM_PULL:
@@ -757,9 +714,7 @@ static int tegra_pinconf_reg(struct tegra_pmx *pmx,
 static int tegra_pinconf_get(struct pinctrl_dev *pctldev,
 			     unsigned pin, unsigned long *config)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	dev_err(pctldev->dev, "pin_config_get op not supported\n");
 	return -ENOTSUPP;
 }
@@ -768,9 +723,7 @@ static int tegra_pinconf_set(struct pinctrl_dev *pctldev,
 			     unsigned pin, unsigned long *configs,
 			     unsigned num_configs)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	dev_err(pctldev->dev, "pin_config_set op not supported\n");
 	return -ENOTSUPP;
 }
@@ -787,9 +740,7 @@ static int tegra_pinconf_group_get(struct pinctrl_dev *pctldev,
 	s32 reg;
 	u32 val, mask;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	g = &pmx->soc->groups[group];
 
@@ -824,9 +775,7 @@ static int tegra_pinconf_group_set(struct pinctrl_dev *pctldev,
 	s32 reg;
 	u32 val, mask;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	g = &pmx->soc->groups[group];
 
@@ -879,17 +828,13 @@ static int tegra_pinconf_group_set(struct pinctrl_dev *pctldev,
 static void tegra_pinconf_dbg_show(struct pinctrl_dev *pctldev,
 				   struct seq_file *s, unsigned offset)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 }
 
 static const char *strip_prefix(const char *s)
 {
 	const char *comma = strchr(s, ',');
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	if (!comma)
 		return s;
 
@@ -907,9 +852,7 @@ static void tegra_pinconf_group_dbg_show(struct pinctrl_dev *pctldev,
 	u32 val;
 	u8 idx;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	g = &pmx->soc->groups[group];
 
@@ -943,9 +886,7 @@ static void tegra_pinconf_config_dbg_show(struct pinctrl_dev *pctldev,
 	const char *pname = "unknown";
 	int i;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	for (i = 0; i < ARRAY_SIZE(cfg_params); i++) {
 		if (cfg_params[i].param == param) {
@@ -956,7 +897,7 @@ static void tegra_pinconf_config_dbg_show(struct pinctrl_dev *pctldev,
 
 	seq_printf(s, "%s=%d", strip_prefix(pname), arg);
 }
-	#endif
+    #endif
 
 static const struct pinconf_ops tegra_pinconf_ops = {
 	.pin_config_get = tegra_pinconf_get,
@@ -989,9 +930,7 @@ static void tegra_pinctrl_clear_parked_bits(struct tegra_pmx *pmx)
 	const struct tegra_pingroup *g;
 	u32 val;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	for (i = 0; i < pmx->soc->ngroups; ++i) {
 		g = &pmx->soc->groups[i];
@@ -1019,9 +958,7 @@ static size_t tegra_pinctrl_get_bank_size(struct device *dev,
 	struct platform_device *pdev = to_platform_device(dev);
 	struct resource *res;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, bank_id);
 
@@ -1036,9 +973,7 @@ static int tegra_pinctrl_suspend(struct device *dev)
 	size_t bank_size;
 	unsigned int i, k;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	for (i = 0; i < pmx->nbanks; i++) {
 		bank_size = tegra_pinctrl_get_bank_size(dev, i);
@@ -1058,9 +993,7 @@ static int tegra_pinctrl_resume(struct device *dev)
 	size_t bank_size;
 	unsigned int i, k;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	for (i = 0; i < pmx->nbanks; i++) {
 		bank_size = tegra_pinctrl_get_bank_size(dev, i);
@@ -1101,9 +1034,7 @@ static bool tegra_pinctrl_gpio_node_has_range(struct tegra_pmx *pmx)
 	struct device_node *np;
 	bool has_prop = false;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	if (of_property_read_bool(dev->of_node, "#gpio-range-cells"))
 		return true;
@@ -1129,9 +1060,7 @@ int tegra_pinctrl_probe(struct platform_device *pdev,
 	int fn, gn, gfn;
 	unsigned long backup_regs_size = 0;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	pmx = devm_kzalloc(&pdev->dev, sizeof(*pmx), GFP_KERNEL);
 	if (!pmx)

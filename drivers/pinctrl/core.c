@@ -37,9 +37,8 @@
 #include "pinconf.h"
 
 #define GPIO_VERBOSE
-#define GPIO_HOST_VERBOSE    1
 
-#if GPIO_HOST_VERBOSE
+#ifdef GPIO_VERBOSE
 #define deb_info(...)     printk(KERN_INFO __VA_ARGS__)
 #define deb_debug(...)    printk(KERN_DEBUG __VA_ARGS__)
 #else
@@ -111,10 +110,8 @@ struct pinctrl_dev *get_pinctrl_dev_from_devname(const char *devname)
 {
 	struct pinctrl_dev *pctldev;
 
-    #ifdef GPIO_VERBOSE
 	// removed because prints too often 
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!devname)
 		return NULL;
@@ -138,10 +135,8 @@ struct pinctrl_dev *get_pinctrl_dev_from_of_node(struct device_node *np)
 {
 	struct pinctrl_dev *pctldev;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it prints too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&pinctrldev_list_mutex);
 
@@ -165,9 +160,7 @@ int pin_get_from_name(struct pinctrl_dev *pctldev, const char *name)
 {
 	unsigned i, pin;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	/* The pin number can be retrived from the pin controller descriptor */
 	for (i = 0; i < pctldev->desc->npins; i++) {
@@ -192,9 +185,7 @@ const char *pin_get_name(struct pinctrl_dev *pctldev, const unsigned pin)
 {
 	const struct pin_desc *desc;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	desc = pin_desc_get(pctldev, pin);
 	if (!desc) {
@@ -214,10 +205,8 @@ static void pinctrl_free_pindescs(struct pinctrl_dev *pctldev,
 {
 	int i;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	for (i = 0; i < num_pins; i++) {
 		struct pin_desc *pindesc;
@@ -239,10 +228,8 @@ static int pinctrl_register_one_pin(struct pinctrl_dev *pctldev,
 {
 	struct pin_desc *pindesc;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	pindesc = pin_desc_get(pctldev, pin->number);
 	if (pindesc) {
@@ -285,10 +272,8 @@ static int pinctrl_register_pins(struct pinctrl_dev *pctldev,
 	unsigned i;
 	int ret = 0;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	for (i = 0; i < num_descs; i++) {
 		ret = pinctrl_register_one_pin(pctldev, &pins[i]);
@@ -316,10 +301,8 @@ static inline int gpio_to_pin(struct pinctrl_gpio_range *range,
 				unsigned int gpio)
 {
 	unsigned int offset = gpio - range->base;
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (range->pins)
 		return range->pins[offset];
@@ -340,10 +323,8 @@ pinctrl_match_gpio_range(struct pinctrl_dev *pctldev, unsigned gpio)
 {
 	struct pinctrl_gpio_range *range;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&pctldev->mutex);
 	/* Loop over the ranges */
@@ -379,10 +360,8 @@ static bool pinctrl_ready_for_gpio_range(unsigned gpio)
 	struct pinctrl_gpio_range *range = NULL;
 	struct gpio_chip *chip = gpio_to_chip(gpio);
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (WARN(!chip, "no gpio_chip for gpio%i?", gpio))
 		return false;
@@ -430,10 +409,8 @@ static int pinctrl_get_device_gpio_range(unsigned gpio,
 {
 	struct pinctrl_dev *pctldev;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&pinctrldev_list_mutex);
 
@@ -466,10 +443,8 @@ static int pinctrl_get_device_gpio_range(unsigned gpio,
 void pinctrl_add_gpio_range(struct pinctrl_dev *pctldev,
 			    struct pinctrl_gpio_range *range)
 {
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&pctldev->mutex);
 	list_add_tail(&range->node, &pctldev->gpio_ranges);
@@ -483,10 +458,8 @@ void pinctrl_add_gpio_ranges(struct pinctrl_dev *pctldev,
 {
 	int i;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	for (i = 0; i < nranges; i++)
 		pinctrl_add_gpio_range(pctldev, &ranges[i]);
@@ -498,10 +471,8 @@ struct pinctrl_dev *pinctrl_find_and_add_gpio_range(const char *devname,
 {
 	struct pinctrl_dev *pctldev;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	pctldev = get_pinctrl_dev_from_devname(devname);
 
@@ -525,10 +496,8 @@ int pinctrl_get_group_pins(struct pinctrl_dev *pctldev, const char *pin_group,
 	const struct pinctrl_ops *pctlops = pctldev->desc->pctlops;
 	int gs;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!pctlops->get_group_pins)
 		return -EINVAL;
@@ -547,10 +516,8 @@ pinctrl_find_gpio_range_from_pin_nolock(struct pinctrl_dev *pctldev,
 {
 	struct pinctrl_gpio_range *range;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	/* Loop over the ranges */
 	list_for_each_entry(range, &pctldev->gpio_ranges, node) {
@@ -581,10 +548,8 @@ pinctrl_find_gpio_range_from_pin(struct pinctrl_dev *pctldev,
 {
 	struct pinctrl_gpio_range *range;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&pctldev->mutex);
 	range = pinctrl_find_gpio_range_from_pin_nolock(pctldev, pin);
@@ -602,10 +567,8 @@ EXPORT_SYMBOL_GPL(pinctrl_find_gpio_range_from_pin);
 void pinctrl_remove_gpio_range(struct pinctrl_dev *pctldev,
 			       struct pinctrl_gpio_range *range)
 {
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&pctldev->mutex);
 	list_del(&range->node);
@@ -635,10 +598,8 @@ const char *pinctrl_generic_get_group_name(struct pinctrl_dev *pctldev,
 {
 	struct group_desc *group;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	group = radix_tree_lookup(&pctldev->pin_group_tree,
 				  selector);
@@ -663,10 +624,8 @@ int pinctrl_generic_get_group_pins(struct pinctrl_dev *pctldev,
 {
 	struct group_desc *group;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	group = radix_tree_lookup(&pctldev->pin_group_tree,
 				  selector);
@@ -693,10 +652,8 @@ struct group_desc *pinctrl_generic_get_group(struct pinctrl_dev *pctldev,
 {
 	struct group_desc *group;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	group = radix_tree_lookup(&pctldev->pin_group_tree,
 				  selector);
@@ -743,10 +700,8 @@ int pinctrl_generic_add_group(struct pinctrl_dev *pctldev, const char *name,
 	struct group_desc *group;
 	int selector;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!name)
 		return -EINVAL;
@@ -786,10 +741,8 @@ int pinctrl_generic_remove_group(struct pinctrl_dev *pctldev,
 {
 	struct group_desc *group;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	group = radix_tree_lookup(&pctldev->pin_group_tree,
 				  selector);
@@ -828,7 +781,7 @@ static inline void pinctrl_generic_free_groups(struct pinctrl_dev *pctldev)
 {
 }
     #endif /* CONFIG_GENERIC_PINCTRL_GROUPS */
-
+  
 /**
  * pinctrl_get_group_selector() - returns the group selector for a group
  * @pctldev: the pin controller handling the group
@@ -841,10 +794,8 @@ int pinctrl_get_group_selector(struct pinctrl_dev *pctldev,
 	unsigned ngroups = pctlops->get_groups_count(pctldev);
 	unsigned group_selector = 0;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	while (group_selector < ngroups) {
 		const char *gname = pctlops->get_group_name(pctldev,
@@ -873,10 +824,8 @@ bool pinctrl_gpio_can_use_line(unsigned gpio)
 	bool result;
 	int pin;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	/*
 	 * Try to obtain GPIO range, if it fails
@@ -914,10 +863,8 @@ int pinctrl_gpio_request(unsigned gpio)
 	int ret;
 	int pin;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	ret = pinctrl_get_device_gpio_range(gpio, &pctldev, &range);
 	if (ret) {
@@ -954,9 +901,7 @@ void pinctrl_gpio_free(unsigned gpio)
 	int ret;
 	int pin;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	ret = pinctrl_get_device_gpio_range(gpio, &pctldev, &range);
 	if (ret) {
@@ -980,10 +925,8 @@ static int pinctrl_gpio_direction(unsigned gpio, bool input)
 	int ret;
 	int pin;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	ret = pinctrl_get_device_gpio_range(gpio, &pctldev, &range);
 	if (ret) {
@@ -1011,10 +954,8 @@ static int pinctrl_gpio_direction(unsigned gpio, bool input)
  */
 int pinctrl_gpio_direction_input(unsigned gpio)
 {
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	return pinctrl_gpio_direction(gpio, true);
 }
@@ -1030,10 +971,8 @@ EXPORT_SYMBOL_GPL(pinctrl_gpio_direction_input);
  */
 int pinctrl_gpio_direction_output(unsigned gpio)
 {
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	return pinctrl_gpio_direction(gpio, false);
 }
@@ -1055,9 +994,7 @@ int pinctrl_gpio_set_config(unsigned gpio, unsigned long config)
 	struct pinctrl_dev *pctldev;
 	int ret, pin;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	ret = pinctrl_get_device_gpio_range(gpio, &pctldev, &range);
 	if (ret)
@@ -1077,10 +1014,8 @@ static struct pinctrl_state *find_state(struct pinctrl *p,
 {
 	struct pinctrl_state *state;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	list_for_each_entry(state, &p->states, node)
 		if (!strcmp(state->name, name))
@@ -1094,10 +1029,8 @@ static struct pinctrl_state *create_state(struct pinctrl *p,
 {
 	struct pinctrl_state *state;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	state = kzalloc(sizeof(*state), GFP_KERNEL);
 	if (!state)
@@ -1118,10 +1051,8 @@ static int add_setting(struct pinctrl *p, struct pinctrl_dev *pctldev,
 	struct pinctrl_setting *setting;
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	state = find_state(p, map->name);
 	if (!state)
@@ -1185,10 +1116,8 @@ static struct pinctrl *find_pinctrl(struct device *dev)
 {
 	struct pinctrl *p;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&pinctrl_list_mutex);
 	list_for_each_entry(p, &pinctrl_list, node)
@@ -1213,10 +1142,8 @@ static struct pinctrl *create_pinctrl(struct device *dev,
 	const struct pinctrl_map *map;
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	/*
 	 * create the state cookie holder struct pinctrl for each
@@ -1301,10 +1228,8 @@ struct pinctrl *pinctrl_get(struct device *dev)
 {
 	struct pinctrl *p;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (WARN_ON(!dev))
 		return ERR_PTR(-EINVAL);
@@ -1328,10 +1253,8 @@ EXPORT_SYMBOL_GPL(pinctrl_get);
 static void pinctrl_free_setting(bool disable_setting,
 				 struct pinctrl_setting *setting)
 {
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	switch (setting->type) {
 	case PIN_MAP_TYPE_MUX_GROUP:
@@ -1353,10 +1276,8 @@ static void pinctrl_free(struct pinctrl *p, bool inlist)
 	struct pinctrl_state *state, *n1;
 	struct pinctrl_setting *setting, *n2;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&pinctrl_list_mutex);
 	list_for_each_entry_safe(state, n1, &p->states, node) {
@@ -1385,10 +1306,8 @@ static void pinctrl_release(struct kref *kref)
 {
 	struct pinctrl *p = container_of(kref, struct pinctrl, users);
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	pinctrl_free(p, true);
 }
@@ -1399,10 +1318,8 @@ static void pinctrl_release(struct kref *kref)
  */
 void pinctrl_put(struct pinctrl *p)
 {
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	kref_put(&p->users, pinctrl_release);
 }
@@ -1418,10 +1335,8 @@ struct pinctrl_state *pinctrl_lookup_state(struct pinctrl *p,
 {
 	struct pinctrl_state *state;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	state = find_state(p, name);
 	if (!state) {
@@ -1441,10 +1356,8 @@ EXPORT_SYMBOL_GPL(pinctrl_lookup_state);
 static void pinctrl_link_add(struct pinctrl_dev *pctldev,
 			     struct device *consumer)
 {
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (pctldev->desc->link_consumers)
 		device_link_add(consumer, pctldev->dev,
@@ -1463,10 +1376,8 @@ static int pinctrl_commit_state(struct pinctrl *p, struct pinctrl_state *state)
 	struct pinctrl_state *old_state = p->state;
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (p->state) {
 		/*
@@ -1515,9 +1426,7 @@ static int pinctrl_commit_state(struct pinctrl *p, struct pinctrl_state *state)
 unapply_new_state:
 	dev_err(p->dev, "Error applying setting, reverse things back\n");
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	list_for_each_entry(setting2, &state->settings, node) {
 		if (&setting2->node == &setting->node)
@@ -1547,10 +1456,8 @@ unapply_new_state:
  */
 int pinctrl_select_state(struct pinctrl *p, struct pinctrl_state *state)
 {
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (p->state == state)
 		return 0;
@@ -1575,10 +1482,8 @@ struct pinctrl *devm_pinctrl_get(struct device *dev)
 {
 	struct pinctrl **ptr, *p;
 
-    #ifdef GPIO_VERBOSE
 	// printk removed because it triggers far to often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	ptr = devres_alloc(devm_pinctrl_release, sizeof(*ptr), GFP_KERNEL);
 	if (!ptr)
@@ -1600,10 +1505,8 @@ static int devm_pinctrl_match(struct device *dev, void *res, void *data)
 {
 	struct pinctrl **p = res;
 
-    #ifdef GPIO_VERBOSE
 	// printk removed because it triggers far to often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	return *p == data;
 }
@@ -1618,10 +1521,8 @@ static int devm_pinctrl_match(struct device *dev, void *res, void *data)
  */
 void devm_pinctrl_put(struct pinctrl *p)
 {
-    #ifdef GPIO_VERBOSE
 	// printk removed because it triggers far to often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	WARN_ON(devres_release(p->dev, devm_pinctrl_release,
 			       devm_pinctrl_match, p));
@@ -1641,9 +1542,7 @@ int pinctrl_register_mappings(const struct pinctrl_map *maps,
 	int i, ret;
 	struct pinctrl_maps *maps_node;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	pr_debug("add %u pinctrl maps\n", num_maps);
 
@@ -1713,9 +1612,7 @@ void pinctrl_unregister_mappings(const struct pinctrl_map *map)
 {
 	struct pinctrl_maps *maps_node;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&pinctrl_maps_mutex);
 	list_for_each_entry(maps_node, &pinctrl_maps, node) {
@@ -1736,9 +1633,7 @@ EXPORT_SYMBOL_GPL(pinctrl_unregister_mappings);
  */
 int pinctrl_force_sleep(struct pinctrl_dev *pctldev)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!IS_ERR(pctldev->p) && !IS_ERR(pctldev->hog_sleep))
 		return pinctrl_commit_state(pctldev->p, pctldev->hog_sleep);
@@ -1752,9 +1647,7 @@ EXPORT_SYMBOL_GPL(pinctrl_force_sleep);
  */
 int pinctrl_force_default(struct pinctrl_dev *pctldev)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!IS_ERR(pctldev->p) && !IS_ERR(pctldev->hog_default))
 		return pinctrl_commit_state(pctldev->p, pctldev->hog_default);
@@ -1775,10 +1668,8 @@ int pinctrl_init_done(struct device *dev)
 	struct dev_pin_info *pins = dev->pins;
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	// printk removed because it triggers far to often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!pins)
 		return 0;
@@ -1805,10 +1696,8 @@ static int pinctrl_select_bound_state(struct device *dev,
 	struct dev_pin_info *pins = dev->pins;
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (IS_ERR(state))
 		return 0; /* No such state */
@@ -1825,10 +1714,8 @@ static int pinctrl_select_bound_state(struct device *dev,
  */
 int pinctrl_select_default_state(struct device *dev)
 {
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!dev->pins)
 		return 0;
@@ -1845,10 +1732,8 @@ EXPORT_SYMBOL_GPL(pinctrl_select_default_state);
  */
 int pinctrl_pm_select_default_state(struct device *dev)
 {
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	return pinctrl_select_default_state(dev);
 }
@@ -1873,10 +1758,8 @@ EXPORT_SYMBOL_GPL(pinctrl_pm_select_sleep_state);
  */
 int pinctrl_pm_select_idle_state(struct device *dev)
 {
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!dev->pins)
 		return 0;
@@ -1899,10 +1782,8 @@ static int pinctrl_pins_show(struct seq_file *s, void *what)
 	int gpio_num;
     #endif
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	seq_printf(s, "registered pins: %d\n", pctldev->desc->npins);
 
@@ -1958,10 +1839,8 @@ static int pinctrl_groups_show(struct seq_file *s, void *what)
 	const struct pinctrl_ops *ops = pctldev->desc->pctlops;
 	unsigned ngroups, selector = 0;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	mutex_lock(&pctldev->mutex);
 
@@ -2008,9 +1887,7 @@ static int pinctrl_gpioranges_show(struct seq_file *s, void *what)
 	struct pinctrl_dev *pctldev = s->private;
 	struct pinctrl_gpio_range *range;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	seq_puts(s, "GPIO ranges handled:\n");
 
@@ -2045,9 +1922,7 @@ static int pinctrl_devices_show(struct seq_file *s, void *what)
 {
 	struct pinctrl_dev *pctldev;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	seq_puts(s, "name [pinmux] [pinconf]\n");
 
@@ -2082,9 +1957,7 @@ static inline const char *map_type(enum pinctrl_map_type type)
 		"CONFIGS_GROUP",
 	};
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (type >= ARRAY_SIZE(names))
 		return "UNKNOWN";
@@ -2098,9 +1971,7 @@ static int pinctrl_maps_show(struct seq_file *s, void *what)
 	int i;
 	const struct pinctrl_map *map;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	seq_puts(s, "Pinctrl maps:\n");
 
@@ -2140,9 +2011,7 @@ static int pinctrl_show(struct seq_file *s, void *what)
 	struct pinctrl_state *state;
 	struct pinctrl_setting *setting;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	seq_puts(s, "Requested pin control handlers their pinmux maps:\n");
 
@@ -2191,10 +2060,8 @@ static void pinctrl_init_device_debugfs(struct pinctrl_dev *pctldev)
 	struct dentry *device_root;
 	const char *debugfs_name;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (pctldev->desc->name &&
 			strcmp(dev_name(pctldev->dev), pctldev->desc->name)) {
@@ -2232,18 +2099,14 @@ static void pinctrl_init_device_debugfs(struct pinctrl_dev *pctldev)
 
 static void pinctrl_remove_device_debugfs(struct pinctrl_dev *pctldev)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	debugfs_remove_recursive(pctldev->device_root);
 }
 
 static void pinctrl_init_debugfs(void)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	debugfs_root = debugfs_create_dir("pinctrl", NULL);
 	if (IS_ERR(debugfs_root) || !debugfs_root) {
@@ -2264,38 +2127,29 @@ static void pinctrl_init_debugfs(void)
 
 static void pinctrl_init_device_debugfs(struct pinctrl_dev *pctldev)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 }
 
 static void pinctrl_init_debugfs(void)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 }
 
 static void pinctrl_remove_device_debugfs(struct pinctrl_dev *pctldev)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 }
-
     #endif
 
 static int pinctrl_check_ops(struct pinctrl_dev *pctldev)
 {
 	const struct pinctrl_ops *ops = pctldev->desc->pctlops;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!ops ||
 	    !ops->get_groups_count ||
@@ -2318,9 +2172,7 @@ pinctrl_init_controller(struct pinctrl_desc *pctldesc, struct device *dev,
 	struct pinctrl_dev *pctldev;
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!pctldesc)
 		return ERR_PTR(-EINVAL);
@@ -2341,7 +2193,7 @@ pinctrl_init_controller(struct pinctrl_desc *pctldesc, struct device *dev,
     #endif
     #ifdef CONFIG_GENERIC_PINMUX_FUNCTIONS
 	INIT_RADIX_TREE(&pctldev->pin_function_tree, GFP_KERNEL);
-    #endif
+	#endif
 	INIT_LIST_HEAD(&pctldev->gpio_ranges);
 	INIT_LIST_HEAD(&pctldev->node);
 	pctldev->dev = dev;
@@ -2388,10 +2240,8 @@ out_err:
 
 static int pinctrl_claim_hogs(struct pinctrl_dev *pctldev)
 {
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	pctldev->p = create_pinctrl(pctldev->dev, pctldev);
 	if (PTR_ERR(pctldev->p) == -ENODEV) {
@@ -2433,9 +2283,7 @@ int pinctrl_enable(struct pinctrl_dev *pctldev)
 {
 	int error;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	error = pinctrl_claim_hogs(pctldev);
 	if (error) {
@@ -2476,9 +2324,7 @@ struct pinctrl_dev *pinctrl_register(struct pinctrl_desc *pctldesc,
 	struct pinctrl_dev *pctldev;
 	int error;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	pctldev = pinctrl_init_controller(pctldesc, dev, driver_data);
 	if (IS_ERR(pctldev))
@@ -2508,9 +2354,7 @@ int pinctrl_register_and_init(struct pinctrl_desc *pctldesc,
 {
 	struct pinctrl_dev *p;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	p = pinctrl_init_controller(pctldesc, dev, driver_data);
 	if (IS_ERR(p))
@@ -2538,9 +2382,7 @@ void pinctrl_unregister(struct pinctrl_dev *pctldev)
 {
 	struct pinctrl_gpio_range *range, *n;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (!pctldev)
 		return;
@@ -2576,9 +2418,7 @@ static void devm_pinctrl_dev_release(struct device *dev, void *res)
 {
 	struct pinctrl_dev *pctldev = *(struct pinctrl_dev **)res;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	pinctrl_unregister(pctldev);
 }
@@ -2587,9 +2427,7 @@ static int devm_pinctrl_dev_match(struct device *dev, void *res, void *data)
 {
 	struct pctldev **r = res;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (WARN_ON(!r || !*r))
 		return 0;
@@ -2614,10 +2452,8 @@ struct pinctrl_dev *devm_pinctrl_register(struct device *dev,
 {
 	struct pinctrl_dev **ptr, *pctldev;
 
-    #ifdef GPIO_VERBOSE
 	// removed because it triggers far too often
 	// deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	ptr = devres_alloc(devm_pinctrl_dev_release, sizeof(*ptr), GFP_KERNEL);
 	if (!ptr)
@@ -2655,9 +2491,7 @@ int devm_pinctrl_register_and_init(struct device *dev,
 	struct pinctrl_dev **ptr;
 	int error;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	ptr = devres_alloc(devm_pinctrl_dev_release, sizeof(*ptr), GFP_KERNEL);
 	if (!ptr)
@@ -2683,9 +2517,7 @@ EXPORT_SYMBOL_GPL(devm_pinctrl_register_and_init);
  */
 void devm_pinctrl_unregister(struct device *dev, struct pinctrl_dev *pctldev)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	WARN_ON(devres_release(dev, devm_pinctrl_dev_release,
 			       devm_pinctrl_dev_match, pctldev));
@@ -2694,9 +2526,7 @@ EXPORT_SYMBOL_GPL(devm_pinctrl_unregister);
 
 static int __init pinctrl_init(void)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	pr_info("initialized pinctrl subsystem\n");
 	pinctrl_init_debugfs();

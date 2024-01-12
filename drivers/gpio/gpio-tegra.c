@@ -59,9 +59,8 @@
 #define GPIO_INT_LVL_LEVEL_LOW		0x000000
 
 #define GPIO_VERBOSE
-#define GPIO_HOST_VERBOSE    1
 
-#if GPIO_HOST_VERBOSE
+#ifdef GPIO_VERBOSE
 #define deb_info(...)     printk(KERN_INFO __VA_ARGS__)
 #define deb_debug(...)    printk(KERN_DEBUG __VA_ARGS__)
 #else
@@ -112,18 +111,14 @@ static struct tegra_gpio_info *gpio_info;
 static inline void tegra_gpio_writel(struct tegra_gpio_info *tgi,
 				     u32 val, u32 reg)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	writel_relaxed(val, tgi->regs + reg);
 }
 
 static inline u32 tegra_gpio_readl(struct tegra_gpio_info *tgi, u32 reg)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	return readl_relaxed(tgi->regs + reg);
 }
@@ -131,9 +126,7 @@ static inline u32 tegra_gpio_readl(struct tegra_gpio_info *tgi, u32 reg)
 static unsigned int tegra_gpio_compose(unsigned int bank, unsigned int port,
 				       unsigned int bit)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	return (bank << 5) | ((port & 0x3) << 3) | (bit & 0x7);
 }
@@ -143,9 +136,7 @@ static void tegra_gpio_mask_write(struct tegra_gpio_info *tgi, u32 reg,
 {
 	u32 val;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	val = 0x100 << GPIO_BIT(gpio);
 	if (value)
@@ -162,9 +153,7 @@ static void tegra_gpio_save_gpio_state(unsigned int gpio)
 	u32 mask = BIT(GPIO_BIT(gpio));
 	unsigned long flags;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	spin_lock_irqsave(&bank->gpio_lock[p], flags);
 
@@ -237,18 +226,14 @@ static void tegra_gpio_restore_gpio_state(unsigned int gpio)
 
 static void tegra_gpio_enable(struct tegra_gpio_info *tgi, unsigned int gpio)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	tegra_gpio_mask_write(tgi, GPIO_MSK_CNF(tgi, gpio), gpio, 1);
 }
 
 static int tegra_gpio_request(struct gpio_chip *chip, unsigned int offset)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	tegra_gpio_save_gpio_state(offset);
 	return pinctrl_gpio_request(chip->base + offset);
@@ -256,9 +241,7 @@ static int tegra_gpio_request(struct gpio_chip *chip, unsigned int offset)
 
 static void tegra_gpio_free(struct gpio_chip *chip, unsigned int offset)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
     
 	pinctrl_gpio_free(chip->base + offset);
 	tegra_gpio_restore_gpio_state(offset);
@@ -269,9 +252,7 @@ static void tegra_gpio_set(struct gpio_chip *chip, unsigned int offset,
 {
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	tegra_gpio_mask_write(tgi, GPIO_MSK_OUT(tgi, offset), offset, value);
 }
@@ -294,9 +275,7 @@ static int tegra_gpio_direction_input(struct gpio_chip *chip,
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	tegra_gpio_mask_write(tgi, GPIO_MSK_OE(tgi, offset), offset, 0);
 	tegra_gpio_enable(tgi, offset);
@@ -317,9 +296,7 @@ static int tegra_gpio_direction_output(struct gpio_chip *chip,
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	tegra_gpio_set(chip, offset, value);
 	tegra_gpio_mask_write(tgi, GPIO_MSK_OE(tgi, offset), offset, 1);
@@ -341,9 +318,7 @@ static int tegra_gpio_get_direction(struct gpio_chip *chip,
 	u32 pin_mask = BIT(GPIO_BIT(offset));
 	u32 cnf, oe;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	cnf = tegra_gpio_readl(tgi, GPIO_CNF(tgi, offset));
 	if (!(cnf & pin_mask))
@@ -396,9 +371,7 @@ static int tegra_gpio_set_config(struct gpio_chip *chip, unsigned int offset,
 {
 	u32 debounce;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	if (pinconf_to_config_param(config) != PIN_CONFIG_INPUT_DEBOUNCE)
 		return -ENOTSUPP;
@@ -411,9 +384,7 @@ static int tegra_gpio_to_irq(struct gpio_chip *chip, unsigned int offset)
 {
 	struct tegra_gpio_info *tgi = gpiochip_get_data(chip);
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	return irq_find_mapping(tgi->irq_domain, offset);
 }
@@ -683,9 +654,7 @@ static int tegra_dbg_gpio_show(struct seq_file *s, void *unused)
 	x = ' ';
 	y = 'A';
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	seq_printf(s, "Name:Bank:Port CNF OE OUT IN INT_STA INT_ENB INT_LVL\n");
 	for (i = 0; i < tgi->bank_count; i++) {
@@ -720,9 +689,7 @@ DEFINE_SHOW_ATTRIBUTE(tegra_dbg_gpio);
 
 static void tegra_gpio_debuginit(struct tegra_gpio_info *tgi)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	debugfs_create_file("tegra_gpio", 0444, NULL, tgi,
 			    &tegra_dbg_gpio_fops);
@@ -743,9 +710,7 @@ static int tegra_gpio_probe(struct platform_device *pdev)
 	unsigned int gpio, i, j;
 	int ret;
 
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 
 	tgi = devm_kzalloc(&pdev->dev, sizeof(*tgi), GFP_KERNEL);
 	if (!tgi)
@@ -895,9 +860,7 @@ static struct platform_driver tegra_gpio_driver = {
 
 static int __init tegra_gpio_init(void)
 {
-    #ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-    #endif
 	return platform_driver_register(&tegra_gpio_driver);
 }
 subsys_initcall(tegra_gpio_init);

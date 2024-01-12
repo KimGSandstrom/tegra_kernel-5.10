@@ -84,9 +84,8 @@ struct linehandle_state {
 	GPIOHANDLE_REQUEST_OPEN_SOURCE)
 
 #define GPIO_VERBOSE
-#define GPIO_HOST_VERBOSE    1
 
-#if GPIO_HOST_VERBOSE
+#ifdef GPIO_VERBOSE
 #define deb_info(...)     printk(KERN_INFO __VA_ARGS__)
 #define deb_debug(...)    printk(KERN_DEBUG __VA_ARGS__)
 #else
@@ -166,9 +165,7 @@ static long linehandle_set_config(struct linehandle_state *lh,
 	int i, ret;
 	u32 lflags;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	
 	if (copy_from_user(&gcnf, ip, sizeof(gcnf)))
 		return -EFAULT;
@@ -214,9 +211,7 @@ static long linehandle_ioctl(struct file *file, unsigned int cmd,
 	DECLARE_BITMAP(vals, GPIOHANDLES_MAX);
 	int i;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, cmd=0x%x, user_pointer=0x%p -- file %s", __func__, cmd, ip, __FILE__);
-	#endif
 	
 	if (cmd == GPIOHANDLE_GET_LINE_VALUES_IOCTL) {
 		/* NOTE: It's ok to read values of output lines. */
@@ -287,9 +282,7 @@ static void linehandle_free(struct linehandle_state *lh)
 
 static int linehandle_release(struct inode *inode, struct file *file)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	
 	linehandle_free(file->private_data);
 	return 0;
@@ -313,9 +306,7 @@ static int linehandle_create(struct gpio_device *gdev, void __user *ip)
 	int fd, i, ret;
 	u32 lflags;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	
 	if (copy_from_user(&handlereq, ip, sizeof(handlereq)))
 		return -EFAULT;
@@ -1067,9 +1058,7 @@ static long linereq_set_values_unlocked(struct linereq *lr,
 	unsigned int i, didx, num_set;
 	int ret;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	
 	bitmap_zero(vals, GPIO_V2_LINES_MAX);
 	for (num_set = 0, i = 0; i < lr->num_lines; i++) {
@@ -1110,9 +1099,7 @@ static long linereq_set_values(struct linereq *lr, void __user *ip)
 	struct gpio_v2_line_values lv;
 	int ret;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	
 	if (copy_from_user(&lv, ip, sizeof(lv)))
 		return -EFAULT;
@@ -1200,9 +1187,7 @@ static long linereq_ioctl(struct file *file, unsigned int cmd,
 	struct linereq *lr = file->private_data;
 	void __user *ip = (void __user *)arg;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	
 	if (cmd == GPIO_V2_LINE_GET_VALUES_IOCTL)
 		return linereq_get_values(lr, ip);
@@ -1336,9 +1321,7 @@ static int linereq_create(struct gpio_device *gdev, void __user *ip)
 	unsigned int i;
 	int fd, ret;
 	
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, -- file %s", __func__, __FILE__);
-	#endif
 
 	if (copy_from_user(&ulr, ip, sizeof(ulr)))
 		return -EFAULT;
@@ -1745,9 +1728,7 @@ static int lineevent_create(struct gpio_device *gdev, void __user *ip)
 	int ret;
 	int irq, irqflags = 0;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, -- file %s", __func__, __FILE__);
-	#endif
 	
 	if (copy_from_user(&eventreq, ip, sizeof(eventreq)))
 		return -EFAULT;
@@ -1917,7 +1898,6 @@ static void gpio_v2_line_info_changed_to_v1(
 	lic_v1->timestamp = lic_v2->timestamp_ns;
 	lic_v1->event_type = lic_v2->event_type;
 }
-
 #endif /* CONFIG_GPIO_CDEV_V1 */
 
 static void gpio_desc_to_lineinfo(struct gpio_desc *desc,
@@ -2047,9 +2027,7 @@ static int lineinfo_get_v1(struct gpio_chardev_data *cdev, void __user *ip,
 	struct gpioline_info lineinfo;
 	struct gpio_v2_line_info lineinfo_v2;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	
 	if (copy_from_user(&lineinfo, ip, sizeof(lineinfo)))
 		return -EFAULT;
@@ -2086,9 +2064,7 @@ static int lineinfo_get(struct gpio_chardev_data *cdev, void __user *ip,
 	struct gpio_desc *desc;
 	struct gpio_v2_line_info lineinfo;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	
 	if (copy_from_user(&lineinfo, ip, sizeof(lineinfo)))
 		return -EFAULT;
@@ -2144,9 +2120,7 @@ static long gpio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	struct gpio_device *gdev = cdev->gdev;
 	void __user *ip = (void __user *)arg;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, cmd=0x%x, user_pointer=0x%p -- file %s", __func__, cmd, ip, __FILE__);
-	#endif
 	
 	/* We fail any subsequent ioctl():s when the chip is gone */
 	if (!gdev->chip)
@@ -2181,9 +2155,7 @@ static long gpio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 static long gpio_ioctl_compat(struct file *file, unsigned int cmd,
 			      unsigned long arg)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, cmd=%d -- file %s", __func__, cmd, __FILE__);
-	#endif
 	
 	return gpio_ioctl(file, cmd, (unsigned long)compat_ptr(arg));
 }
@@ -2279,8 +2251,8 @@ static ssize_t lineinfo_watch_read(struct file *file, char __user *buf,
 		if (count < event_size) {
 			spin_unlock(&cdev->wait.lock);
 			return -EINVAL;
-		}
 #endif
+		}
 		ret = kfifo_out(&cdev->events, &event, 1);
 		spin_unlock(&cdev->wait.lock);
 		if (ret != 1) {
@@ -2328,9 +2300,7 @@ static int gpio_chrdev_open(struct inode *inode, struct file *file)
 	struct gpio_chardev_data *cdev;
 	int ret = -ENOMEM;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	/* Fail on open if the backing gpiochip is gone */
 	if (!gdev->chip)
@@ -2384,9 +2354,7 @@ static int gpio_chrdev_release(struct inode *inode, struct file *file)
 	struct gpio_chardev_data *cdev = file->private_data;
 	struct gpio_device *gdev = cdev->gdev;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	bitmap_free(cdev->watched_lines);
 	blocking_notifier_chain_unregister(&gdev->notifier,
@@ -2414,9 +2382,7 @@ int gpiolib_cdev_register(struct gpio_device *gdev, dev_t devt)
 {
 	int ret;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	
 	cdev_init(&gdev->chrdev, &gpio_fileops);
 	gdev->chrdev.owner = THIS_MODULE;
@@ -2434,9 +2400,7 @@ int gpiolib_cdev_register(struct gpio_device *gdev, dev_t devt)
 
 void gpiolib_cdev_unregister(struct gpio_device *gdev)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 	
 	cdev_device_del(&gdev->chrdev, &gdev->dev);
 }

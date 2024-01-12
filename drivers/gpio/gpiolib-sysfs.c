@@ -18,6 +18,16 @@
 #define GPIO_IRQF_TRIGGER_BOTH		(GPIO_IRQF_TRIGGER_FALLING | \
 					 GPIO_IRQF_TRIGGER_RISING)
 
+#define GPIO_VERBOSE
+
+#ifdef GPIO_VERBOSE
+#define deb_info(...)     printk(KERN_INFO __VA_ARGS__)
+#define deb_debug(...)    printk(KERN_DEBUG __VA_ARGS__)
+#else
+#define deb_info(...)
+#define deb_debug(...)
+#endif
+
 struct gpiod_data {
 	struct gpio_desc *desc;
 
@@ -489,9 +499,7 @@ static ssize_t export_store(struct class *class,
 	struct gpio_chip	*gc;
 	int			offset;
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, label=%s -- file %s", __func__, label, __FILE__);
-	#endif
+	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
 	
 	status = kstrtol(buf, 0, &gpio);
 

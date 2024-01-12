@@ -180,9 +180,8 @@
 /**************************************************************/
 
 #define GPIO_VERBOSE
-#define GPIO_HOST_VERBOSE    1
 
-#if GPIO_HOST_VERBOSE
+#ifdef GPIO_VERBOSE
 #define deb_info(...)     printk(KERN_INFO __VA_ARGS__)
 #define deb_debug(...)    printk(KERN_DEBUG __VA_ARGS__)
 #else
@@ -246,9 +245,9 @@ struct tegra_gpio {
 // following pattern from bpmp virtualisation
 
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-static int gpio_chip_count = 0;
-struct gpio_chip *tegra_gpio_hosts[2] = {NULL, NULL};
-EXPORT_SYMBOL_GPL(tegra_gpio_hosts);
+// static int gpio_chip_count = 0;
+// struct gpio_chip *tegra_gpio_hosts[2] = {NULL, NULL};
+// EXPORT_SYMBOL_GPL(tegra_gpio_hosts);
 int gpio_outloud = 0;
 EXPORT_SYMBOL_GPL(gpio_outloud);
 
@@ -317,9 +316,7 @@ static struct tegra_gte_info tegra194_gte_info[] = {
 
 static inline u32 tegra_gte_readl(struct tegra_gpio *tgi, u32 reg)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	return __raw_readl(tgi->gte_regs + reg);
 }
@@ -327,9 +324,7 @@ static inline u32 tegra_gte_readl(struct tegra_gpio *tgi, u32 reg)
 static inline void tegra_gte_writel(struct tegra_gpio *tgi, u32 reg,
 		u32 val)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	__raw_writel(val, tgi->gte_regs + reg);
 }
@@ -354,9 +349,7 @@ u64 tegra_gte_read_fifo(struct tegra_gpio *tgi, u32 offset)
 	u32 aon_bits;
 	u32 bit_index = 0;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	/* Check if FIFO is empty */
 	while ((tegra_gte_readl(tgi, GTE_GPIO_TESTATUS) >>
@@ -399,9 +392,7 @@ int tegra_gte_enable_ts(struct tegra_gpio *tgi, u32 offset)
 	u32 val, mask, reg;
 	int i = 0;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	if (tgi->gte_enable == 1) {
 		dev_err(tgi->gpio.parent, "timestamp is already enabled for gpio\n");
@@ -436,9 +427,7 @@ int tegra_gte_disable_ts(struct tegra_gpio *tgi, u32 offset)
 {
 	u32 val, mask;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	if (tgi->gte_enable == 0) {
 		dev_err(tgi->gpio.parent, "timestamp is already disabled\n");
@@ -464,9 +453,7 @@ int tegra_gte_disable_ts(struct tegra_gpio *tgi, u32 offset)
 
 int tegra_gte_setup(struct tegra_gpio *tgi)
 {
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	tegra_gte_writel(tgi, GTE_GPIO_TECTRL, 0);
 	tgi->gte_enable = 0;
@@ -481,9 +468,7 @@ tegra186_gpio_get_port(struct tegra_gpio *gpio, unsigned int *pin)
 {
 	unsigned int start = 0, i;
 
-	// #ifdef GPIO_VERBOSE
 	// deb_debug("GPIO %s, chip %s -- file %s", __func__, gpio->gpio.label, __FILE__);
-	// #endif
 
 	for (i = 0; i < gpio->soc->num_ports; i++) {
 		const struct tegra_gpio_port *port = &gpio->soc->ports[i];
@@ -505,9 +490,7 @@ static void __iomem *tegra186_gpio_get_base(struct tegra_gpio *gpio,
 	const struct tegra_gpio_port *port;
 	unsigned int offset;
 
-	// #ifdef GPIO_VERBOSE
 	// deb_debug("GPIO %s, chip %s -- file %s", __func__, gpio->gpio.label, __FILE__);
-	// #endif
 
 	port = tegra186_gpio_get_port(gpio, &pin);
 	if (!port)
@@ -524,9 +507,7 @@ static void __iomem *tegra186_gpio_get_secure(struct tegra_gpio *gpio,
 	const struct tegra_gpio_port *port;
 	unsigned int offset;
 
-	// #ifdef GPIO_VERBOSE
 	// deb_debug("GPIO %s, chip %s -- file %s", __func__, gpio->gpio.label, __FILE__);
-	// #endif
 
 	port = tegra186_gpio_get_port(gpio, &pin);
 	if (!port)
@@ -541,9 +522,7 @@ static inline bool gpio_is_accessible(struct tegra_gpio *gpio, u32 pin)
 	void __iomem *secure;
 	u32 val;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	secure = tegra186_gpio_get_secure(gpio, pin);
 	if (gpio->soc->do_vm_check) {
@@ -570,9 +549,7 @@ int tegra186_gpio_get_direction(struct gpio_chip *chip,
 	void __iomem *base;
 	u32 value;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, chip %s, offset %u -- file %s", __func__, chip->label, offset, __FILE__);
-	#endif
 
 	if (!gpio_is_accessible(gpio, offset))
 		return -EPERM;
@@ -589,22 +566,7 @@ int tegra186_gpio_get_direction(struct gpio_chip *chip,
 }
 EXPORT_SYMBOL_GPL(tegra186_gpio_get_direction);
 
-int tegra186_gpio_get_direction_by_name(const char *name,
-				       unsigned int offset)
-{
-	struct gpio_chip *chip = find_chip_by_name(name);
-	if (chip) {
-		return tegra186_gpio_get_direction(chip, offset);
-		}
-	else {
-		pr_err("GPIO cannot find chip by name, %s", name);
-		return -ENODEV;
-		}
-}
-EXPORT_SYMBOL_GPL(tegra186_gpio_get_direction_by_name);
-
-
-static int tegra186_gpio_direction_input(struct gpio_chip *chip,
+int tegra186_gpio_direction_input(struct gpio_chip *chip,
 					 unsigned int offset)
 {
 	struct tegra_gpio *gpio = gpiochip_get_data(chip);
@@ -612,9 +574,7 @@ static int tegra186_gpio_direction_input(struct gpio_chip *chip,
 	u32 value;
 	int ret = 0;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, chip %s, offset %u -- file %s", __func__, chip->label, offset, __FILE__);
-	#endif
 
 	if (!gpio_is_accessible(gpio, offset))
 		return -EPERM;
@@ -638,19 +598,9 @@ static int tegra186_gpio_direction_input(struct gpio_chip *chip,
 			"Failed to set input direction: %d\n", ret);
 	return ret;
 }
+EXPORT_SYMBOL_GPL(tegra186_gpio_direction_input);
 
-int tegra186_gpio_direction_input_by_name(const char *name, unsigned int offset)
-{
-	struct gpio_chip *chip = find_chip_by_name(name);
-	if (chip) { return tegra186_gpio_direction_input(chip, offset); }
-	else {
-		pr_err("GPIO cannot find chip by name, %s", name);
-		return -ENODEV;
-	}
-}
-EXPORT_SYMBOL_GPL(tegra186_gpio_direction_input_by_name);
-
-static int tegra186_gpio_direction_output(struct gpio_chip *chip,
+int tegra186_gpio_direction_output(struct gpio_chip *chip,
 					  unsigned int offset, int level)
 {
 	struct tegra_gpio *gpio = gpiochip_get_data(chip);
@@ -658,10 +608,7 @@ static int tegra186_gpio_direction_output(struct gpio_chip *chip,
 	u32 value;
 	int ret = 0;
 
-	#ifdef GPIO_VERBOSE
-	deb_debug("GPIO %s, chip %s, offset %u -- file %s", __func__, chip->label, offset, __FILE__);
-	#endif
-
+	deb_debug("GPIO %s, chip %s, offset %u, level %d -- file %s", __func__, chip->label, offset, level, __FILE__);
 
 	if (!gpio_is_accessible(gpio, offset))
 		return -EPERM;
@@ -689,18 +636,7 @@ static int tegra186_gpio_direction_output(struct gpio_chip *chip,
 			"Failed to set output direction: %d\n", ret);
 	return ret;
 }
-
-int tegra186_gpio_direction_output_by_name(const char *name, unsigned int offset,
-			      int level)
-{
-	struct gpio_chip *chip = find_chip_by_name(name);
-	if (chip) { return tegra186_gpio_direction_output(chip, offset, level); }
-	else {
-		pr_err("GPIO cannot find chip by name, %s", name);
-		return -ENODEV;
-	}
-}
-EXPORT_SYMBOL_GPL(tegra186_gpio_direction_output_by_name);
+EXPORT_SYMBOL_GPL(tegra186_gpio_direction_output);
 
 static int tegra_gpio_suspend_configure(struct gpio_chip *chip, unsigned offset,
 					enum gpiod_flags dflags)
@@ -709,9 +645,7 @@ static int tegra_gpio_suspend_configure(struct gpio_chip *chip, unsigned offset,
 	struct tegra_gpio_saved_register *regs;
 	void __iomem *base;
 	
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO chip %s, offset %u, %s -- file %s", chip->label, offset, __func__, __FILE__);
-	#endif
 
 	if (!gpio_is_accessible(gpio, offset))
 		return -EPERM;
@@ -741,9 +675,7 @@ static int tegra_gpio_timestamp_control(struct gpio_chip *chip, unsigned offset,
 	int value;
 	int ret;
 	
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, chip %s, offset %u -- file %s", __func__, chip->label, offset, __FILE__);
-	#endif
 
 	base = tegra186_gpio_get_base(gpio, offset);
 	if (WARN_ON(base == NULL))
@@ -769,9 +701,7 @@ static int tegra_gpio_timestamp_read(struct gpio_chip *chip, unsigned offset,
 	struct tegra_gpio *tgi = gpiochip_get_data(chip);
 	int ret;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO chip %s, offset %u, %s -- file %s", chip->label, offset, __func__, __FILE__);
-	#endif
 	
 	if (tgi->use_timestamp) {
 		*ts = tegra_gte_read_fifo(tgi, offset);
@@ -788,9 +718,7 @@ static int tegra186_gpio_get(struct gpio_chip *chip, unsigned int offset)
 	void __iomem *base;
 	u32 value;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO chip %s, offset %u, %s -- file %s", chip->label, offset, __func__, __FILE__);
-	#endif
 
 	base = tegra186_gpio_get_base(gpio, offset);
 	if (WARN_ON(base == NULL))
@@ -812,9 +740,7 @@ void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
 	void __iomem *base;
 	u32 value;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s (1): Chip %s, Offset %u -- file %s", __func__, chip->label, offset, __FILE__);
-	#endif
 
 	// redirect request to virtio module
 	// redirect function is used in Guest VM
@@ -822,10 +748,8 @@ void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
 		return tegra186_gpio_set_redirect(gpio->gpio.label, offset, level);
 	}
 	
-	#ifdef GPIO_VERBOSE
 	// if in host dump parameters for debuging
 	deb_debug("GPIO %s (2): Chip %s, Offset %d, Level %d", __func__, gpio->gpio.label, offset, level);
-	#endif
 
 	if (!gpio_is_accessible(gpio, offset)) {
 		pr_err("GPIO %s (error): gpio is not accessible, Chip %s, Offset %d", __func__, gpio->gpio.label, offset);
@@ -866,9 +790,7 @@ static int tegra186_gpio_set_config(struct gpio_chip *chip,
 	u32 debounce, value;
 	void __iomem *base;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s, chip %s, offset %u -- file %s", __func__, chip->label, offset, __FILE__);
-	#endif
 
 	base = tegra186_gpio_get_base(gpio, offset);
 	if (base == NULL)
@@ -906,9 +828,7 @@ static int tegra186_gpio_add_pin_ranges(struct gpio_chip *chip)
 	unsigned int i, j;
 	int err;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO chip %s, %s -- file %s", chip->label, __func__, __FILE__);
-	#endif
 
 	if (!gpio->soc->pinmux || gpio->soc->num_pin_ranges == 0)
 		return 0;
@@ -953,9 +873,7 @@ static int tegra186_gpio_of_xlate(struct gpio_chip *chip,
 	struct tegra_gpio *gpio = gpiochip_get_data(chip);
 	unsigned int port, pin, i, offset = 0;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO chip %s, %s -- file %s", chip->label, __func__, __FILE__);
-	#endif
 	
 	if (WARN_ON(chip->of_gpio_n_cells < 2))
 		return -EINVAL;
@@ -1226,9 +1144,7 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 	unsigned int i, j;
 	u32 value;
 
-	// #ifdef GPIO_VERBOSE
 	// deb_debug("GPIO %s, chip %s -- file %s", __func__, gpio->gpio.label, __FILE__);
-	// #endif
 
 	for (i = 0; i < gpio->soc->num_ports; i++) {
 		const struct tegra_gpio_port *port = &gpio->soc->ports[i];
@@ -1313,15 +1229,11 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	int value;
 	void __iomem *base;
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	#endif
 
 	gpio = devm_kzalloc(&pdev->dev, sizeof(*gpio), GFP_KERNEL);
 	if (!gpio) {
-	#ifdef GPIO_VERBOSE
 		pr_err("GPIO devm_kzalloc error %s -- file %s", __func__, __FILE__);
-	#endif
 		return -ENOMEM;
 	}
 
@@ -1331,9 +1243,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 
 	#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO Probe %s -- file %s", __func__, __FILE__);
-	#endif
 
 	// If virtual-pa node is defined, it means that we are using a virtual GPIO
 	// then we have to initialise the gpio-guest
@@ -1344,6 +1254,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 		return ret;
 	}
 	else {
+		/* we do not need tegra_gpio_hosts
  		// we can set tegra_gpio_host as soon as we have the pointer ?
 		// this is set only in the host
 		// note theat we can have several gpiochips
@@ -1355,6 +1266,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 			tegra_gpio_hosts[gpio_chip_count] = &gpio->gpio;
 		}
 		gpio_chip_count++;
+		*/ 
 	}
 	BUG_ON(gpio_vpa != 0);
 	
@@ -1464,9 +1376,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 				return -ENOMEM;
 
 			names[offset + j] = name;
-			// #ifdef GPIO_VERBOSE
 			// deb_debug("GPIO %s, name=%s", __func__, name);
-			// #endif
 		}
 
 		offset += port->pins;
@@ -1581,13 +1491,11 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	if (gpio->use_timestamp)
 		tegra_gte_setup(gpio);
 
-	#ifdef GPIO_VERBOSE
     deb_debug("GPIO %s, initialised gpio label=%s", __func__, gpio->gpio.label);
 	deb_debug("GPIO %s, initialised gpio at %p", __func__, gpio);
 	deb_debug("GPIO %s, initialised gpio->secure at %p", __func__, gpio->secure);
 	deb_debug("GPIO %s, initialised gpio->base at %p", __func__, gpio->base);
 	deb_debug("GPIO %s, initialised gpio->gte_regs at %p", __func__, gpio->gte_regs);
-	#endif
 
 /*	this section is from copydriver branch -- not valid here
 	
@@ -1604,20 +1512,16 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	else if ( ! strcmp(gpio->gpio.label,"tegra234-gpio-aon") ) {
 		gpio_ready += 1;
 	}
-	#ifdef GPIO_VERBOSE
 	else
 		pr_err("Can't match gpio chip label, in %s -- file %s", __func__, __FILE__);
 	if ( gpio_ready > 2 )
 		pr_err("Found too many chips, in %s -- file %s", __func__, __FILE__);
-	#endif
 
 	memcpy(&preset_gpio_local[n],  gpio, sizeof(struct tegra_gpio));
 	if ( gpio_ready == 2 )
 		complete(&gpio_data_ready);
 
-	#ifdef GPIO_VERBOSE
 	deb_debug("GPIO preset_gpio %s exported in %s -- file %s", gpio->gpio.label, __func__, __FILE__);
-	#endif
 	#endif
 */
 	return 0;
@@ -2009,9 +1913,7 @@ void * get_tegra186_gpio_driver(struct platform_driver *cpy) {
 	unsigned long flags;
 	void *ret;
 
-	#ifdef GPIO_VERBOSE
 	deb_info("Copying gpio_driver in function %s -- file %s", __func__, __FILE__);
-	#endif
 
 	wait_for_completion(&gpio_data_ready);
 	spin_lock_irqsave(&gpio_data_lock, flags);	// calling spinlock is redundant. No collision would occur.
@@ -2026,9 +1928,7 @@ void * get_preset_gpio(struct tegra_gpio *get)
 	unsigned long flags;
 	void *ret;
 	
-	#ifdef GPIO_VERBOSE
 	deb_debug("Debug probing gpio %s and %s, in function %s -- file %s", &preset_gpio_local->gpio.label[0], &preset_gpio_local->gpio.label[1], __func__, __FILE__);
-	#endif
 	
 	wait_for_completion(&gpio_data_ready);
 	spin_lock_irqsave(&gpio_data_lock, flags);

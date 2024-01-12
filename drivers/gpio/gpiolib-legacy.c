@@ -6,11 +6,20 @@
 
 #include "gpiolib.h"
 
+#define GPIO_VERBOSE
+
+#ifdef GPIO_VERBOSE
+#define deb_info(...)     printk(KERN_INFO __VA_ARGS__)
+#define deb_debug(...)    printk(KERN_DEBUG __VA_ARGS__)
+#else
+#define deb_info(...)
+#define deb_debug(...)
+#endif
+
+
 void gpio_free(unsigned gpio)
 {
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, label=%s -- file %s", __func__, label, __FILE__);
-	#endif
+	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
 		
 	gpiod_free(gpio_to_desc(gpio));
 }
@@ -27,9 +36,7 @@ int gpio_request_one(unsigned gpio, unsigned long flags, const char *label)
 	struct gpio_desc *desc;
 	int err;
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, label=%s -- file %s", __func__, label, __FILE__);
-	#endif	
+	deb_debug("GPIO %s, label=%s -- file %s", __func__, label, __FILE__);
 
 	desc = gpio_to_desc(gpio);
 
@@ -77,9 +84,7 @@ int gpio_request(unsigned gpio, const char *label)
 {
 	struct gpio_desc *desc = gpio_to_desc(gpio);
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, label=%s -- file %s", __func__, label, __FILE__);
-	#endif
+	deb_debug("GPIO %s, label=%s -- file %s", __func__, label, __FILE__);
 	
 	/* Compatibility: assume unavailable "valid" GPIOs will appear later */
 	if (!desc && gpio_is_valid(gpio))
@@ -98,9 +103,7 @@ int gpio_request_array(const struct gpio *array, size_t num)
 {
 	int i, err;
 
-	#ifdef GPIO_VERBOSE
-	printk(KERN_DEBUG "GPIO %s, label=%s -- file %s", __func__, label, __FILE__);
-	#endif
+	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
 	
 	for (i = 0; i < num; i++, array++) {
 		err = gpio_request_one(array->gpio, array->flags, array->label);
