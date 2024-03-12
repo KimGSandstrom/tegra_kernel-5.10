@@ -37,11 +37,11 @@
 #define GPIO_VERBOSE
 
 #ifdef GPIO_VERBOSE
-#define deb_info(fmt, args...)     printk(KERN_INFO fmt, ##args)
-#define deb_debug(fmt, args...)    printk(KERN_DEBUG fmt, ##args)
+#define deb_info(fmt, ...)     printk(KERN_INFO fmt, ##__VA_ARGS__)
+#define deb_debug(fmt, ...)    printk(KERN_DEBUG fmt, ##__VA_ARGS__)
 #else
-#define deb_info(fmt, args...)
-#define deb_debug(fmt, args...)
+#define deb_info(fmt, ...)
+#define deb_debug(fmt, ...)
 #endif
 
 
