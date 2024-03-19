@@ -2480,7 +2480,7 @@ static const struct tegra_pinctrl_soc_data tegra30_pinctrl = {
 	.drvtype_in_mux = false,
 };
 
-#define GPIO_VERBOSE
+// #define GPIO_VERBOSE
 
 static int tegra30_pinctrl_probe(struct platform_device *pdev)
 {

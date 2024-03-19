@@ -918,7 +918,7 @@ static const struct tegra_pinctrl_soc_data tegra186_pinctrl = {
 	.sfsel_in_mux = true,
 };
 
-#define GPIO_VERBOSE
+// #define GPIO_VERBOSE
 
 static int tegra186_pinctrl_probe(struct platform_device *pdev)
 {

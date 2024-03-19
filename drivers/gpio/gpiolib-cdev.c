@@ -83,7 +83,7 @@ struct linehandle_state {
 	GPIOHANDLE_REQUEST_OPEN_DRAIN | \
 	GPIOHANDLE_REQUEST_OPEN_SOURCE)
 
-#define GPIO_VERBOSE
+// #define GPIO_VERBOSE
 
 #ifdef GPIO_VERBOSE
 #define deb_info(fmt, ...)     printk(KERN_INFO fmt, ##__VA_ARGS__)

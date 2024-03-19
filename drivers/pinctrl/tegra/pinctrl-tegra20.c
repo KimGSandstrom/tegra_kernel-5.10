@@ -2236,7 +2236,7 @@ static const char *cdev2_parents[] = {
 	"dev2_osc_div", "hclk", "pclk", "pll_p_out4",
 };
 
-#define GPIO_VERBOSE
+// #define GPIO_VERBOSE
 
 static void tegra20_pinctrl_register_clock_muxes(struct platform_device *pdev)
 {

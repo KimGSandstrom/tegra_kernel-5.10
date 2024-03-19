@@ -18,7 +18,7 @@
 #define GPIO_IRQF_TRIGGER_BOTH		(GPIO_IRQF_TRIGGER_FALLING | \
 					 GPIO_IRQF_TRIGGER_RISING)
 
-#define GPIO_VERBOSE
+// #define GPIO_VERBOSE
 
 #ifdef GPIO_VERBOSE
 #define deb_info(fmt, ...)     printk(KERN_INFO fmt, ##__VA_ARGS__)

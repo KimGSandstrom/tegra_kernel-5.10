@@ -34,7 +34,7 @@
 #define EMMC_DPD_PARKING(x)		(x << EMMC_PARKING_BIT)
 #define EMMC_PARKING_SET		0x1FFF
 
-#define GPIO_VERBOSE
+// #define GPIO_VERBOSE
 
 #ifdef GPIO_VERBOSE
 #define deb_info(fmt, ...)     printk(KERN_INFO fmt, ##__VA_ARGS__)

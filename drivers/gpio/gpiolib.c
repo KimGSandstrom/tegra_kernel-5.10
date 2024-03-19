@@ -31,7 +31,7 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/gpio.h>
 
-#define GPIO_VERBOSE
+// #define GPIO_VERBOSE
 
 #ifdef GPIO_VERBOSE
 #define deb_info(fmt, ...)     printk(KERN_INFO fmt, ##__VA_ARGS__)

@@ -58,7 +58,7 @@
 #define GPIO_INT_LVL_LEVEL_HIGH		0x000001
 #define GPIO_INT_LVL_LEVEL_LOW		0x000000
 
-#define GPIO_VERBOSE
+// #define GPIO_VERBOSE
 
 #ifdef GPIO_VERBOSE
 #define deb_info(fmt, ...)     printk(KERN_INFO fmt, ##__VA_ARGS__)
