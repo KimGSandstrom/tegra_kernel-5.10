@@ -318,8 +318,6 @@ struct gpio_desc *gpiod_get_from_of_node(struct device_node *node,
 	bool transitory = false;
 	int ret;
 
-	printk(KERN_DEBUG "GPIO %s, label=%s -- file %s", __func__, label, __FILE__);
-	
 	desc = of_get_named_gpiod_flags(node, propname,
 					index, &flags);
 

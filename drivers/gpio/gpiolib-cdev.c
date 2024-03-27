@@ -83,11 +83,11 @@ struct linehandle_state {
 	GPIOHANDLE_REQUEST_OPEN_DRAIN | \
 	GPIOHANDLE_REQUEST_OPEN_SOURCE)
 
-// #define GPIO_VERBOSE
+// #define GPIO_DEBUG
 
-#ifdef GPIO_VERBOSE
-#define deb_info(fmt, ...)     printk(KERN_INFO fmt, ##__VA_ARGS__)
-#define deb_debug(fmt, ...)    printk(KERN_DEBUG fmt, ##__VA_ARGS__)
+#ifdef GPIO_DEBUG
+#define deb_info(fmt, ...)     printk(KERN_INFO"GPIO func \'%s\' in file \'%s\' -- " fmt, ##__VA_ARGS__)
+#define deb_debug(fmt, ...)    printk(KERN_DEBUG"GPIO func \'%s\' in file \'%s\' -- " fmt, ##__VA_ARGS__)
 #else
 #define deb_info(fmt, ...)
 #define deb_debug(fmt, ...)
@@ -165,7 +165,7 @@ static long linehandle_set_config(struct linehandle_state *lh,
 	int i, ret;
 	u32 lflags;
 
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	
 	if (copy_from_user(&gcnf, ip, sizeof(gcnf)))
 		return -EFAULT;
@@ -211,7 +211,7 @@ static long linehandle_ioctl(struct file *file, unsigned int cmd,
 	DECLARE_BITMAP(vals, GPIOHANDLES_MAX);
 	int i;
 
-	deb_debug("GPIO %s, cmd=0x%x, user_pointer=0x%p -- file %s", __func__, cmd, ip, __FILE__);
+	deb_debug("cmd=0x%x, user_pointer=0x%p\n", cmd, ip);
 	
 	if (cmd == GPIOHANDLE_GET_LINE_VALUES_IOCTL) {
 		/* NOTE: It's ok to read values of output lines. */
@@ -282,7 +282,7 @@ static void linehandle_free(struct linehandle_state *lh)
 
 static int linehandle_release(struct inode *inode, struct file *file)
 {
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	
 	linehandle_free(file->private_data);
 	return 0;
@@ -306,7 +306,7 @@ static int linehandle_create(struct gpio_device *gdev, void __user *ip)
 	int fd, i, ret;
 	u32 lflags;
 
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	
 	if (copy_from_user(&handlereq, ip, sizeof(handlereq)))
 		return -EFAULT;
@@ -1058,7 +1058,7 @@ static long linereq_set_values_unlocked(struct linereq *lr,
 	unsigned int i, didx, num_set;
 	int ret;
 
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	
 	bitmap_zero(vals, GPIO_V2_LINES_MAX);
 	for (num_set = 0, i = 0; i < lr->num_lines; i++) {
@@ -1099,7 +1099,7 @@ static long linereq_set_values(struct linereq *lr, void __user *ip)
 	struct gpio_v2_line_values lv;
 	int ret;
 
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	
 	if (copy_from_user(&lv, ip, sizeof(lv)))
 		return -EFAULT;
@@ -1187,7 +1187,7 @@ static long linereq_ioctl(struct file *file, unsigned int cmd,
 	struct linereq *lr = file->private_data;
 	void __user *ip = (void __user *)arg;
 
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	
 	if (cmd == GPIO_V2_LINE_GET_VALUES_IOCTL)
 		return linereq_get_values(lr, ip);
@@ -1321,7 +1321,7 @@ static int linereq_create(struct gpio_device *gdev, void __user *ip)
 	unsigned int i;
 	int fd, ret;
 	
-	deb_debug("GPIO %s, -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 
 	if (copy_from_user(&ulr, ip, sizeof(ulr)))
 		return -EFAULT;
@@ -1728,7 +1728,7 @@ static int lineevent_create(struct gpio_device *gdev, void __user *ip)
 	int ret;
 	int irq, irqflags = 0;
 
-	deb_debug("GPIO %s, -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	
 	if (copy_from_user(&eventreq, ip, sizeof(eventreq)))
 		return -EFAULT;
@@ -2027,7 +2027,7 @@ static int lineinfo_get_v1(struct gpio_chardev_data *cdev, void __user *ip,
 	struct gpioline_info lineinfo;
 	struct gpio_v2_line_info lineinfo_v2;
 
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	
 	if (copy_from_user(&lineinfo, ip, sizeof(lineinfo)))
 		return -EFAULT;
@@ -2064,7 +2064,7 @@ static int lineinfo_get(struct gpio_chardev_data *cdev, void __user *ip,
 	struct gpio_desc *desc;
 	struct gpio_v2_line_info lineinfo;
 
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	
 	if (copy_from_user(&lineinfo, ip, sizeof(lineinfo)))
 		return -EFAULT;
@@ -2120,7 +2120,7 @@ static long gpio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	struct gpio_device *gdev = cdev->gdev;
 	void __user *ip = (void __user *)arg;
 
-	deb_debug("GPIO %s, cmd=0x%x, user_pointer=0x%p -- file %s", __func__, cmd, ip, __FILE__);
+	deb_debug("cmd=0x%x, user_pointer=0x%p\n", cmd, ip);
 	
 	/* We fail any subsequent ioctl():s when the chip is gone */
 	if (!gdev->chip)
@@ -2155,7 +2155,7 @@ static long gpio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 static long gpio_ioctl_compat(struct file *file, unsigned int cmd,
 			      unsigned long arg)
 {
-	deb_debug("GPIO %s, cmd=%d -- file %s", __func__, cmd, __FILE__);
+	deb_debug("cmd=%d\n", cmd);
 	
 	return gpio_ioctl(file, cmd, (unsigned long)compat_ptr(arg));
 }
@@ -2283,10 +2283,6 @@ static ssize_t lineinfo_watch_read(struct file *file, char __user *buf,
 	return bytes_read;
 }
 
-// XXX this one seems top level -- file handle is problematic
-// gpio_device should provide sufficient data
-// we are saving data in extern struct gpio_device *proxy_host_gpio_dev[MAX_CHIPS];
-
 /**
  * gpio_chrdev_open() - open the chardev for ioctl operations
  * @inode: inode for this chardev
@@ -2300,7 +2296,7 @@ static int gpio_chrdev_open(struct inode *inode, struct file *file)
 	struct gpio_chardev_data *cdev;
 	int ret = -ENOMEM;
 
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 
 	/* Fail on open if the backing gpiochip is gone */
 	if (!gdev->chip)
@@ -2326,7 +2322,6 @@ static int gpio_chrdev_open(struct inode *inode, struct file *file)
 
 	get_device(&gdev->dev);
 	file->private_data = cdev;
-// XXX here is one problem with inode, file
 	ret = nonseekable_open(inode, file);
 	if (ret)
 		goto out_unregister_notifier;
@@ -2354,7 +2349,7 @@ static int gpio_chrdev_release(struct inode *inode, struct file *file)
 	struct gpio_chardev_data *cdev = file->private_data;
 	struct gpio_device *gdev = cdev->gdev;
 
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 
 	bitmap_free(cdev->watched_lines);
 	blocking_notifier_chain_unregister(&gdev->notifier,
@@ -2382,7 +2377,7 @@ int gpiolib_cdev_register(struct gpio_device *gdev, dev_t devt)
 {
 	int ret;
 
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	
 	cdev_init(&gdev->chrdev, &gpio_fileops);
 	gdev->chrdev.owner = THIS_MODULE;
@@ -2400,7 +2395,7 @@ int gpiolib_cdev_register(struct gpio_device *gdev, dev_t devt)
 
 void gpiolib_cdev_unregister(struct gpio_device *gdev)
 {
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	
 	cdev_device_del(&gdev->chrdev, &gdev->dev);
 }

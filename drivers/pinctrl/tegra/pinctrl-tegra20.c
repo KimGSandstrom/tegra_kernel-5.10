@@ -2236,7 +2236,22 @@ static const char *cdev2_parents[] = {
 	"dev2_osc_div", "hclk", "pclk", "pll_p_out4",
 };
 
-// #define GPIO_VERBOSE
+// #define GPIO_DEBUG
+// #define GPIO_DEBUG_VERBOSE
+
+#ifdef GPIO_DEBUG
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
+#else
+  #define deb_info(fmt, ...)
+  #define deb_debug(fmt, ...)
+#endif
+
+#ifdef GPIO_DEBUG_VERBOSE
+  #define deb_verbose           deb_debug
+#else
+  #define deb_verbose(fmt, ...)
+#endif
 
 static void tegra20_pinctrl_register_clock_muxes(struct platform_device *pdev)
 {
@@ -2251,7 +2266,7 @@ static void tegra20_pinctrl_register_clock_muxes(struct platform_device *pdev)
 
 static int tegra20_pinctrl_probe(struct platform_device *pdev)
 {
-	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	int err;
 
 	err = tegra_pinctrl_probe(pdev, &tegra20_pinctrl);
@@ -2278,7 +2293,7 @@ static struct platform_driver tegra20_pinctrl_driver = {
 
 static int __init tegra20_pinctrl_init(void)
 {
-	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	return platform_driver_register(&tegra20_pinctrl_driver);
 }
 arch_initcall(tegra20_pinctrl_init);

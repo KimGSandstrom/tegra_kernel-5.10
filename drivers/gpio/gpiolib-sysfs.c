@@ -18,11 +18,11 @@
 #define GPIO_IRQF_TRIGGER_BOTH		(GPIO_IRQF_TRIGGER_FALLING | \
 					 GPIO_IRQF_TRIGGER_RISING)
 
-// #define GPIO_VERBOSE
+// #define GPIO_DEBUG
 
-#ifdef GPIO_VERBOSE
-#define deb_info(fmt, ...)     printk(KERN_INFO fmt, ##__VA_ARGS__)
-#define deb_debug(fmt, ...)    printk(KERN_DEBUG fmt, ##__VA_ARGS__)
+#ifdef GPIO_DEBUG
+#define deb_info(fmt, ...)     printk(KERN_INFO"GPIO func \'%s\' in file \'%s\' -- " fmt, ##__VA_ARGS__)
+#define deb_debug(fmt, ...)    printk(KERN_DEBUG"GPIO func \'%s\' in file \'%s\' -- " fmt, ##__VA_ARGS__)
 #else
 #define deb_info(fmt, ...)
 #define deb_debug(fmt, ...)
@@ -499,8 +499,8 @@ static ssize_t export_store(struct class *class,
 	struct gpio_chip	*gc;
 	int			offset;
 
-	deb_debug("GPIO %s -- file %s", __func__, __FILE__);
-	
+	deb_debug("\n");
+
 	status = kstrtol(buf, 0, &gpio);
 
 	/* If buf is not a number then try to find by name */

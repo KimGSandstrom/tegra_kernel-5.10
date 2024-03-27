@@ -2057,11 +2057,26 @@ static const struct tegra_pinctrl_soc_data tegra124_pinctrl = {
 	.drvtype_in_mux = false,
 };
 
-// #define GPIO_VERBOSE
+// #define GPIO_DEBUG
+// #define GPIO_DEBUG_VERBOSE
+
+#ifdef GPIO_DEBUG
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
+#else
+  #define deb_info(fmt, ...)
+  #define deb_debug(fmt, ...)
+#endif
+
+#ifdef GPIO_DEBUG_VERBOSE
+  #define deb_verbose           deb_debug
+#else
+  #define deb_verbose(fmt, ...)
+#endif
 
 static int tegra124_pinctrl_probe(struct platform_device *pdev)
 {
-	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	return tegra_pinctrl_probe(pdev, &tegra124_pinctrl);
 }
 
@@ -2080,7 +2095,7 @@ static struct platform_driver tegra124_pinctrl_driver = {
 
 static int __init tegra124_pinctrl_init(void)
 {
-	printk(KERN_DEBUG "GPIO %s -- file %s", __func__, __FILE__);
+	deb_debug("\n");
 	return platform_driver_register(&tegra124_pinctrl_driver);
 }
 arch_initcall(tegra124_pinctrl_init);
