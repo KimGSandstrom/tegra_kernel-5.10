@@ -198,7 +198,7 @@
     #define deb_info(fmt, ...)
     #define deb_debug(fmt, ...)
   #endif
-  
+
   #ifdef GPIO_DEBUG_VERBOSE
     #define deb_verbose           deb_debug
   #else
@@ -1255,6 +1255,7 @@ error:
   extern int tegra186_gpio_add_pin_ranges_redirect(struct gpio_chip *chip);
 
   static inline void gpio_hook(struct tegra_gpio *gpio) {
+    deb_debug("Entering function with pointer: %p and gpio: %s", gpio, gpio->gpio.label);
     gpio->gpio.request = gpiochip_generic_request_redirect;
     gpio->gpio.free = gpiochip_generic_free_redirect;
     gpio->gpio.get_direction = tegra186_gpio_get_direction_redirect;
@@ -1275,6 +1276,7 @@ error:
 
 // this function sets the standard bindings used by the host driver
 static inline void gpio_unhook(struct tegra_gpio *gpio) {
+  deb_debug("Entering function with pointer: %p and gpio: %s", gpio, gpio->gpio.label);
   gpio->gpio.request = gpiochip_generic_request;
   gpio->gpio.free = gpiochip_generic_free;
   gpio->gpio.get_direction = tegra186_gpio_get_direction;
@@ -1359,17 +1361,17 @@ static inline void gpio_unhook(struct tegra_gpio *gpio) {
   void unpreserve_all_tegrachips(void) {
     struct tegra_gpio ** tegrachip;
     int i = 0;
-    
+
     // wait until tegra driver has set the tegra_gpio_hosts array -- this seems a bit paranoid
     while (atomic_read(&tegra_gpio_hosts_ready) != MAX_CHIP) {
       msleep(100); // Sleep briefly instead of looping infinitely.
       if( i++ > 120 ) {
-        pr_err("could not access tegra_gpio chip array\n");
+        pr_err("GPIO could not access tegra_gpio chip array\n");
         return;
       }
     }
     for( i = 0 ; i < MAX_CHIP ; i++){
-      tegrachip = &tegra_gpio_hosts[i]; 
+      tegrachip = &tegra_gpio_hosts[i];
       if(*tegrachip)
         gpio_unhook(*tegrachip);
       *tegrachip = NULL;
@@ -1384,7 +1386,7 @@ static inline void gpio_unhook(struct tegra_gpio *gpio) {
     while (atomic_read(&tegra_gpio_hosts_ready) != MAX_CHIP) {
       msleep(100); // Sleep briefly instead of looping infinitely.
       if( i++ > 120 ) {
-        pr_err("tegra_gpio_hosts setup error\n");
+        pr_err("GPIO tegra_gpio_hosts setup error\n");
         return NULL;
       }
     }
@@ -1406,8 +1408,9 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	int value;
 	void __iomem *base;
 
+  bool kernel_is_on_guest = false;
   static bool guest_proxy_is_set_up = false;
-	
+
   deb_debug("Probing gpio\n");
 
 	gpio = devm_kzalloc(&pdev->dev, sizeof(*gpio), GFP_KERNEL);
@@ -1416,16 +1419,33 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 
+	#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+
+    deb_debug("GPIO Proxy code\n");
+
+    // If virtual-pa node is defined, it means that we are using a virtual GPIO
+    err = of_property_read_u64(pdev->dev.of_node, "virtual-pa", &gpio_vpa);
+    if(!err) {
+      deb_info("GPIO kernel is on guest, virtual-pa: 0x%llx\n", gpio_vpa);
+      kernel_is_on_guest = true;
+    }
+  #endif
+
+  deb_debug("A");
 	gpio->soc = of_device_get_match_data(&pdev->dev);
+  deb_debug("B %s with id=%u", pdev->name, pdev->id);
 	gpio->gpio.label = gpio->soc->name;
+  deb_debug("C gpio->soc->name=%s", gpio->soc->name);
 	gpio->gpio.parent = &pdev->dev;
 
+  deb_debug("D");
 	gpio->secure = devm_platform_ioremap_resource_byname(pdev, "security");
 	if (IS_ERR(gpio->secure)) {
-		pr_err("GPIO *ERROR* devm_platform_ioremap_resource_byname pdev->name = \"%s\"", pdev->name);
+		pr_err("GPIO *ERROR* devm_platform_ioremap_resource_byname pdev->name=\"%s\"", pdev->name);
 		return PTR_ERR(gpio->secure);
 	}
 
+  deb_debug("num of ports = %d\n", gpio->soc->num_ports);
 
 	/* count the number of banks in the controller */
 	for (i = 0; i < gpio->soc->num_ports; i++)
@@ -1433,6 +1453,12 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 			gpio->num_banks = gpio->soc->ports[i].bank;
 
 	gpio->num_banks++;
+
+	#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+    // in we are on guest VM
+    if(kernel_is_on_guest)
+      goto quick_end_without_irq_setup;
+  #endif
 
 	gpio->base = devm_platform_ioremap_resource_byname(pdev, "gpio");
 	if (IS_ERR(gpio->base))
@@ -1467,14 +1493,18 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	}
 
 	err = platform_irq_count(pdev);
-	if (err < 0)
+	if (err < 0) {
+    pr_err("GPIO platform_irq_count\n");
 		return err;
+  }
 
 	gpio->num_irq = err;
 
 	err = tegra186_gpio_irqs_per_bank(gpio);
-	if (err < 0)
+	if (err < 0) {
+    pr_err("GPIO tegra186_gpio_irqs_per_bank\n");
 		return err;
+  }
 
 	gpio->irq = devm_kcalloc(&pdev->dev, gpio->num_irq, sizeof(*gpio->irq),
 				 GFP_KERNEL);
@@ -1483,46 +1513,15 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 
 	for (i = 0; i < gpio->num_irq; i++) {
 		err = platform_get_irq(pdev, i);
-		if (err < 0)
+		if (err < 0) {
+      pr_err("GPIO platform_get_irq");
 			return err;
+    }
 
 		gpio->irq[i] = err;
 	}
 
-	#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-
-    deb_debug("GPIO Proxy code\n");
-
-    // If virtual-pa node is defined, it means that we are using a virtual GPIO
-    // then we have to initialise the gpio-guest
-    err = of_property_read_u64(pdev->dev.of_node, "virtual-pa", &gpio_vpa);
-    // code behind 'if' is executed in guest VM based on Device Tree parsing of virtual-pa above
-    if(!err) {
-      deb_info("GPIO virtual-pa: 0x%llx\n", gpio_vpa);
-      if( ! guest_proxy_is_set_up ) {
-        // we want to avoid double initialisation of tegra_gpio_guest_init()
-        ret = tegra_gpio_guest_init();
-        guest_proxy_is_set_up = true;
-      }
-      // hook for all instances of "host" (i.e. default) driver in guest VM"
-      gpio_hook(gpio);
-    }
-    // error in reading virtual-pa is non fatal, it only means we are on host.
-    else {
-      // gpio_unhook is the same as standard settings
-      // unhooked pointers are for the host driver on host only
-      // guest should use gpio_hook() for its host driver
-      BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver
-      gpio_unhook(gpio);
-    }
-  gpio->gpio.base = -1;
-  #else
-    deb_debug("Setting standard gpio functions in a non-proxy compile of driver\n")
-    BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver, because non-proxy
-    gpio_unhook(gpio);
-  #endif
-
-  deb_debug("gpio function pointers are set\n");
+  // gpio function pionters were set here in stock code, now moved to the end of this function
 
 	for (i = 0; i < gpio->soc->num_ports; i++)
 		gpio->gpio.ngpio += gpio->soc->ports[i].pins;
@@ -1629,15 +1628,12 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	}
 
 	platform_set_drvdata(pdev, gpio);
-	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
-    if(guest_proxy_is_set_up) {
-      deb_debug("Skipping devm_gpiochip_add_data because of lacking data in guest");
-      goto quick_end_for_hostdriver_in_guestvm;
-    }
-  #endif
+
   err = devm_gpiochip_add_data(&pdev->dev, &gpio->gpio, gpio);
-	if (err < 0)
+	if (err < 0) {
+    pr_err("GPIO devm_gpiochip_add_data\n");
     return err;
+  }
 
 	if (gpio->soc->is_hw_ts_sup) {
 		for (i = 0, offset = 0; i < gpio->soc->num_ports; i++) {
@@ -1664,9 +1660,34 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 		tegra_gte_setup(gpio);
 
 	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
-    quick_end_for_hostdriver_in_guestvm:
-    deb_debug("GPIO, initialised gpio label=%s\n", gpio->gpio.label);
-    preserve_tegrachip(gpio);
+    quick_end_without_irq_setup:
+
+    deb_debug("GPIO Proxy code\n");
+
+    if( kernel_is_on_guest ) {
+      if( ! guest_proxy_is_set_up ) {
+        ret = tegra_gpio_guest_init();
+        guest_proxy_is_set_up = true;
+      }
+      // hook for all function pointers in default driver in guest VM"
+      // guest should use gpio_hook() for its "host" driver
+      gpio_hook(gpio);
+    }
+    // error in reading virtual-pa is non fatal, it only means we are on host.
+    else {
+      // gpio_unhook is the same as standard settings
+      // unhooked pointers are for the host driver on host only
+      BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver
+      gpio_unhook(gpio);
+    }
+  gpio->gpio.base = -1;
+  deb_debug("gpio function pointers are set for gpio label=%s\n", gpio->gpio.label);
+  preserve_tegrachip(gpio);
+  #else
+    // this code segment is for standard operation in a compile without PROXY configuraton
+    deb_debug("Setting standard gpio functions for a non-proxy compile of driver\n")
+    BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver, because non-proxy
+    gpio_unhook(gpio);
   #endif
   return 0;
 }
