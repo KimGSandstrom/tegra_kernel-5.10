@@ -503,6 +503,7 @@ static void devm_gpio_chip_release(struct device *dev, void *res)
  * gc->base is invalid or already associated with a different chip.
  * Otherwise it returns zero as a success code.
  */
+
 int devm_gpiochip_add_data_with_key(struct device *dev, struct gpio_chip *gc, void *data,
 				    struct lock_class_key *lock_key,
 				    struct lock_class_key *request_key)
@@ -527,3 +528,37 @@ int devm_gpiochip_add_data_with_key(struct device *dev, struct gpio_chip *gc, vo
 	return 0;
 }
 EXPORT_SYMBOL_GPL(devm_gpiochip_add_data_with_key);
+
+/* redirect function added for gpio passthrough in Guest VM
+ * Virtual machine does not have psysical access to resources
+ */
+
+//from kernel-5.10/drivers/gpio/gpiolib-devres.c
+// a note for redirect
+// we redirect
+
+extern int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data);
+
+int devm_gpiochip_add_data__redirect(struct device *dev, struct gpio_chip *gc, void *data)
+{
+	struct gpio_chip **ptr;
+	int ret;
+
+	ptr = devres_alloc(devm_gpio_chip_release, sizeof(*ptr),
+			     GFP_KERNEL);
+	if (!ptr)
+		return -ENOMEM;
+
+	ret = gpiochip_add_data__redirect (gc, data);
+	if (ret < 0) {
+		devres_free(ptr);
+		return ret;
+	}
+
+	*ptr = gc;
+	devres_add(dev, ptr);
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(devm_gpiochip_add_data__redirect);
+

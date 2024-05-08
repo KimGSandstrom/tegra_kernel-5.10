@@ -855,6 +855,242 @@ err_free_gdev:
 }
 EXPORT_SYMBOL_GPL(gpiochip_add_data_with_key);
 
+/* redirect function added for gpio passthrough in Guest VM
+ * Virtual machine does not have psysical access to resources
+ */
+
+extern int devm_gpiochip_add_data__redirect(struct device *dev, struct gpio_chip *gc, void *data);
+
+int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
+{
+  struct lock_class_key *lock_key = NULL;
+  struct lock_class_key *request_key = NULL;
+	struct fwnode_handle *fwnode = gc->parent ? dev_fwnode(gc->parent) : NULL;
+	unsigned long	flags;
+	int		ret = 0;
+	unsigned	i;
+	int		base = gc->base;
+	struct gpio_device *gdev;
+
+	deb_debug("\n");
+
+	/*
+	 * First: allocate and populate the internal stat container, and
+	 * set up the struct device.
+	 */
+	gdev = kzalloc(sizeof(*gdev), GFP_KERNEL);
+	if (!gdev)
+		return -ENOMEM;
+	gdev->dev.bus = &gpio_bus_type;
+	gdev->chip = gc;
+	gc->gpiodev = gdev;
+	if (gc->parent) {
+		gdev->dev.parent = gc->parent;
+		gdev->dev.of_node = gc->parent->of_node;
+	}
+
+    #ifdef CONFIG_OF_GPIO
+	/* If the gpiochip has an assigned OF node this takes precedence */
+	if (gc->of_node)
+		gdev->dev.of_node = gc->of_node;
+	else
+		gc->of_node = gdev->dev.of_node;
+    #endif
+
+	/*
+	 * Assign fwnode depending on the result of the previous calls,
+	 * if none of them succeed, assign it to the parent's one.
+	 */
+	gdev->dev.fwnode = dev_fwnode(&gdev->dev) ?: fwnode;
+
+	gdev->id = ida_alloc(&gpio_ida, GFP_KERNEL);
+	if (gdev->id < 0) {
+		ret = gdev->id;
+		goto err_free_gdev;
+	}
+
+	ret = dev_set_name(&gdev->dev, GPIOCHIP_NAME "%d", gdev->id);
+	if (ret)
+		goto err_free_ida;
+
+	device_initialize(&gdev->dev);
+	dev_set_drvdata(&gdev->dev, gdev);
+	if (gc->parent && gc->parent->driver)
+		gdev->owner = gc->parent->driver->owner;
+	else if (gc->owner)
+		/* TODO: remove chip->owner */
+		gdev->owner = gc->owner;
+	else
+		gdev->owner = THIS_MODULE;
+
+	gdev->descs = kcalloc(gc->ngpio, sizeof(gdev->descs[0]), GFP_KERNEL);
+	if (!gdev->descs) {
+		ret = -ENOMEM;
+		goto err_free_dev_name;
+	}
+
+	if (gc->ngpio == 0) {
+		chip_err(gc, "tried to insert a GPIO chip with zero lines\n");
+		ret = -EINVAL;
+		goto err_free_descs;
+	}
+
+	if (gc->ngpio > FASTPATH_NGPIO)
+		chip_warn(gc, "line cnt %u is greater than fast path cnt %u\n",
+			  gc->ngpio, FASTPATH_NGPIO);
+
+	gdev->label = kstrdup_const(gc->label ?: "unknown", GFP_KERNEL);
+	if (!gdev->label) {
+		ret = -ENOMEM;
+		goto err_free_descs;
+	}
+
+	gdev->ngpio = gc->ngpio;
+	gdev->data = data;
+
+	spin_lock_irqsave(&gpio_lock, flags);
+
+	/*
+	 * TODO: this allocates a Linux GPIO number base in the global
+	 * GPIO numberspace for this chip. In the long run we want to
+	 * get *rid* of this numberspace and use only descriptors, but
+	 * it may be a pipe dream. It will not happen before we get rid
+	 * of the sysfs interface anyways.
+	 */
+	if (base < 0) {
+		base = gpiochip_find_base(gc->ngpio);
+		if (base < 0) {
+			ret = base;
+			spin_unlock_irqrestore(&gpio_lock, flags);
+			goto err_free_label;
+		}
+		/*
+		 * TODO: it should not be necessary to reflect the assigned
+		 * base outside of the GPIO subsystem. Go over drivers and
+		 * see if anyone makes use of this, else drop this and assign
+		 * a poison instead.
+		 */
+		gc->base = base;
+	}
+	gdev->base = base;
+
+	ret = gpiodev_add_to_list(gdev);
+	if (ret) {
+		spin_unlock_irqrestore(&gpio_lock, flags);
+		goto err_free_label;
+	}
+
+	for (i = 0; i < gc->ngpio; i++)
+		gdev->descs[i].gdev = gdev;
+
+	spin_unlock_irqrestore(&gpio_lock, flags);
+
+	BLOCKING_INIT_NOTIFIER_HEAD(&gdev->notifier);
+
+    #ifdef CONFIG_PINCTRL
+	INIT_LIST_HEAD(&gdev->pin_ranges);
+    #endif
+
+	if (gc->names)
+		ret = gpiochip_set_desc_names(gc);
+	else
+		ret = devprop_gpiochip_set_names(gc);
+	if (ret)
+		goto err_remove_from_list;
+
+	ret = gpiochip_alloc_valid_mask(gc);
+	if (ret)
+		goto err_remove_from_list;
+
+	ret = of_gpiochip_add(gc);
+	if (ret)
+		goto err_free_gpiochip_mask;
+
+	ret = gpiochip_init_valid_mask(gc);
+	if (ret)
+		goto err_remove_of_chip;
+
+	for (i = 0; i < gc->ngpio; i++) {
+		struct gpio_desc *desc = &gdev->descs[i];
+
+		if (gc->get_direction && gpiochip_line_is_valid(gc, i)) {
+			assign_bit(FLAG_IS_OUT,
+				   &desc->flags, !gc->get_direction(gc, i));
+		} else {
+			assign_bit(FLAG_IS_OUT,
+				   &desc->flags, !gc->direction_input);
+		}
+	}
+
+	ret = gpiochip_add_pin_ranges(gc);
+	if (ret)
+		goto err_remove_of_chip;
+
+	acpi_gpiochip_add(gc);
+
+	machine_gpiochip_add(gc);
+
+	ret = gpiochip_irqchip_init_valid_mask(gc);
+	if (ret)
+		goto err_remove_acpi_chip;
+
+	ret = gpiochip_irqchip_init_hw(gc);
+	if (ret)
+		goto err_remove_acpi_chip;
+
+	ret = gpiochip_add_irqchip(gc, lock_key, request_key);
+	if (ret)
+		goto err_remove_irqchip_mask;
+
+	/*
+	 * By first adding the chardev, and then adding the device,
+	 * we get a device node entry in sysfs under
+	 * /sys/bus/gpio/devices/gpiochipN/dev that can be used for
+	 * coldplug of device nodes and other udev business.
+	 * We can do this only if gpiolib has been initialized.
+	 * Otherwise, defer until later.
+	 */
+	if (gpiolib_initialized) {
+		ret = gpiochip_setup_dev(gdev);
+		if (ret)
+			goto err_remove_irqchip;
+	}
+	return 0;
+
+err_remove_irqchip:
+	gpiochip_irqchip_remove(gc);
+err_remove_irqchip_mask:
+	gpiochip_irqchip_free_valid_mask(gc);
+err_remove_acpi_chip:
+	acpi_gpiochip_remove(gc);
+err_remove_of_chip:
+	gpiochip_free_hogs(gc);
+	of_gpiochip_remove(gc);
+err_free_gpiochip_mask:
+	gpiochip_remove_pin_ranges(gc);
+	gpiochip_free_valid_mask(gc);
+err_remove_from_list:
+	spin_lock_irqsave(&gpio_lock, flags);
+	list_del(&gdev->list);
+	spin_unlock_irqrestore(&gpio_lock, flags);
+err_free_label:
+	kfree_const(gdev->label);
+err_free_descs:
+	kfree(gdev->descs);
+err_free_dev_name:
+	kfree(dev_name(&gdev->dev));
+err_free_ida:
+	ida_free(&gpio_ida, gdev->id);
+err_free_gdev:
+	/* failures here can mean systems won't boot... */
+	pr_err("%s: GPIOs %d..%d (%s) failed to register, %d\n", __func__,
+	       gdev->base, gdev->base + gdev->ngpio - 1,
+	       gc->label ? : "generic", ret);
+	kfree(gdev);
+	return ret;
+}
+EXPORT_SYMBOL_GPL(gpiochip_add_data__redirect);
+
 /**
  * gpiochip_get_data() - get per-subdriver data for the chip
  * @gc: GPIO chip
