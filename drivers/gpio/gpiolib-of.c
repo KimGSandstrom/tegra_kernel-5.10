@@ -24,6 +24,23 @@
 #include "gpiolib.h"
 #include "gpiolib-of.h"
 
+#define GPIO_DEBUG
+#define GPIO_DEBUG_VERBOSE
+
+#ifdef GPIO_DEBUG
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
+#else
+  #define deb_info(fmt, ...)
+  #define deb_debug(fmt, ...)
+#endif
+
+#ifdef GPIO_DEBUG_VERBOSE
+  #define deb_verbose           deb_debug
+#else
+  #define deb_verbose(fmt, ...)
+#endif
+
 /**
  * of_gpio_spi_cs_get_count() - special GPIO counting for SPI
  * @dev:    Consuming device
@@ -1066,10 +1083,19 @@ static int of_gpiochip_add_pin_range(struct gpio_chip *chip)
 		if (ret)
 			break;
 
-		pctldev = of_pinctrl_get(pinspec.np);
+// FIXIT -- removed for debug
+// FIXIT
+// FIXIT
+// FIXIT -- we need this function to set pinranges ... a lot of pin data can be dummy
+// FIXIT
+// FIXIT
+//		pctldev = of_pinctrl_get(pinspec.np);
 		of_node_put(pinspec.np);
 		if (!pctldev)
+//FIXIT - debug
+{ deb_verbose("**A");
 			return -EPROBE_DEFER;
+}
 
 		if (pinspec.args[2]) {
 			if (group_names) {
@@ -1089,7 +1115,10 @@ static int of_gpiochip_add_pin_range(struct gpio_chip *chip)
 					pinspec.args[1],
 					pinspec.args[2]);
 			if (ret)
+//FIXIT - debug
+{ deb_verbose("**B");
 				return ret;
+}
 		} else {
 			/* npins == 0: special range */
 			if (pinspec.args[1]) {
@@ -1119,7 +1148,10 @@ static int of_gpiochip_add_pin_range(struct gpio_chip *chip)
 			ret = gpiochip_add_pingroup_range(chip, pctldev,
 						pinspec.args[0], name);
 			if (ret)
+//FIXIT - debug
+{ deb_verbose("C");
 				return ret;
+}
 		}
 	}
 
@@ -1133,7 +1165,7 @@ static int of_gpiochip_add_pin_range(struct gpio_chip *chip) { return 0; }
 int of_gpiochip_add(struct gpio_chip *chip)
 {
 	int ret;
-
+  
 	if (!chip->of_node)
 		return 0;
 
@@ -1151,12 +1183,15 @@ int of_gpiochip_add(struct gpio_chip *chip)
 	if (ret)
 		return ret;
 
+deb_verbose("1");
 	of_node_get(chip->of_node);
 
+deb_verbose("2");
 	ret = of_gpiochip_scan_gpios(chip);
 	if (ret)
 		of_node_put(chip->of_node);
 
+deb_verbose("3");
 	return ret;
 }
 
