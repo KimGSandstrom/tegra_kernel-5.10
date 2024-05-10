@@ -142,12 +142,13 @@ struct pinctrl_dev *get_pinctrl_dev_from_of_node(struct device_node *np)
 
 	list_for_each_entry(pctldev, &pinctrldev_list, node)
 		if (pctldev->dev->of_node == np) {
+deb_debug("comparing %p and %p", pctldev->dev->of_node, np);  // debug never prints this because we have an empty list?
 			mutex_unlock(&pinctrldev_list_mutex);
 			return pctldev;
 		}
 
 	mutex_unlock(&pinctrldev_list_mutex);
-
+deb_debug("Error: failed to find match")
 	return NULL;
 }
 

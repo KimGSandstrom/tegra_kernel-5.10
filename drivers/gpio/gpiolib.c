@@ -283,6 +283,7 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 	if (list_empty(&gpio_devices)) {
 		/* initial entry in list */
 		list_add_tail(&gdev->list, &gpio_devices);
+deb_info("debug 1");
 		return 0;
 	}
 
@@ -290,6 +291,7 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 	if (gdev->base + gdev->ngpio <= next->base) {
 		/* add before first entry */
 		list_add(&gdev->list, &gpio_devices);
+deb_info("debug 2");
 		return 0;
 	}
 
@@ -297,18 +299,21 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 	if (prev->base + prev->ngpio <= gdev->base) {
 		/* add behind last entry */
 		list_add_tail(&gdev->list, &gpio_devices);
+deb_info("debug 3");
 		return 0;
 	}
 
 	list_for_each_entry_safe(prev, next, &gpio_devices, list) {
 		/* at the end of the list */
 		if (&next->list == &gpio_devices)
+{ deb_info("debug 4, prev= 0x%p, next = 0x%p", prev, next);
 			break;
-
+}
 		/* add between prev and next */
 		if (prev->base + prev->ngpio <= gdev->base
 				&& gdev->base + gdev->ngpio <= next->base) {
 			list_add(&gdev->list, &prev->list);
+deb_info("debug 5");
 			return 0;
 		}
 	}
@@ -908,6 +913,7 @@ EXPORT_SYMBOL_GPL(gpiochip_add_data_with_key);
  * Virtual machine does not have psysical access to resources
  */
 
+extern int of_gpiochip_add__redirect(struct gpio_chip *chip);
 extern int devm_gpiochip_add_data__redirect(struct device *dev, struct gpio_chip *gc, void *data);
 
 int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
@@ -1025,12 +1031,14 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 	gdev->base = base;
 
 	ret = gpiodev_add_to_list(gdev);
+  deb_verbose("number of lines: %d", gdev->ngpio);
+// XXX
+// TODO DEBUG
+// gpiodev_add_to_list returns empty list 
+// Probably a BUG 
 	if (ret) {
 		spin_unlock_irqrestore(&gpio_lock, flags);
-/* FIXIT -- debug
- * skip this for debug
 		goto err_free_label;
- */
 	}
 
 	for (i = 0; i < gc->ngpio; i++)
@@ -1055,7 +1063,7 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 	if (ret)
 		goto err_remove_from_list;
 
-	ret = of_gpiochip_add(gc);
+	ret = of_gpiochip_add__redirect(gc);
 	if (ret)
 		goto err_free_gpiochip_mask;
 /* FIXIT -- debug
@@ -1128,7 +1136,7 @@ deb_info("D");
 	gpiochip_free_hogs(gc);
 	of_gpiochip_remove(gc);
 err_free_gpiochip_mask:
-deb_info("E");
+deb_info("E -- of_gpiochip_add__redirect fails");
 	gpiochip_remove_pin_ranges(gc);
 	gpiochip_free_valid_mask(gc);
 err_remove_from_list:

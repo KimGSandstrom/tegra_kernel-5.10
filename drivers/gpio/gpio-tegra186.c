@@ -1403,7 +1403,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
   bool kernel_is_on_guest = false;
   static bool guest_proxy_is_set_up = false;
 
-  deb_debug("Probing gpio\n");
+  deb_debug("Probing gpio");
 
 	gpio = devm_kzalloc(&pdev->dev, sizeof(*gpio), GFP_KERNEL);
 	if (!gpio) {
@@ -1434,7 +1434,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
     return PTR_ERR(gpio->secure);
   }
 
-  deb_debug("num of ports = %d\n", gpio->soc->num_ports);
+  deb_verbose("num of ports = %d", gpio->soc->num_ports);
 
 	/* count the number of banks in the controller */
 	for (i = 0; i < gpio->soc->num_ports; i++)
@@ -1443,11 +1443,15 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 
 	gpio->num_banks++;
 
+  deb_verbose("num of banks = %d", gpio->num_banks);
+
 	gpio->base = devm_platform_ioremap_resource_byname(pdev, "gpio");
 	if (IS_ERR(gpio->base))
 		return PTR_ERR(gpio->base);
 
-	gpio->gpio_rval = devm_kzalloc(&pdev->dev, gpio->soc->num_ports * 8 *
+  deb_verbose("base set = %p", gpio->base);
+	
+  gpio->gpio_rval = devm_kzalloc(&pdev->dev, gpio->soc->num_ports * 8 *
 				      sizeof(*gpio->gpio_rval), GFP_KERNEL);
 	if (!gpio->gpio_rval)
 		return -ENOMEM;
@@ -1457,6 +1461,8 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "No valid device node, probe failed\n");
 		return -EINVAL;
 	}
+
+  deb_verbose("node pointer = %p", np);
 
 	gpio->use_timestamp = of_property_read_bool(np, "use-timestamp");
 
@@ -1483,7 +1489,9 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 
 	gpio->num_irq = err;
 
-	err = tegra186_gpio_irqs_per_bank(gpio);
+  deb_verbose("num_irq = %d", gpio->num_irq);
+	
+  err = tegra186_gpio_irqs_per_bank(gpio);
 	if (err < 0) {
     pr_err("GPIO tegra186_gpio_irqs_per_bank\n");
 		return err;
@@ -1503,6 +1511,8 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 
 		gpio->irq[i] = err;
 	}
+
+  deb_debug("got irq");
 
   // gpio function pionters were set here in stock code, now moved to the end of this function
 
@@ -1557,6 +1567,8 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	irq->parent_handler_data = gpio;
 	irq->num_parents = gpio->num_irq;
 
+//DEBUG
+deb_verbose("gpio->gpio.of_node = %p, pdev->dev.of_node = %p", gpio->gpio.of_node, pdev->dev.of_node);
 
 	/*
 	* To simplify things, use a single interrupt per bank for now. Some
@@ -1656,7 +1668,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
     if (gpio->use_timestamp)
       tegra_gte_setup(gpio);
 
-    deb_debug("GPIO Proxy code, proxy end\n");
+    deb_debug("GPIO Guest init section\n");
     if( kernel_is_on_guest ) {
       if( ! guest_proxy_is_set_up ) {
         ret = tegra_gpio_guest_init();

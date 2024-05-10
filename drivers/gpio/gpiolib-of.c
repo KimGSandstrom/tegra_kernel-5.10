@@ -1061,6 +1061,9 @@ static void of_gpiochip_init_valid_mask(struct gpio_chip *chip)
 	}
 };
 
+// debug
+#include <../drivers/pinctrl/core.h>
+
 #ifdef CONFIG_PINCTRL
 static int of_gpiochip_add_pin_range(struct gpio_chip *chip)
 {
@@ -1083,21 +1086,35 @@ static int of_gpiochip_add_pin_range(struct gpio_chip *chip)
 		if (ret)
 			break;
 
+// DEBUG
+if(pinspec.args_count == 0)
+deb_debug("no pins found in DT based on gpio-ranges");
+deb_debug("node pointers, in=%p, out=%p", np, pinspec.np);
+for(index=0; index < pinspec.args_count; index++)
+deb_debug("index: %d, pin: %d", index, pinspec.args[index]);
+
 // FIXIT -- removed for debug
 // FIXIT
 // FIXIT
 // FIXIT -- we need this function to set pinranges ... a lot of pin data can be dummy
 // FIXIT
 // FIXIT
-//		pctldev = of_pinctrl_get(pinspec.np);
+// pctldev = kmalloc(sizeof(struct pinctrl_dev), GFP_KERNEL);
+// memset(pctldev, 0, sizeof(struct pinctrl_dev));
+deb_verbose("np we search is: %p", pinspec.np);    // the BUG? np we search is: (____ptrval____)
+    pctldev = of_pinctrl_get(pinspec.np);
 		of_node_put(pinspec.np);
+//FIXIT - debug
+
 		if (!pctldev)
 //FIXIT - debug
 { deb_verbose("**A");
 			return -EPROBE_DEFER;
 }
+deb_verbose("**a");
 
 		if (pinspec.args[2]) {
+deb_verbose("**b");
 			if (group_names) {
 				of_property_read_string_index(np,
 						group_names_propname,
@@ -1108,6 +1125,7 @@ static int of_gpiochip_add_pin_range(struct gpio_chip *chip)
 					break;
 				}
 			}
+deb_verbose("**c");
 			/* npins != 0: linear range */
 			ret = gpiochip_add_pin_range(chip,
 					pinctrl_dev_get_devname(pctldev),
@@ -1115,6 +1133,7 @@ static int of_gpiochip_add_pin_range(struct gpio_chip *chip)
 					pinspec.args[1],
 					pinspec.args[2]);
 			if (ret)
+deb_verbose("**d");
 //FIXIT - debug
 { deb_verbose("**B");
 				return ret;
@@ -1183,15 +1202,12 @@ int of_gpiochip_add(struct gpio_chip *chip)
 	if (ret)
 		return ret;
 
-deb_verbose("1");
 	of_node_get(chip->of_node);
 
-deb_verbose("2");
 	ret = of_gpiochip_scan_gpios(chip);
 	if (ret)
 		of_node_put(chip->of_node);
 
-deb_verbose("3");
 	return ret;
 }
 
@@ -1199,3 +1215,47 @@ void of_gpiochip_remove(struct gpio_chip *chip)
 {
 	of_node_put(chip->of_node);
 }
+
+int of_gpiochip_add__redirect(struct gpio_chip *chip)
+{
+	int ret;
+  
+deb_verbose("1.entry");
+	if (!chip->of_node)
+		return 0;
+
+deb_verbose("2");
+	if (!chip->of_xlate) {
+		chip->of_gpio_n_cells = 2;
+		chip->of_xlate = of_gpio_simple_xlate;
+	}
+
+deb_verbose("3");
+	if (chip->of_gpio_n_cells > MAX_PHANDLE_ARGS)
+		return -EINVAL;
+
+deb_verbose("4");
+	of_gpiochip_init_valid_mask(chip);
+
+deb_verbose("5");
+	ret = of_gpiochip_add_pin_range(chip);
+	if (ret)
+		return ret;
+
+deb_verbose("6");
+	of_node_get(chip->of_node);
+
+deb_verbose("7");
+//	ret = of_gpiochip_scan_gpios(chip);
+	if (ret)
+		of_node_put(chip->of_node);
+
+deb_verbose("8.return");
+	return ret;
+}
+
+void of_gpiochip_remove_redirect(struct gpio_chip *chip)
+{
+	of_node_put(chip->of_node);
+}
+
