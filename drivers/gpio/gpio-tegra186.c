@@ -187,23 +187,13 @@
 
   #include "gpiolib.h"
   #include <linux/delay.h>
+  #include "gpio-irq-proxy.h"  // low level hooks for readl_x and writel_x
 
   #define GPIO_DEBUG
-  // #define GPIO_DEBUG_VERBOSE
+  #define GPIO_DEBUG_VERBOSE
 
-  #ifdef GPIO_DEBUG
-    #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
-    #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
-  #else
-    #define deb_info(fmt, ...)
-    #define deb_debug(fmt, ...)
-  #endif
-
-  #ifdef GPIO_DEBUG_VERBOSE
-    #define deb_verbose           deb_debug
-  #else
-    #define deb_verbose(fmt, ...)
-  #endif
+  bool kernel_is_on_guest = false;
+  EXPORT_SYMBOL_GPL(kernel_is_on_guest);
 
   int gpio_outloud = 0;
   EXPORT_SYMBOL_GPL(gpio_outloud);
@@ -213,6 +203,20 @@
   extern struct gpio_chip *find_chip_by_name(const char *name);
   extern const char **tegra_chiplabel;
 
+#endif
+
+#ifdef GPIO_DEBUG
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
+#else
+  #define deb_info(fmt, ...)
+  #define deb_debug(fmt, ...)
+#endif
+
+#ifdef GPIO_DEBUG_VERBOSE
+  #define deb_verbose           deb_debug
+#else
+  #define deb_verbose(fmt, ...)
 #endif
 
 /* this portion of code comes from copydrivers branch
@@ -566,7 +570,7 @@ int tegra186_gpio_get_direction(struct gpio_chip *chip,
 	if (WARN_ON(base == NULL))
 		return -ENODEV;
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	if (value & TEGRA186_GPIO_ENABLE_CONFIG_OUT)
 		return GPIO_LINE_DIRECTION_OUT;
 
@@ -590,14 +594,14 @@ int tegra186_gpio_direction_input(struct gpio_chip *chip,
 	if (WARN_ON(base == NULL))
 		return -ENODEV;
 
-	value = readl(base + TEGRA186_GPIO_OUTPUT_CONTROL);
+	value = readl_x(base + TEGRA186_GPIO_OUTPUT_CONTROL);
 	value |= TEGRA186_GPIO_OUTPUT_CONTROL_FLOATED;
-	writel(value, base + TEGRA186_GPIO_OUTPUT_CONTROL);
+	writel_x(value, base + TEGRA186_GPIO_OUTPUT_CONTROL);
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	value |= TEGRA186_GPIO_ENABLE_CONFIG_ENABLE;
 	value &= ~TEGRA186_GPIO_ENABLE_CONFIG_OUT;
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+	writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 
 	ret = pinctrl_gpio_direction_input(chip->base + offset);
 	if (ret < 0)
@@ -627,14 +631,14 @@ int tegra186_gpio_direction_output(struct gpio_chip *chip,
 		return -EINVAL;
 
 	/* set the direction */
-	value = readl(base + TEGRA186_GPIO_OUTPUT_CONTROL);
+	value = readl_x(base + TEGRA186_GPIO_OUTPUT_CONTROL);
 	value &= ~TEGRA186_GPIO_OUTPUT_CONTROL_FLOATED;
-	writel(value, base + TEGRA186_GPIO_OUTPUT_CONTROL);
+	writel_x(value, base + TEGRA186_GPIO_OUTPUT_CONTROL);
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	value |= TEGRA186_GPIO_ENABLE_CONFIG_ENABLE;
 	value |= TEGRA186_GPIO_ENABLE_CONFIG_OUT;
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+	writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 	ret = pinctrl_gpio_direction_output(chip->base + offset);
 
 	if (ret < 0)
@@ -660,9 +664,9 @@ static int tegra_gpio_suspend_configure(struct gpio_chip *chip, unsigned offset,
 		return -EINVAL;
 
 	regs = &gpio->gpio_rval[offset];
-	regs->conf = readl(base + TEGRA186_GPIO_ENABLE_CONFIG),
-	regs->out = readl(base + TEGRA186_GPIO_OUTPUT_CONTROL),
-	regs->val = readl(base + TEGRA186_GPIO_OUTPUT_VALUE),
+	regs->conf = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG),
+	regs->out = readl_x(base + TEGRA186_GPIO_OUTPUT_CONTROL),
+	regs->val = readl_x(base + TEGRA186_GPIO_OUTPUT_VALUE),
 	regs->restore_needed = true;
 
 	if (dflags & GPIOD_FLAGS_BIT_DIR_OUT)
@@ -687,9 +691,9 @@ static int tegra_gpio_timestamp_control(struct gpio_chip *chip, unsigned offset,
 		return -EINVAL;
 
 	if (gpio->use_timestamp) {
-		value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+		value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
 		value |= TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC;
-		writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+		writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 		if (enable)
 			ret = tegra_gte_enable_ts(gpio, offset);
 		else
@@ -729,11 +733,11 @@ static int tegra186_gpio_get(struct gpio_chip *chip, unsigned int offset)
 	if (WARN_ON(base == NULL))
 		return -ENODEV;
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	if (value & TEGRA186_GPIO_ENABLE_CONFIG_OUT)
-		value = readl(base + TEGRA186_GPIO_OUTPUT_VALUE);
+		value = readl_x(base + TEGRA186_GPIO_OUTPUT_VALUE);
 	else
-		value = readl(base + TEGRA186_GPIO_INPUT);
+		value = readl_x(base + TEGRA186_GPIO_INPUT);
 
 	return value & BIT(0);
 }
@@ -756,15 +760,15 @@ void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
 	if (WARN_ON(base == NULL))
 		return;
 
-	value = readl(base + TEGRA186_GPIO_OUTPUT_VALUE);
+	value = readl_x(base + TEGRA186_GPIO_OUTPUT_VALUE);
 	if (level == 0)
 		value &= ~TEGRA186_GPIO_OUTPUT_VALUE_HIGH;
 	else
 		value |= TEGRA186_GPIO_OUTPUT_VALUE_HIGH;
 
-	writel(value, base + TEGRA186_GPIO_OUTPUT_VALUE);
+	writel_x(value, base + TEGRA186_GPIO_OUTPUT_VALUE);
 
-	deb_verbose("(2): exiting -- value is %d, base is %p\n", value, (void *)base);
+	deb_verbose("(2): exiting -- value is %d, base is nn%p\n", value, (void *)base);
 }
 
 void tegra186_gpio_set_by_name(const char *name, unsigned int offset,
@@ -806,11 +810,11 @@ static int tegra186_gpio_set_config(struct gpio_chip *chip,
 	debounce = DIV_ROUND_UP(debounce, USEC_PER_MSEC);
 
 	value = TEGRA186_GPIO_DEBOUNCE_CONTROL_THRESHOLD(debounce);
-	writel(value, base + TEGRA186_GPIO_DEBOUNCE_CONTROL);
+	writel_x(value, base + TEGRA186_GPIO_DEBOUNCE_CONTROL);
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	value |= TEGRA186_GPIO_ENABLE_CONFIG_DEBOUNCE;
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+	writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 
 	return 0;
 }
@@ -905,7 +909,7 @@ static void tegra186_irq_ack(struct irq_data *data)
 	if (WARN_ON(base == NULL))
 		return;
 
-	writel(1, base + TEGRA186_GPIO_INTERRUPT_CLEAR);
+	writel_x(1, base + TEGRA186_GPIO_INTERRUPT_CLEAR);
 }
 
 static void tegra186_irq_mask(struct irq_data *data)
@@ -919,9 +923,9 @@ static void tegra186_irq_mask(struct irq_data *data)
 	if (WARN_ON(base == NULL))
 		return;
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	value &= ~TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT;
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+	writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 }
 
 static void tegra186_irq_unmask(struct irq_data *data)
@@ -935,9 +939,9 @@ static void tegra186_irq_unmask(struct irq_data *data)
 	if (WARN_ON(base == NULL))
 		return;
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	value |= TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT;
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+	writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 }
 
 static int tegra186_irq_set_type(struct irq_data *data, unsigned int type)
@@ -951,7 +955,7 @@ static int tegra186_irq_set_type(struct irq_data *data, unsigned int type)
 	if (WARN_ON(base == NULL))
 		return -ENODEV;
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	value &= ~TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_MASK;
 	value &= ~TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_LEVEL;
 
@@ -985,7 +989,7 @@ static int tegra186_irq_set_type(struct irq_data *data, unsigned int type)
 		return -EINVAL;
 	}
 
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+	writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 
 	if ((type & IRQ_TYPE_EDGE_BOTH) == 0)
 		irq_set_handler_locked(data, handle_level_irq);
@@ -1032,7 +1036,7 @@ static void tegra186_gpio_irq(struct irq_desc *desc)
 		if (j == gpio->num_irqs_per_bank)
 			goto skip;
 
-		value = readl(base + TEGRA186_GPIO_INTERRUPT_STATUS(1));
+		value = readl_x(base + TEGRA186_GPIO_INTERRUPT_STATUS(1));
 
 		for_each_set_bit(pin, &value, port->pins) {
 			irq = irq_find_mapping(domain, offset + pin);
@@ -1148,7 +1152,7 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 
 		base = gpio->secure + port->bank * 0x1000 + 0x800;
 
-		value = readl(base + TEGRA186_GPIO_CTL_SCR);
+		value = readl_x(base + TEGRA186_GPIO_CTL_SCR);
 
 		/*
 		 * For controllers that haven't been locked down yet, make
@@ -1177,9 +1181,9 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 				 */
 
 				if (j == 0) {
-					value = readl(base + offset);
+					value = readl_x(base + offset);
 					value = BIT(port->pins) - 1;
-					writel(value, base + offset);
+					writel_x(value, base + offset);
 				}
 			}
 		}
@@ -1400,7 +1404,6 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	int value;
 	void __iomem *base;
 
-  bool kernel_is_on_guest = false;
   static bool guest_proxy_is_set_up = false;
 
   deb_debug("Probing gpio");
@@ -1449,7 +1452,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	if (IS_ERR(gpio->base))
 		return PTR_ERR(gpio->base);
 
-  deb_verbose("base set = %p", gpio->base);
+  deb_verbose("gpio base = 0x%llx", (long long unsigned int)gpio->base);
 	
   gpio->gpio_rval = devm_kzalloc(&pdev->dev, gpio->soc->num_ports * 8 *
 				      sizeof(*gpio->gpio_rval), GFP_KERNEL);
@@ -1462,11 +1465,12 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-  deb_verbose("node pointer = %p", np);
+  deb_verbose("node pointer = 0x%llx", (long long unsigned int)np);
 
 	gpio->use_timestamp = of_property_read_bool(np, "use-timestamp");
 
 	if (gpio->use_timestamp) {
+    deb_verbose("use_timestamp");
 		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "gte");
 		if (!res) {
 			dev_err(&pdev->dev, "Missing gte MEM resource\n");
@@ -1512,9 +1516,36 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 		gpio->irq[i] = err;
 	}
 
-  deb_debug("got irq");
+	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
 
-  // gpio function pionters were set here in stock code, now moved to the end of this function
+
+    if (gpio->use_timestamp)
+      tegra_gte_setup(gpio);
+
+    deb_debug("GPIO Guest init section\n");
+    if( kernel_is_on_guest ) {
+      if( ! guest_proxy_is_set_up ) {
+        ret = tegra_gpio_guest_init();
+        guest_proxy_is_set_up = true;
+      }
+      // guest should use gpio_hook() for its "host" driver
+      gpio_hook(gpio);
+    }
+    else {
+      // gpio_unhook is the same as standard settings
+      // unhooked pointers are for the host driver on host only
+      BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver
+      gpio_unhook(gpio);
+    }
+  gpio->gpio.base = -1;
+  deb_debug("gpio function pointers are set for gpio label=%s\n", gpio->gpio.label);
+  preserve_tegrachip(gpio);
+  #else
+    // this code segment is for standard operation in a compile without PROXY configuraton
+    deb_debug("Setting standard gpio functions for a non-proxy compile of driver\n")
+    BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver, because non-proxy
+    gpio_unhook(gpio);
+  #endif
 
 	for (i = 0; i < gpio->soc->num_ports; i++)
 		gpio->gpio.ngpio += gpio->soc->ports[i].pins;
@@ -1568,7 +1599,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	irq->num_parents = gpio->num_irq;
 
 //DEBUG
-deb_verbose("gpio->gpio.of_node = %p, pdev->dev.of_node = %p", gpio->gpio.of_node, pdev->dev.of_node);
+deb_verbose("gpio->gpio.of_node = 0x%llx, pdev->dev.of_node = 0x%llx", (long long unsigned int)gpio->gpio.of_node, (long long unsigned int)pdev->dev.of_node);
 
 	/*
 	* To simplify things, use a single interrupt per bank for now. Some
@@ -1592,8 +1623,15 @@ deb_verbose("gpio->gpio.of_node = %p, pdev->dev.of_node = %p", gpio->gpio.of_nod
 		irq->parents = gpio->irq;
 	}
 
+	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
+  // we cannot physically set up irq on guest
+  if(kernel_is_on_guest) {
+  #endif
 	if (gpio->soc->num_irqs_per_bank > 1)
 		tegra186_gpio_init_route_mapping(gpio);
+	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
+  }
+  #endif
 
 	np = of_find_matching_node(NULL, tegra186_pmc_of_match);
 	if (!of_device_is_available(np))
@@ -1627,7 +1665,6 @@ deb_verbose("gpio->gpio.of_node = %p, pdev->dev.of_node = %p", gpio->gpio.of_nod
 	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
     if(kernel_is_on_guest) { 
       err = devm_gpiochip_add_data__redirect(&pdev->dev, &gpio->gpio, gpio);
-      goto guest_skip;
     }
     else
       err = devm_gpiochip_add_data(&pdev->dev, &gpio->gpio, gpio);
@@ -1640,6 +1677,10 @@ deb_verbose("gpio->gpio.of_node = %p, pdev->dev.of_node = %p", gpio->gpio.of_nod
     return err;
   }
 
+	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
+    if(kernel_is_on_guest) goto guest_skip;
+  #endif
+
 	if (gpio->soc->is_hw_ts_sup) {
 		for (i = 0, offset = 0; i < gpio->soc->num_ports; i++) {
 			const struct tegra_gpio_port *port =
@@ -1650,11 +1691,11 @@ deb_verbose("gpio->gpio.of_node = %p, pdev->dev.of_node = %p", gpio->gpio.of_nod
 				if (WARN_ON(base == NULL))
 					return -EINVAL;
 
-				value = readl(base +
+				value = readl_x(base +
 					      TEGRA186_GPIO_ENABLE_CONFIG);
 				value |=
 				TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC;
-				writel(value,
+				writel_x(value,
 				       base + TEGRA186_GPIO_ENABLE_CONFIG);
 			}
 			offset += port->pins;
@@ -1662,35 +1703,7 @@ deb_verbose("gpio->gpio.of_node = %p, pdev->dev.of_node = %p", gpio->gpio.of_nod
 	}
 
 	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
-
     guest_skip:
-
-    if (gpio->use_timestamp)
-      tegra_gte_setup(gpio);
-
-    deb_debug("GPIO Guest init section\n");
-    if( kernel_is_on_guest ) {
-      if( ! guest_proxy_is_set_up ) {
-        ret = tegra_gpio_guest_init();
-        guest_proxy_is_set_up = true;
-      }
-      // guest should use gpio_hook() for its "host" driver
-      gpio_hook(gpio);
-    }
-    else {
-      // gpio_unhook is the same as standard settings
-      // unhooked pointers are for the host driver on host only
-      BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver
-      gpio_unhook(gpio);
-    }
-  gpio->gpio.base = -1;
-  deb_debug("gpio function pointers are set for gpio label=%s\n", gpio->gpio.label);
-  preserve_tegrachip(gpio);
-  #else
-    // this code segment is for standard operation in a compile without PROXY configuraton
-    deb_debug("Setting standard gpio functions for a non-proxy compile of driver\n")
-    BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver, because non-proxy
-    gpio_unhook(gpio);
   #endif
   return 0;
 }
@@ -1715,9 +1728,9 @@ static int tegra_gpio_resume_early(struct device *dev)
 
 		regs->restore_needed = false;
 
-		writel(regs->val,  base + TEGRA186_GPIO_OUTPUT_VALUE);
-		writel(regs->out,  base + TEGRA186_GPIO_OUTPUT_CONTROL);
-		writel(regs->conf, base + TEGRA186_GPIO_ENABLE_CONFIG);
+		writel_x(regs->val,  base + TEGRA186_GPIO_OUTPUT_VALUE);
+		writel_x(regs->out,  base + TEGRA186_GPIO_OUTPUT_CONTROL);
+		writel_x(regs->conf, base + TEGRA186_GPIO_ENABLE_CONFIG);
 	}
 
 	return 0;

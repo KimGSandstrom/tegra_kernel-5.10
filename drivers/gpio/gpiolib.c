@@ -31,8 +31,14 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/gpio.h>
 
+
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+#include "gpio-irq-proxy.h"  // low level hooks for readl_x and writel_x
+
 #define GPIO_DEBUG
 #define GPIO_DEBUG_VERBOSE
+
+#endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
 
 #ifdef GPIO_DEBUG
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
@@ -206,6 +212,7 @@ static int gpiochip_find_base(int ngpio)
 	int base = ARCH_NR_GPIOS - ngpio;
 
 	list_for_each_entry_reverse(gdev, &gpio_devices, list) {
+    deb_verbose("entry 0x%llx", (long long unsigned int)gdev);
 		/* found a free space? */
 		if (gdev->base + gdev->ngpio <= base)
 			break;
@@ -1030,6 +1037,12 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 	}
 	gdev->base = base;
 
+
+
+//DEBUG
+  deb_verbose("precheck number of lines: %d, list=0x%llx, next=0x%llx, prev=0x%llx", gdev->ngpio, (long long unsigned int)&gdev->list, (long long unsigned int)gdev->list.next, (long long unsigned int)gdev->list.prev);
+
+// debug gdev here --- empty list?
 	ret = gpiodev_add_to_list(gdev);
   deb_verbose("number of lines: %d", gdev->ngpio);
 // XXX

@@ -24,8 +24,14 @@
 #include "gpiolib.h"
 #include "gpiolib-of.h"
 
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+
+#include "gpio-irq-proxy.h"  // low level hooks for readl_x and writel_x
+
 #define GPIO_DEBUG
 #define GPIO_DEBUG_VERBOSE
+
+#endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
 
 #ifdef GPIO_DEBUG
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
@@ -1087,11 +1093,10 @@ static int of_gpiochip_add_pin_range(struct gpio_chip *chip)
 			break;
 
 // DEBUG
-if(pinspec.args_count == 0)
-deb_debug("no pins found in DT based on gpio-ranges");
-deb_debug("node pointers, in=%p, out=%p", np, pinspec.np);
+if(pinspec.args_count == 0) deb_debug("no pins found in DT based on gpio-ranges");
+deb_debug("node pointers, in=0x%llx, out=i0x%llx", (long long unsigned int)np, (long long unsigned int)pinspec.np);
 for(index=0; index < pinspec.args_count; index++)
-deb_debug("index: %d, pin: %d", index, pinspec.args[index]);
+deb_debug("node index: %d, value: %d", index, pinspec.args[index]);
 
 // FIXIT -- removed for debug
 // FIXIT
@@ -1099,9 +1104,9 @@ deb_debug("index: %d, pin: %d", index, pinspec.args[index]);
 // FIXIT -- we need this function to set pinranges ... a lot of pin data can be dummy
 // FIXIT
 // FIXIT
-// pctldev = kmalloc(sizeof(struct pinctrl_dev), GFP_KERNEL);
-// memset(pctldev, 0, sizeof(struct pinctrl_dev));
-deb_verbose("np we search is: %p", pinspec.np);    // the BUG? np we search is: (____ptrval____)
+// pctldev = kmalloc(sizeof(struct pinctrl_dev), GFP_KERNEL); // kmalloc is for debug use
+// memset(pctldev, 0, sizeof(struct pinctrl_dev)); // menset is a debug 
+deb_verbose("np we search is: 0x%llx", (long long unsigned int)pinspec.np);    // the BUG? np we search is: (____ptrval____)
     pctldev = of_pinctrl_get(pinspec.np);
 		of_node_put(pinspec.np);
 //FIXIT - debug
