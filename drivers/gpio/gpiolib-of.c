@@ -1098,18 +1098,10 @@ deb_debug("node pointers, in=0x%llx, out=i0x%llx", (long long unsigned int)np, (
 for(index=0; index < pinspec.args_count; index++)
 deb_debug("node index: %d, value: %d", index, pinspec.args[index]);
 
-// FIXIT -- removed for debug
-// FIXIT
-// FIXIT
-// FIXIT -- we need this function to set pinranges ... a lot of pin data can be dummy
-// FIXIT
-// FIXIT
-// pctldev = kmalloc(sizeof(struct pinctrl_dev), GFP_KERNEL); // kmalloc is for debug use
-// memset(pctldev, 0, sizeof(struct pinctrl_dev)); // menset is a debug 
+//DEBUG
 deb_verbose("np we search is: 0x%llx", (long long unsigned int)pinspec.np);    // the BUG? np we search is: (____ptrval____)
     pctldev = of_pinctrl_get(pinspec.np);
 		of_node_put(pinspec.np);
-//FIXIT - debug
 
 		if (!pctldev)
 //FIXIT - debug
@@ -1173,7 +1165,7 @@ deb_verbose("**d");
 						pinspec.args[0], name);
 			if (ret)
 //FIXIT - debug
-{ deb_verbose("C");
+{ deb_verbose("**C");
 				return ret;
 }
 		}

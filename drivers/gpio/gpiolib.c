@@ -605,7 +605,7 @@ static int gpiochip_setup_dev__redirect(struct gpio_device *gdev)
 	// we continue to populate gdev
 	
 // FIXIT -- debug
-goto debug_end;
+//goto debug_end;
 
 	ret = gcdev_register(gdev, gpio_devt);
 
@@ -617,7 +617,7 @@ goto debug_end;
 		goto err_remove_device;
 
 // FIXIT --debug
-debug_end:
+//debug_end:
 
 	/* From this point, the .release() function cleans up gpio_device */
 	gdev->dev.release = gpiodevice_release;
@@ -1079,11 +1079,10 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 	ret = of_gpiochip_add__redirect(gc);
 	if (ret)
 		goto err_free_gpiochip_mask;
-/* FIXIT -- debug
- * skip this for debug
+
 	if (ret)
 		goto err_free_gpiochip_mask;
- */
+
 	ret = gpiochip_init_valid_mask(gc);
 	if (ret)
 		goto err_remove_of_chip;
