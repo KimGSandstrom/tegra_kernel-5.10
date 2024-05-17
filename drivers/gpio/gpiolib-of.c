@@ -1067,9 +1067,6 @@ static void of_gpiochip_init_valid_mask(struct gpio_chip *chip)
 	}
 };
 
-// debug
-#include <../drivers/pinctrl/core.h>
-
 #ifdef CONFIG_PINCTRL
 static int of_gpiochip_add_pin_range(struct gpio_chip *chip)
 {
@@ -1092,26 +1089,12 @@ static int of_gpiochip_add_pin_range(struct gpio_chip *chip)
 		if (ret)
 			break;
 
-// DEBUG
-if(pinspec.args_count == 0) deb_debug("no pins found in DT based on gpio-ranges");
-deb_debug("node pointers, in=0x%llx, out=i0x%llx", (long long unsigned int)np, (long long unsigned int)pinspec.np);
-for(index=0; index < pinspec.args_count; index++)
-deb_debug("node index: %d, value: %d", index, pinspec.args[index]);
-
-//DEBUG
-deb_verbose("np we search is: 0x%llx", (long long unsigned int)pinspec.np);    // the BUG? np we search is: (____ptrval____)
-    pctldev = of_pinctrl_get(pinspec.np);
+		pctldev = of_pinctrl_get(pinspec.np);
 		of_node_put(pinspec.np);
-
 		if (!pctldev)
-//FIXIT - debug
-{ deb_verbose("**A");
 			return -EPROBE_DEFER;
-}
-deb_verbose("**a");
 
 		if (pinspec.args[2]) {
-deb_verbose("**b");
 			if (group_names) {
 				of_property_read_string_index(np,
 						group_names_propname,
@@ -1122,7 +1105,6 @@ deb_verbose("**b");
 					break;
 				}
 			}
-deb_verbose("**c");
 			/* npins != 0: linear range */
 			ret = gpiochip_add_pin_range(chip,
 					pinctrl_dev_get_devname(pctldev),
@@ -1130,11 +1112,7 @@ deb_verbose("**c");
 					pinspec.args[1],
 					pinspec.args[2]);
 			if (ret)
-deb_verbose("**d");
-//FIXIT - debug
-{ deb_verbose("**B");
 				return ret;
-}
 		} else {
 			/* npins == 0: special range */
 			if (pinspec.args[1]) {
@@ -1164,10 +1142,7 @@ deb_verbose("**d");
 			ret = gpiochip_add_pingroup_range(chip, pctldev,
 						pinspec.args[0], name);
 			if (ret)
-//FIXIT - debug
-{ deb_verbose("**C");
 				return ret;
-}
 		}
 	}
 
@@ -1181,7 +1156,7 @@ static int of_gpiochip_add_pin_range(struct gpio_chip *chip) { return 0; }
 int of_gpiochip_add(struct gpio_chip *chip)
 {
 	int ret;
-  
+
 	if (!chip->of_node)
 		return 0;
 
@@ -1189,7 +1164,6 @@ int of_gpiochip_add(struct gpio_chip *chip)
 		chip->of_gpio_n_cells = 2;
 		chip->of_xlate = of_gpio_simple_xlate;
 	}
-
 	if (chip->of_gpio_n_cells > MAX_PHANDLE_ARGS)
 		return -EINVAL;
 
@@ -1243,7 +1217,7 @@ deb_verbose("6");
 	of_node_get(chip->of_node);
 
 deb_verbose("7");
-//	ret = of_gpiochip_scan_gpios(chip);
+ret = of_gpiochip_scan_gpios(chip);
 	if (ret)
 		of_node_put(chip->of_node);
 
