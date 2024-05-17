@@ -1374,13 +1374,13 @@ static inline void gpio_unhook(struct tegra_gpio *gpio) {
   /* find_chip_by_id
    * replacement for find_chip_by_name, because it is slightly faster
    * one doubtful assumption is that chip pointers are numbered by the driver 
-   * in the same order preserve_tegrachip recirds them */
+   * in the same order preserve_tegrachip records them */
   inline struct gpio_chip * find_chip_by_id(int id) {
     int i = 0;
     while (atomic_read(&tegra_gpio_hosts_ready) != MAX_CHIP) {
       msleep(100); // Sleep briefly instead of looping infinitely.
       if( i++ > 120 ) {
-        pr_err("GPIO tegra_gpio_hosts setup error\n");
+        pr_err("GPIO tegra_gpio_hosts setup error: id=%d, count=%d\n", atomic_read(&tegra_gpio_hosts_ready));
         return NULL;
       }
     }
@@ -1522,8 +1522,8 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
     if (gpio->use_timestamp)
       tegra_gte_setup(gpio);
 
-    deb_debug("GPIO Guest init section\n");
     if( kernel_is_on_guest ) {
+      deb_debug("GPIO Guest init section\n");
       if( ! guest_proxy_is_set_up ) {
         ret = tegra_gpio_guest_init();
         guest_proxy_is_set_up = true;
@@ -1535,7 +1535,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
       // gpio_unhook is the same as standard settings
       // unhooked pointers are for the host driver on host only
       BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver
-      gpio_unhook(gpio);
+      gpio_unhook(gpio);      // set standard function pointers
     }
   gpio->gpio.base = -1;
   deb_debug("gpio function pointers are set for gpio label=%s\n", gpio->gpio.label);
