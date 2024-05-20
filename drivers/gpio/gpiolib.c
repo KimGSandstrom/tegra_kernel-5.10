@@ -31,14 +31,8 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/gpio.h>
 
-
-#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-#include "gpio-irq-proxy.h"  // low level hooks for readl_x and writel_x
-
 #define GPIO_DEBUG
 #define GPIO_DEBUG_VERBOSE
-
-#endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
 
 #ifdef GPIO_DEBUG
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
@@ -53,6 +47,10 @@
 #else
   #define deb_verbose(fmt, ...)
 #endif
+
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+#include "gpio-proxy.h"  // low level hooks for readl_x and writel_x
+#endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
 
 /* Implementation infrastructure for GPIO interfaces.
  *

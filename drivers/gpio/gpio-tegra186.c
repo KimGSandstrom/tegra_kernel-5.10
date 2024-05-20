@@ -179,31 +179,8 @@
 
 /**************************************************************/
 
-// possibly/probably declare this in gpio-tegra.c instead
-// following pattern from bpmp virtualisation
-//
-// TODO separate guest and host proxy configuration defines
-#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-
-  #include "gpiolib.h"
-  #include <linux/delay.h>
-  #include "gpio-irq-proxy.h"  // low level hooks for readl_x and writel_x
-
-  #define GPIO_DEBUG
-  #define GPIO_DEBUG_VERBOSE
-
-  bool kernel_is_on_guest = false;
-  EXPORT_SYMBOL_GPL(kernel_is_on_guest);
-
-  int gpio_outloud = 0;
-  EXPORT_SYMBOL_GPL(gpio_outloud);
-
-  uint64_t gpio_vpa = 0;
-
-  extern struct gpio_chip *find_chip_by_name(const char *name);
-  extern const char **tegra_chiplabel;
-
-#endif
+#define GPIO_DEBUG
+#define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
@@ -217,6 +194,29 @@
   #define deb_verbose           deb_debug
 #else
   #define deb_verbose(fmt, ...)
+#endif
+
+// possibly/probably declare this in gpio-tegra.c instead
+// following pattern from bpmp virtualisation
+//
+// TODO separate guest and host proxy configuration defines
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+
+  #include "gpiolib.h"
+  #include <linux/delay.h>
+  #include "gpio-proxy.h"  // low level hooks for readl_x and writel_x
+
+  bool kernel_is_on_guest = false;
+  EXPORT_SYMBOL_GPL(kernel_is_on_guest);
+
+  int gpio_outloud = 0;
+  EXPORT_SYMBOL_GPL(gpio_outloud);
+
+  uint64_t gpio_vpa = 0;
+
+  extern struct gpio_chip *find_chip_by_name(const char *name);
+  extern const char **tegra_chiplabel;
+
 #endif
 
 /* this portion of code comes from copydrivers branch
@@ -574,6 +574,7 @@ int tegra186_gpio_get_direction(struct gpio_chip *chip,
 	if (value & TEGRA186_GPIO_ENABLE_CONFIG_OUT)
 		return GPIO_LINE_DIRECTION_OUT;
 
+	deb_verbose("GPIO, OK\n");
 	return GPIO_LINE_DIRECTION_IN;
 }
 
@@ -1380,7 +1381,7 @@ static inline void gpio_unhook(struct tegra_gpio *gpio) {
     while (atomic_read(&tegra_gpio_hosts_ready) != MAX_CHIP) {
       msleep(100); // Sleep briefly instead of looping infinitely.
       if( i++ > 120 ) {
-        pr_err("GPIO tegra_gpio_hosts setup error: id=%d, count=%d\n", atomic_read(&tegra_gpio_hosts_ready));
+        pr_err("GPIO tegra_gpio_hosts setup error: id=%d, count=%d\n", id, atomic_read(&tegra_gpio_hosts_ready));
         return NULL;
       }
     }
