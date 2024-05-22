@@ -1269,6 +1269,7 @@ struct gpio_chip *gpiochip_find(void *data,
 	list_for_each_entry(gdev, &gpio_devices, list)
 		if (gdev->chip && match(gdev->chip, data)) {
 			gc = gdev->chip;
+      deb_verbose("found: %p, chip: %s", gc, gc->label);
 			break;
 		}
 

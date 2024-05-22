@@ -174,7 +174,7 @@ deb_debug("# A #");
 deb_debug("# B #");
 	ret = ops->dt_node_to_map(pctldev, np_config, &map, &num_maps);
 // DEBUG
-deb_debug("# C #");
+deb_debug("# C -- OK #");
 	if (ret < 0)
 		return ret;
 	else if (num_maps == 0) {
@@ -186,7 +186,7 @@ deb_debug("# C #");
 		dev_info(p->dev,
 			 "there is not valid maps for state %s\n", statename);
 // DEBUG
-deb_debug("# D #");
+deb_debug("# D -- error #");
 		return 0;
 	}
        /* Stash the mapping table chunk away for later use */
