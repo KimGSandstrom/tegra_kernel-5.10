@@ -34,29 +34,39 @@
 #define EMMC_DPD_PARKING(x)		(x << EMMC_PARKING_BIT)
 #define EMMC_PARKING_SET		0x1FFF
 
-// #define GPIO_DEBUG
+//#define GPIO_DEBUG
+//#define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
-#define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, ##__VA_ARGS__)
-#define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, ##__VA_ARGS__)
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
 #else
-#define deb_info(fmt, ...)
-#define deb_debug(fmt, ...)
+  #define deb_info(fmt, ...)
+  #define deb_debug(fmt, ...)
 #endif
 
+#ifdef GPIO_DEBUG_VERBOSE
+  #define deb_verbose           deb_debug
+#else
+  #define deb_verbose(fmt, ...)
+#endif
+
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+#include "../../gpio/gpio-proxy.h"  // low level hooks for readl_x and writel_x
+#endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
 
 static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
 {
 	deb_debug("\n");
 
-	return readl(pmx->regs[bank] + reg);
+	return readl_x(pmx->regs[bank] + reg);
 }
 
 static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 {
 	deb_debug("\n");
 
-	writel_relaxed(val, pmx->regs[bank] + reg);
+	writel_relaxed_x(val, pmx->regs[bank] + reg);
 	/* make sure pinmux register write completed */
 	pmx_readl(pmx, bank, reg);
 }
@@ -979,7 +989,7 @@ static int tegra_pinctrl_suspend(struct device *dev)
 		bank_size = tegra_pinctrl_get_bank_size(dev, i);
 		regs = pmx->regs[i];
 		for (k = 0; k < bank_size; k++)
-			*backup_regs++ = readl_relaxed(regs++);
+			*backup_regs++ = readl_relaxed_x(regs++);
 	}
 
 	return pinctrl_force_sleep(pmx->pctl);
@@ -999,11 +1009,11 @@ static int tegra_pinctrl_resume(struct device *dev)
 		bank_size = tegra_pinctrl_get_bank_size(dev, i);
 		regs = pmx->regs[i];
 		for (k = 0; k < bank_size; k++)
-			writel_relaxed(*backup_regs++, regs++);
+		writel_relaxed_x(*backup_regs++, regs++);
 	}
 
 	/* flush all the prior writes */
-	readl_relaxed(pmx->regs[0]);
+  readl_relaxed_x(pmx->regs[0]);
 	/* wait for pinctrl register read to complete */
 	rmb();
 

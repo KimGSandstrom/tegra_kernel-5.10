@@ -75,6 +75,10 @@
   #define deb_verbose(fmt, ...)
 #endif
 
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+#include "gpio-proxy.h"  // low level hooks for readl_x and writel_x
+#endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
+
 struct tegra_gpio_info;
 
 struct tegra_gpio_bank {
@@ -120,14 +124,14 @@ static inline void tegra_gpio_writel(struct tegra_gpio_info *tgi,
 {
 	deb_debug("\n");
 
-	writel_relaxed(val, tgi->regs + reg);
+	writel_relaxed_x(val, tgi->regs + reg);
 }
 
 static inline u32 tegra_gpio_readl(struct tegra_gpio_info *tgi, u32 reg)
 {
 	deb_debug("\n");
 
-	return readl_relaxed(tgi->regs + reg);
+	return readl_relaxed_x(tgi->regs + reg);
 }
 
 static unsigned int tegra_gpio_compose(unsigned int bank, unsigned int port,

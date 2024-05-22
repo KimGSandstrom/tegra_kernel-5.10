@@ -16,11 +16,9 @@ extern const unsigned char rwl_relaxed_type;
 static inline u32 readl_x( void * addr) {
   u32 ret;
   if(kernel_is_on_guest) {
-    deb_verbose("on guest");
     ret = readl_redirect(addr, rwl_std_type);
   }
   else {
-    deb_verbose("on host");
     ret = readl(addr);
   }
   return ret;  
@@ -28,61 +26,62 @@ static inline u32 readl_x( void * addr) {
 
 static inline void writel_x( u32 value, void * addr) {
   if(kernel_is_on_guest) {
-    deb_verbose("on guest");
     writel_redirect(value, addr, rwl_std_type);
   }
   else {
-    deb_verbose("on host");
     writel(value, addr);
   }
 };
 
-static inline u32 readl_raw_x( void * addr) {
+static inline u32 __raw_readl_x( void * addr) {
   u32 ret;
   if(kernel_is_on_guest) {
-    deb_verbose("on guest");
     ret = readl_redirect(addr, rwl_raw_type);
   }
   else {
-    deb_verbose("on host");
-    ret = readl(addr);
+    ret = __raw_readl(addr);
   }
   return ret;  
 };
 
-static inline void writel_raw_x( u32 value, void * addr) {
+static inline void __raw_writel_x( u32 value, void * addr) {
   if(kernel_is_on_guest) {
-    deb_verbose("on guest");
     writel_redirect(value, addr, rwl_raw_type);
   }
   else {
-    deb_verbose("on host");
-    writel(value, addr);
+    __raw_writel(value, addr);
   }
 
 };
 static inline u32 readl_relaxed_x( void * addr) {
   u32 ret;
   if(kernel_is_on_guest) {
-    deb_verbose("on guest");
     ret = readl_redirect(addr, rwl_relaxed_type);
   }
   else {
-    deb_verbose("on host");
-    ret = readl(addr);
+    ret = readl_relaxed(addr);
   }
   return ret;  
 };
 
 static inline void writel_relaxed_x( u32 value, void * addr) {
   if(kernel_is_on_guest) {
-    deb_verbose("on guest");
     writel_redirect(value, addr, rwl_relaxed_type);
   }
   else {
-    deb_verbose("on host");
-    writel(value, addr);
+    writel_relaxed(value, addr);
   }
 };
+
+
+// TODO, adding these passthroughs would make execution less latent
+static inline u32 pmx_readl_x( void * addr) { return 0; };
+static inline void pmx_writel_x( u32 value, void * addr) {};
+static inline u32 tegra_gpio_readl_x( void * addr) { return 0;};
+static inline void tegra_gpio_writel_x( u32 value, void * addr) {};
+static inline u32 tegra_gte_readl_x( void * addr) { return 0; };
+static inline void tegra_gte_writel_x( u32 value, void * addr) {};
+
+// note: adding even higher level functions migth take latency off the lower level functions
 
 #endif
