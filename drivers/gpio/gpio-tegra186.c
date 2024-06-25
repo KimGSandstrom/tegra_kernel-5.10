@@ -811,6 +811,9 @@ static int tegra186_gpio_set_config(struct gpio_chip *chip,
 	return 0;
 }
 
+// TODO DEBUG FIXIT
+// for guest:
+// this function cannot maybe be redirected because we need to set up pointer 'chip' in guest!
 static int tegra186_gpio_add_pin_ranges(struct gpio_chip *chip)
 {
 	struct tegra_gpio *gpio = gpiochip_get_data(chip);
@@ -1263,7 +1266,9 @@ error:
     gpio->gpio.timestamp_control = tegra_gpio_timestamp_control_redirect;
     gpio->gpio.timestamp_read = tegra_gpio_timestamp_read_redirect;
     gpio->gpio.suspend_configure = tegra_gpio_suspend_configure_redirect;
-    gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges_redirect;
+  // DEBUG
+  // gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges_redirect;
+    gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges;
     gpio->gpio.base = -1;
   }
 #endif
@@ -1654,7 +1659,16 @@ deb_verbose("gpio->gpio.of_node = 0x%llx, pdev->dev.of_node = 0x%llx", (long lon
 	platform_set_drvdata(pdev, gpio);
 
 	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
+  /* of these functions:
+   *   int devm_gpiochip_add_data__redirect(struct device *dev, struct gpio_chip *gc, void *data)
+   *   int of_gpiochip_add__redirect(struct gpio_chip *chip)
+   *   static int gpiochip_setup_dev__redirect(struct gpio_device *gdev)
+   *   int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
+   * only devm_gpiochip_add_data needs to be redirected and passthrough
+   * (assuming passthrough is the solution)
+   */
     if(kernel_is_on_guest) { 
+      // passthrough function if we are guest
       err = devm_gpiochip_add_data__redirect(&pdev->dev, &gpio->gpio, gpio);
     }
     else
@@ -1668,9 +1682,12 @@ deb_verbose("gpio->gpio.of_node = 0x%llx, pdev->dev.of_node = 0x%llx", (long lon
     return err;
   }
 
-	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
-    if(kernel_is_on_guest) goto guest_skip;
-  #endif
+  // DEBUG
+	// #if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
+  //   if(kernel_is_on_guest) goto guest_skip;
+  // #endif
+
+  /* on guest, we could possibly passsthrough the whole loop below for better performance */
 
 	if (gpio->soc->is_hw_ts_sup) {
 		for (i = 0, offset = 0; i < gpio->soc->num_ports; i++) {
@@ -1695,7 +1712,7 @@ deb_verbose("gpio->gpio.of_node = 0x%llx, pdev->dev.of_node = 0x%llx", (long lon
 
 	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
     preserve_tegrachip(gpio);
-    guest_skip:
+  //  guest_skip:
   #endif
   return 0;
 }

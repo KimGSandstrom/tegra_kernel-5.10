@@ -1082,15 +1082,20 @@ static int of_gpiochip_add_pin_range(struct gpio_chip *chip)
 	group_names = of_find_property(np, group_names_propname, NULL);
 
 	for (;; index++) {
+    deb_verbose("index at A: %d", index);
 		ret = of_parse_phandle_with_fixed_args(np, "gpio-ranges", 3,
 				index, &pinspec);
 		if (ret)
 			break;
 
+    deb_verbose("index at B: %d", index);
+
 		pctldev = of_pinctrl_get(pinspec.np);
 		of_node_put(pinspec.np);
 		if (!pctldev)
 			return -EPROBE_DEFER;
+
+    deb_verbose("index at C: %d", index);
 
 		if (pinspec.args[2]) {
 			if (group_names) {
@@ -1208,6 +1213,10 @@ deb_verbose("4");
 
 deb_verbose("5");
 	ret = of_gpiochip_add_pin_range(chip);
+
+// TODO guest fails here: returns -517
+
+deb_verbose("of_gpiochip_add_pin_range returns: %d", ret);
 	if (ret)
 		return ret;
 

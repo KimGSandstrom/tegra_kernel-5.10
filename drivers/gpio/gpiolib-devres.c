@@ -377,9 +377,6 @@ void devm_gpiod_put_array(struct device *dev, struct gpio_descs *descs)
 }
 EXPORT_SYMBOL_GPL(devm_gpiod_put_array);
 
-
-
-
 static void devm_gpio_release(struct device *dev, void *res)
 {
 	unsigned *gpio = res;
@@ -557,6 +554,7 @@ int devm_gpiochip_add_data__redirect(struct device *dev, struct gpio_chip *gc, v
 
 	*ptr = gc;
 	devres_add(dev, ptr);
+
 
 	return 0;
 }

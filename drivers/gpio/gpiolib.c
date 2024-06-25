@@ -288,7 +288,7 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 	if (list_empty(&gpio_devices)) {
 		/* initial entry in list */
 		list_add_tail(&gdev->list, &gpio_devices);
-deb_info("debug 1");
+deb_debug("debug 1");
 		return 0;
 	}
 
@@ -296,7 +296,7 @@ deb_info("debug 1");
 	if (gdev->base + gdev->ngpio <= next->base) {
 		/* add before first entry */
 		list_add(&gdev->list, &gpio_devices);
-deb_info("debug 2");
+deb_debug("debug 2");
 		return 0;
 	}
 
@@ -304,21 +304,21 @@ deb_info("debug 2");
 	if (prev->base + prev->ngpio <= gdev->base) {
 		/* add behind last entry */
 		list_add_tail(&gdev->list, &gpio_devices);
-deb_info("debug 3");
+deb_debug("debug 3");
 		return 0;
 	}
 
 	list_for_each_entry_safe(prev, next, &gpio_devices, list) {
 		/* at the end of the list */
 		if (&next->list == &gpio_devices)
-{ deb_info("debug 4, prev= 0x%p, next = 0x%p", prev, next);
+{ deb_debug("debug 4, prev= 0x%p, next = 0x%p", prev, next);
 			break;
 }
 		/* add between prev and next */
 		if (prev->base + prev->ngpio <= gdev->base
 				&& gdev->base + gdev->ngpio <= next->base) {
 			list_add(&gdev->list, &prev->list);
-deb_info("debug 5");
+deb_debug("debug 5");
 			return 0;
 		}
 	}
@@ -1074,16 +1074,21 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 	if (ret)
 		goto err_remove_from_list;
 
+
+  /* TODO guest driver fails on of_gpiochip_add */
 	ret = of_gpiochip_add__redirect(gc);
 	if (ret)
+// DEBUG
+{   deb_verbose("of_gpiochip_add__redirect fails, with: %d", ret); 
 		goto err_free_gpiochip_mask;
-
-	if (ret)
-		goto err_free_gpiochip_mask;
+}
 
 	ret = gpiochip_init_valid_mask(gc);
 	if (ret)
+// DEBUG
+{   deb_verbose("gpiochip_init_valid_mask fails, with: %d", ret);
 		goto err_remove_of_chip;
+}
 
 	for (i = 0; i < gc->ngpio; i++) {
 		struct gpio_desc *desc = &gdev->descs[i];
@@ -1099,7 +1104,10 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 
 	ret = gpiochip_add_pin_ranges(gc);
 	if (ret)
+// DEBUG
+{   deb_verbose("gpiochip_add_pin_ranges, with: %d", ret);
 		goto err_remove_of_chip;
+}
 
 	acpi_gpiochip_add(gc);
 
@@ -1133,41 +1141,41 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 	return 0;
 
 err_remove_irqchip:
-deb_info("A");
+deb_debug("A");
 	gpiochip_irqchip_remove(gc);
 err_remove_irqchip_mask:
-deb_info("B");
+deb_debug("B");
 	gpiochip_irqchip_free_valid_mask(gc);
 err_remove_acpi_chip:
-deb_info("C");
+deb_debug("C");
 	acpi_gpiochip_remove(gc);
 err_remove_of_chip:
-deb_info("D");
+deb_debug("D");
 	gpiochip_free_hogs(gc);
 	of_gpiochip_remove(gc);
 err_free_gpiochip_mask:
-deb_info("E -- of_gpiochip_add__redirect fails");
+deb_debug("E");
 	gpiochip_remove_pin_ranges(gc);
 	gpiochip_free_valid_mask(gc);
 err_remove_from_list:
-deb_info("F");
+deb_debug("F");
 	spin_lock_irqsave(&gpio_lock, flags);
 	list_del(&gdev->list);
 	spin_unlock_irqrestore(&gpio_lock, flags);
 err_free_label:
-deb_info("G");
+deb_debug("G");
 	kfree_const(gdev->label);
 err_free_descs:
-deb_info("H");
+deb_debug("H");
 	kfree(gdev->descs);
 err_free_dev_name:
-deb_info("I");
+deb_debug("I");
 	kfree(dev_name(&gdev->dev));
 err_free_ida:
-deb_info("J");
+deb_debug("J");
 	ida_free(&gpio_ida, gdev->id);
 err_free_gdev:
-deb_info("K");
+deb_debug("K");
 	/* failures here can mean systems won't boot... */
 	pr_err("%s: GPIOs %d..%d (%s) failed to register, %d\n", __func__,
 	       gdev->base, gdev->base + gdev->ngpio - 1,
