@@ -24,8 +24,8 @@
 #define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
-  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
-  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
 #else
   #define deb_info(fmt, ...)
   #define deb_debug(fmt, ...)
@@ -1621,7 +1621,7 @@ deb_verbose("gpio->gpio.of_node = 0x%llx, pdev->dev.of_node = 0x%llx", (long lon
 
 	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
   // we cannot physically set up irq on guest
-  if(kernel_is_on_guest) {
+  if(!kernel_is_on_guest) {
   #endif
 	if (gpio->soc->num_irqs_per_bank > 1)
 		tegra186_gpio_init_route_mapping(gpio);

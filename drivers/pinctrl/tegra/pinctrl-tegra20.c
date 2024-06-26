@@ -2240,8 +2240,8 @@ static const char *cdev2_parents[] = {
 // #define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
-  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
-  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, __FILE__, ##__VA_ARGS__)
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
 #else
   #define deb_info(fmt, ...)
   #define deb_debug(fmt, ...)
