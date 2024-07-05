@@ -1519,7 +1519,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
     if (gpio->use_timestamp)
       tegra_gte_setup(gpio);
 
-    if( kernel_is_on_guest ) {
+    if(kernel_is_on_guest) {
       deb_debug("GPIO Guest init section\n");
       if( ! guest_proxy_is_set_up ) {
         ret = tegra_gpio_guest_init();

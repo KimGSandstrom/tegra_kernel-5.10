@@ -106,12 +106,6 @@ struct pinctrl_dev *of_pinctrl_get(struct device_node *np)
 }
 EXPORT_SYMBOL_GPL(of_pinctrl_get);
 
-
-// DEBUG
-#define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
-
-
-
 static int dt_to_map_one_config(struct pinctrl *p,
 				struct pinctrl_dev *hog_pctldev,
 				const char *statename,
@@ -157,9 +151,6 @@ static int dt_to_map_one_config(struct pinctrl *p,
 	}
 	of_node_put(np_pctldev);
 
-// DEBUG
-deb_debug("# A #");
-
 	/*
 	 * Call pinctrl driver to parse device tree node, and
 	 * generate mapping table entries
@@ -170,11 +161,7 @@ deb_debug("# A #");
 			dev_name(pctldev->dev));
 		return -ENODEV;
 	}
-// DEBUG
-deb_debug("# B #");
 	ret = ops->dt_node_to_map(pctldev, np_config, &map, &num_maps);
-// DEBUG
-deb_debug("# C -- OK #");
 	if (ret < 0)
 		return ret;
 	else if (num_maps == 0) {
@@ -185,12 +172,11 @@ deb_debug("# C -- OK #");
 		 */
 		dev_info(p->dev,
 			 "there is not valid maps for state %s\n", statename);
-// DEBUG
-deb_debug("# D -- error #");
 		return 0;
 	}
-       /* Stash the mapping table chunk away for later use */
-       return dt_remember_or_free_map(p, statename, pctldev, map, num_maps);
+
+	/* Stash the mapping table chunk away for later use */
+	return dt_remember_or_free_map(p, statename, pctldev, map, num_maps);
 }
 
 static int dt_remember_dummy_state(struct pinctrl *p, const char *statename)
