@@ -741,8 +741,6 @@ void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
 	void __iomem *base;
 	u32 value;
 
-	deb_verbose("(1) chip %s, Offset %d, Level %d\n", gpio->gpio.label, offset, level);
-
 	if (!gpio_is_accessible(gpio, offset)) {
 		pr_err("GPIO error: gpio is not accessible, Chip %s, Offset %d", gpio->gpio.label, offset);
 		return;
@@ -759,8 +757,6 @@ void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
 		value |= TEGRA186_GPIO_OUTPUT_VALUE_HIGH;
 
 	writel_x(value, base + TEGRA186_GPIO_OUTPUT_VALUE);
-
-	deb_verbose("(2): exiting -- value is %d, base is nn%p\n", value, (void *)base);
 }
 
 void tegra186_gpio_set_by_name(const char *name, unsigned int offset,
@@ -1373,6 +1369,7 @@ static inline void gpio_unhook(struct tegra_gpio *gpio) {
    * one doubtful assumption is that chip pointers are numbered by the driver 
    * in the same order preserve_tegrachip records them */
   inline struct gpio_chip * find_chip_by_id(int id) {
+    /*
     int i = 0;
     while (atomic_read(&tegra_gpio_hosts_ready) != MAX_CHIP) {
       msleep(100); // Sleep briefly instead of looping infinitely.
@@ -1381,7 +1378,13 @@ static inline void gpio_unhook(struct tegra_gpio *gpio) {
         return NULL;
       }
     }
-    return &tegra_gpio_hosts[id]->gpio;
+    */
+    if(id & ~0x00000001) {
+			pr_err("GPIO, *ERROR* Illegal chip number (%d)", id);
+      return 0;
+    }
+    else
+      return &tegra_gpio_hosts[id]->gpio;
   }
   EXPORT_SYMBOL_GPL(find_chip_by_id);
 #endif
