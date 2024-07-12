@@ -1237,6 +1237,16 @@ error:
   extern int tegra186_gpio_set_config_redirect(struct gpio_chip *chip,
               unsigned int offset,
               unsigned long config);
+	/*
+  extern const struct tegra_gpio_port *
+  tegra186_gpio_get_port_redirect(struct tegra_gpio *gpio, unsigned int *pin);
+
+  extern void __iomem *tegra186_gpio_get_base_redirect(struct tegra_gpio *gpio,
+					    unsigned int pin);
+
+  extern void __iomem *tegra186_gpio_get_secure_redirect(struct tegra_gpio *gpio,
+					    unsigned int pin);
+	*/
 
   extern int tegra_gpio_timestamp_control_redirect(struct gpio_chip *chip, unsigned offset,
             int enable);
@@ -1257,13 +1267,20 @@ error:
     gpio->gpio.direction_input = tegra186_gpio_direction_input_redirect;
     gpio->gpio.direction_output = tegra186_gpio_direction_output_redirect;
     gpio->gpio.get = tegra186_gpio_get_redirect;
+    // gpio->gpio.get_multiple = N/A;
     gpio->gpio.set = tegra186_gpio_set_redirect;
+    // gpio->gpio.set_multiple = N/A;
     gpio->gpio.set_config = tegra186_gpio_set_config_redirect;
+    // gpio->gpio.set_config = tegra186_gpio_get_port_redirect;  // not in struct
+    // gpio->gpio.set_config = tegra186_gpio_get_base_redirect;  // not in struct
+    // gpio->gpio.set_config = tegra186_gpio_get_secure_redirect; // not in struct 
     gpio->gpio.timestamp_control = tegra_gpio_timestamp_control_redirect;
     gpio->gpio.timestamp_read = tegra_gpio_timestamp_read_redirect;
     gpio->gpio.suspend_configure = tegra_gpio_suspend_configure_redirect;
-  // DEBUG
-  // gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges_redirect;
+    // gpio->gpio.to_irq = N/A;
+    // gpio->gpio.dbg_show = N/A;
+    // gpio->gpio.init_valid_mask = N/A;
+    // gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges_redirect;
     gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges;
     gpio->gpio.base = -1;
   }
@@ -1283,6 +1300,9 @@ static inline void gpio_unhook(struct tegra_gpio *gpio) {
   gpio->gpio.timestamp_control = tegra_gpio_timestamp_control;
   gpio->gpio.timestamp_read = tegra_gpio_timestamp_read;
   gpio->gpio.suspend_configure = tegra_gpio_suspend_configure;
+  // gpio->gpio.to_irq = N/A;
+  // gpio->gpio.dbg_show = N/A;
+  // gpio->gpio.init_valid_mask = N/A;
   gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges;
   gpio->gpio.base = -1;
 }
@@ -1714,9 +1734,9 @@ deb_verbose("gpio->gpio.of_node = 0x%llx, pdev->dev.of_node = 0x%llx", (long lon
 	}
 
 	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
-    preserve_tegrachip(gpio);
-  //  guest_skip:
-  #endif
+	preserve_tegrachip(gpio);
+	//  guest_skip:
+	#endif
   return 0;
 }
 
