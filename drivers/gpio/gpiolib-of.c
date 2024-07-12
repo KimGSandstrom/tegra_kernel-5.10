@@ -25,7 +25,7 @@
 #include "gpiolib-of.h"
 
 #define GPIO_DEBUG
-#define GPIO_DEBUG_VERBOSE
+// #define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
@@ -42,7 +42,6 @@
 #endif
 
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-#include "gpio-proxy.h"  // low level hooks for readl_x and writel_x
 #endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
 
 /**
@@ -1194,41 +1193,30 @@ int of_gpiochip_add__redirect(struct gpio_chip *chip)
 {
 	int ret;
   
-deb_verbose("1.entry");
 	if (!chip->of_node)
 		return 0;
 
-deb_verbose("2");
 	if (!chip->of_xlate) {
 		chip->of_gpio_n_cells = 2;
 		chip->of_xlate = of_gpio_simple_xlate;
 	}
 
-deb_verbose("3");
 	if (chip->of_gpio_n_cells > MAX_PHANDLE_ARGS)
 		return -EINVAL;
 
-deb_verbose("4");
 	of_gpiochip_init_valid_mask(chip);
 
-deb_verbose("5");
 	ret = of_gpiochip_add_pin_range(chip);
-
-// TODO guest fails here: returns -517
-
-deb_verbose("of_gpiochip_add_pin_range returns: %d", ret);
+	deb_verbose("of_gpiochip_add_pin_range returns: %d", ret);
 	if (ret)
 		return ret;
 
-deb_verbose("6");
 	of_node_get(chip->of_node);
 
-deb_verbose("7");
 ret = of_gpiochip_scan_gpios(chip);
 	if (ret)
 		of_node_put(chip->of_node);
 
-deb_verbose("8.return");
 	return ret;
 }
 

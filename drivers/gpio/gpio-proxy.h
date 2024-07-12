@@ -1,22 +1,27 @@
 #ifndef GPIO_PROXY_H
 #define GPIO_PROXY_H
 
-/* passthrough hooks for low level functions sudh as readl adnn writel
+/* passthrough hooks for low level functions such as readl and writel
  * functions are mainly intended for GPIO passthrough
  */
 
 extern bool kernel_is_on_guest;
 extern inline u32 readl_redirect( void * addr, unsigned char type);
 extern inline void writel_redirect( u32 value, void * addr, unsigned char type);
+extern void __iomem *tegra186_gpio_get_base_redirect(unsigned char id, unsigned int pin);
 
 extern const unsigned char rwl_std_type;
 extern const unsigned char rwl_raw_type;
 extern const unsigned char rwl_relaxed_type;
 
+// TODO
+// check readl_x() and writel_x() in files: gpio-tegra.c, pinctrl-tegra.c
+
 static inline u32 readl_x( void * addr) {
   u32 ret;
   if(kernel_is_on_guest) {
     ret = readl_redirect(addr, rwl_std_type);
+    
   }
   else {
     ret = readl(addr);
@@ -75,13 +80,14 @@ static inline void writel_relaxed_x( u32 value, void * addr) {
 
 
 // TODO, adding these passthroughs would make execution less latent
+/*
 static inline u32 pmx_readl_x( void * addr) { return 0; };
 static inline void pmx_writel_x( u32 value, void * addr) {};
 static inline u32 tegra_gpio_readl_x( void * addr) { return 0;};
 static inline void tegra_gpio_writel_x( u32 value, void * addr) {};
 static inline u32 tegra_gte_readl_x( void * addr) { return 0; };
 static inline void tegra_gte_writel_x( u32 value, void * addr) {};
-
-// note: adding even higher level functions migth take latency off the lower level functions
+*/
+// note: adding more higher level functions migth take latency off the lower level functions
 
 #endif

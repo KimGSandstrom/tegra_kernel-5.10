@@ -32,7 +32,7 @@
 #include <trace/events/gpio.h>
 
 #define GPIO_DEBUG
-#define GPIO_DEBUG_VERBOSE
+// #define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
@@ -49,7 +49,6 @@
 #endif
 
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-#include "gpio-proxy.h"  // low level hooks for readl_x and writel_x
 #endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
 
 /* Implementation infrastructure for GPIO interfaces.
@@ -288,7 +287,7 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 	if (list_empty(&gpio_devices)) {
 		/* initial entry in list */
 		list_add_tail(&gdev->list, &gpio_devices);
-deb_debug("debug 1");
+		deb_verbose("debug 1");
 		return 0;
 	}
 
@@ -296,7 +295,7 @@ deb_debug("debug 1");
 	if (gdev->base + gdev->ngpio <= next->base) {
 		/* add before first entry */
 		list_add(&gdev->list, &gpio_devices);
-deb_debug("debug 2");
+		deb_verbose("debug 2");
 		return 0;
 	}
 
@@ -304,21 +303,21 @@ deb_debug("debug 2");
 	if (prev->base + prev->ngpio <= gdev->base) {
 		/* add behind last entry */
 		list_add_tail(&gdev->list, &gpio_devices);
-deb_debug("debug 3");
+		deb_verbose("debug 3");
 		return 0;
 	}
 
 	list_for_each_entry_safe(prev, next, &gpio_devices, list) {
 		/* at the end of the list */
 		if (&next->list == &gpio_devices)
-{ deb_debug("debug 4, prev= 0x%p, next = 0x%p", prev, next);
-			break;
-}
+			{ deb_verbose("debug 4, prev= 0x%p, next = 0x%p", prev, next);
+				break;
+			}
 		/* add between prev and next */
 		if (prev->base + prev->ngpio <= gdev->base
 				&& gdev->base + gdev->ngpio <= next->base) {
 			list_add(&gdev->list, &prev->list);
-deb_debug("debug 5");
+			deb_verbose("debug 5");
 			return 0;
 		}
 	}
@@ -1035,18 +1034,11 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 	}
 	gdev->base = base;
 
+	deb_verbose("precheck number of lines: %d, list=0x%llx, next=0x%llx, prev=0x%llx", gdev->ngpio, (long long unsigned int)&gdev->list, (long long unsigned int)gdev->list.next, (long long unsigned int)gdev->list.prev);
 
-
-//DEBUG
-  deb_verbose("precheck number of lines: %d, list=0x%llx, next=0x%llx, prev=0x%llx", gdev->ngpio, (long long unsigned int)&gdev->list, (long long unsigned int)gdev->list.next, (long long unsigned int)gdev->list.prev);
-
-// debug gdev here --- empty list?
 	ret = gpiodev_add_to_list(gdev);
-  deb_verbose("number of lines: %d", gdev->ngpio);
-// XXX
-// TODO DEBUG
-// gpiodev_add_to_list returns empty list 
-// Probably a BUG 
+	if(WARN_ON(gdev->ngpio == 0))
+		deb_verbose("number of lines: %d", gdev->ngpio);
 	if (ret) {
 		spin_unlock_irqrestore(&gpio_lock, flags);
 		goto err_free_label;
@@ -1078,14 +1070,12 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
   /* TODO guest driver fails on of_gpiochip_add */
 	ret = of_gpiochip_add__redirect(gc);
 	if (ret)
-// DEBUG
 {   deb_verbose("of_gpiochip_add__redirect fails, with: %d", ret); 
 		goto err_free_gpiochip_mask;
 }
 
 	ret = gpiochip_init_valid_mask(gc);
 	if (ret)
-// DEBUG
 {   deb_verbose("gpiochip_init_valid_mask fails, with: %d", ret);
 		goto err_remove_of_chip;
 }
@@ -1104,7 +1094,6 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 
 	ret = gpiochip_add_pin_ranges(gc);
 	if (ret)
-// DEBUG
 {   deb_verbose("gpiochip_add_pin_ranges, with: %d", ret);
 		goto err_remove_of_chip;
 }
@@ -1141,41 +1130,30 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 	return 0;
 
 err_remove_irqchip:
-deb_debug("A");
 	gpiochip_irqchip_remove(gc);
 err_remove_irqchip_mask:
-deb_debug("B");
 	gpiochip_irqchip_free_valid_mask(gc);
 err_remove_acpi_chip:
-deb_debug("C");
 	acpi_gpiochip_remove(gc);
 err_remove_of_chip:
-deb_debug("D");
 	gpiochip_free_hogs(gc);
 	of_gpiochip_remove(gc);
 err_free_gpiochip_mask:
-deb_debug("E");
 	gpiochip_remove_pin_ranges(gc);
 	gpiochip_free_valid_mask(gc);
 err_remove_from_list:
-deb_debug("F");
 	spin_lock_irqsave(&gpio_lock, flags);
 	list_del(&gdev->list);
 	spin_unlock_irqrestore(&gpio_lock, flags);
 err_free_label:
-deb_debug("G");
 	kfree_const(gdev->label);
 err_free_descs:
-deb_debug("H");
 	kfree(gdev->descs);
 err_free_dev_name:
-deb_debug("I");
 	kfree(dev_name(&gdev->dev));
 err_free_ida:
-deb_debug("J");
 	ida_free(&gpio_ida, gdev->id);
 err_free_gdev:
-deb_debug("K");
 	/* failures here can mean systems won't boot... */
 	pr_err("%s: GPIOs %d..%d (%s) failed to register, %d\n", __func__,
 	       gdev->base, gdev->base + gdev->ngpio - 1,
