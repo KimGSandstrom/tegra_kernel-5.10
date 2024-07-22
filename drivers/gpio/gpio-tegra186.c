@@ -1269,6 +1269,7 @@ error:
   tegra186_gpio_get_port_redirect(struct tegra_gpio *gpio, unsigned int *pin);
 
   extern void __iomem *tegra186_gpio_get_base_redirect(unsigned char id,
+
 					    unsigned int pin);
 
   extern void __iomem *tegra186_gpio_get_secure_redirect(struct tegra_gpio *gpio,
@@ -1298,6 +1299,9 @@ error:
     gpio->gpio.set = tegra186_gpio_set_redirect;
     // gpio->gpio.set_multiple = N/A;
     gpio->gpio.set_config = tegra186_gpio_set_config_redirect;
+    // gpio->gpio.set_config = tegra186_gpio_get_port_redirect;  // not in struct
+    // gpio->gpio.set_config = tegra186_gpio_get_base_redirect;  // not in struct
+    // gpio->gpio.set_config = tegra186_gpio_get_secure_redirect; // not in struct 
     gpio->gpio.timestamp_control = tegra_gpio_timestamp_control_redirect;
     gpio->gpio.timestamp_read = tegra_gpio_timestamp_read_redirect;
     gpio->gpio.suspend_configure = tegra_gpio_suspend_configure_redirect;
@@ -1778,6 +1782,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 
 	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
 	preserve_tegrachip(gpio);
+
 	#endif
   return 0;
 }
