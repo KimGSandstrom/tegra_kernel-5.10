@@ -912,6 +912,7 @@ static int tegra186_gpio_of_xlate(struct gpio_chip *chip,
 
 #define to_tegra_gpio(x) container_of((x), struct tegra_gpio, gpio)
 
+// candidate for passthrough (but we still need irq in Guest)
 static void tegra186_irq_ack(struct irq_data *data)
 {
 	struct gpio_chip *gc = irq_data_get_irq_chip_data(data);
@@ -922,7 +923,7 @@ static void tegra186_irq_ack(struct irq_data *data)
 	if (WARN_ON(base == NULL))
 		return;
 
-	writel(1, base + TEGRA186_GPIO_INTERRUPT_CLEAR);
+	writel_x(1, base + TEGRA186_GPIO_INTERRUPT_CLEAR);
 }
 
 // candidate for passthrough (but we still need irq in Guest)
@@ -939,7 +940,7 @@ static void tegra186_irq_mask(struct irq_data *data)
 
 	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	value &= ~TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT;
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+	writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 }
 
 // candidate for passthrough (but we still need irq in Guest)
@@ -956,7 +957,7 @@ static void tegra186_irq_unmask(struct irq_data *data)
 
 	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	value |= TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT;
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+	writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 }
 
 // candidate for passthrough (but we still need irq in Guest)
@@ -1005,7 +1006,7 @@ static int tegra186_irq_set_type(struct irq_data *data, unsigned int type)
 		return -EINVAL;
 	}
 
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+	writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 
 	if ((type & IRQ_TYPE_EDGE_BOTH) == 0)
 		irq_set_handler_locked(data, handle_level_irq);
@@ -1201,7 +1202,7 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 				if (j == 0) {
 					value = readl_x(base + offset);
 					value = BIT(port->pins) - 1;
-					writel(value, base + offset);
+					writel_x(value, base + offset);
 				}
 			}
 		}
@@ -1773,7 +1774,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 					      TEGRA186_GPIO_ENABLE_CONFIG);
 				value |=
 				TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC;
-				writel(value,
+				writel_x(value,
 				       base + TEGRA186_GPIO_ENABLE_CONFIG);
 			}
 			offset += port->pins;
@@ -1807,9 +1808,9 @@ static int tegra_gpio_resume_early(struct device *dev)
 
 		regs->restore_needed = false;
 
-    writel(regs->val,  base + TEGRA186_GPIO_OUTPUT_VALUE);
-    writel(regs->out,  base + TEGRA186_GPIO_OUTPUT_CONTROL);
-    writel(regs->conf, base + TEGRA186_GPIO_ENABLE_CONFIG);
+    writel_x(regs->val,  base + TEGRA186_GPIO_OUTPUT_VALUE);
+    writel_x(regs->out,  base + TEGRA186_GPIO_OUTPUT_CONTROL);
+    writel_x(regs->conf, base + TEGRA186_GPIO_ENABLE_CONFIG);
 	}
 
 	return 0;

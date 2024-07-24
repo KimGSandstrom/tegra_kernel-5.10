@@ -287,7 +287,6 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 	if (list_empty(&gpio_devices)) {
 		/* initial entry in list */
 		list_add_tail(&gdev->list, &gpio_devices);
-		deb_verbose("debug 1");
 		return 0;
 	}
 
@@ -295,7 +294,6 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 	if (gdev->base + gdev->ngpio <= next->base) {
 		/* add before first entry */
 		list_add(&gdev->list, &gpio_devices);
-		deb_verbose("debug 2");
 		return 0;
 	}
 
@@ -309,15 +307,10 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 
 	list_for_each_entry_safe(prev, next, &gpio_devices, list) {
 		/* at the end of the list */
-		if (&next->list == &gpio_devices)
-			{ deb_verbose("debug 4, prev= 0x%p, next = 0x%p", prev, next);
-				break;
-			}
 		/* add between prev and next */
 		if (prev->base + prev->ngpio <= gdev->base
 				&& gdev->base + gdev->ngpio <= next->base) {
 			list_add(&gdev->list, &prev->list);
-			deb_verbose("debug 5");
 			return 0;
 		}
 	}

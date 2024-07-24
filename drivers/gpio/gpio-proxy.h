@@ -21,7 +21,6 @@ static inline u32 readl_x( void * addr) {
   u32 ret;
   if(kernel_is_on_guest) {
     ret = readl_redirect(addr, rwl_std_type);
-    
   }
   else {
     ret = readl(addr);
@@ -56,8 +55,8 @@ static inline void __raw_writel_x( u32 value, void * addr) {
   else {
     __raw_writel(value, addr);
   }
-
 };
+
 static inline u32 readl_relaxed_x( void * addr) {
   u32 ret;
   if(kernel_is_on_guest) {
