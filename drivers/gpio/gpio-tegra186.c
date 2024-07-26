@@ -1430,7 +1430,7 @@ static inline void gpio_unhook(struct tegra_gpio *gpio) {
     }
     if(id & ~0x00000001) {
 			pr_err("GPIO, *ERROR* Illegal chip number (%d)", id);
-      return 0;
+      return NULL;
     }
     else
       return &tegra_gpio_hosts[id]->gpio;
@@ -1450,7 +1450,7 @@ static inline void gpio_unhook(struct tegra_gpio *gpio) {
     */
     if(id & ~0x00000001) {
 			pr_err("GPIO, *ERROR* Illegal chip number (%d)", id);
-      return 0;
+      return NULL;
     }
     else
       return tegra_gpio_hosts[id];
