@@ -509,6 +509,7 @@ void __iomem *tegra186_gpio_get_base_execute(int id, unsigned int pin)
 	}
 EXPORT_SYMBOL_GPL(tegra186_gpio_get_base_execute);
 
+//checks if we are on host or guest. Guest calls the redidrec function
 static inline void __iomem *tegra186_gpio_get_base_x(struct tegra_gpio *tgpio, unsigned int pin) {
   if(kernel_is_on_guest) {
     return tegra186_gpio_get_base_redirect(tgpio->gpio.gpiodev->id, pin);
