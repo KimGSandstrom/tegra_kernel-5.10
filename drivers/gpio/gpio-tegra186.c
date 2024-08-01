@@ -1301,9 +1301,9 @@ error:
     gpio->gpio.set = tegra186_gpio_set_redirect;
     // gpio->gpio.set_multiple = N/A;
     gpio->gpio.set_config = tegra186_gpio_set_config_redirect;
-    // gpio->gpio.set_config = tegra186_gpio_get_port_redirect;  // not in struct
-    // gpio->gpio.set_config = tegra186_gpio_get_base_redirect;  // not in struct
-    // gpio->gpio.set_config = tegra186_gpio_get_secure_redirect; // not in struct 
+    // ??? = tegra186_gpio_get_port_redirect;  // not in struct
+    // ??? = tegra186_gpio_get_base_redirect;  // not in struct
+    // ??? = tegra186_gpio_get_secure_redirect; // not in struct 
     gpio->gpio.timestamp_control = tegra_gpio_timestamp_control_redirect;
     gpio->gpio.timestamp_read = tegra_gpio_timestamp_read_redirect;
     gpio->gpio.suspend_configure = tegra_gpio_suspend_configure_redirect;
