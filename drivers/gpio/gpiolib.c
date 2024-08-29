@@ -65,11 +65,11 @@
  *
  * Otherwise, minimize overhead in what may be bitbanging codepaths.
  */
-    #ifdef	DEBUG
+#ifdef	DEBUG
 #define	extra_checks	1
 #else
 #define	extra_checks	0
-    #endif
+#endif
 
 /* Device and char device-related information */
 static DEFINE_IDA(gpio_ida);
@@ -307,6 +307,9 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 
 	list_for_each_entry_safe(prev, next, &gpio_devices, list) {
 		/* at the end of the list */
+		if (&next->list == &gpio_devices)
+			break;
+
 		/* add between prev and next */
 		if (prev->base + prev->ngpio <= gdev->base
 				&& gdev->base + gdev->ngpio <= next->base) {
@@ -1814,7 +1817,7 @@ static int gpiochip_to_irq(struct gpio_chip *gc, unsigned offset)
 	if (!gpiochip_irqchip_irq_valid(gc, offset))
 		return -ENXIO;
 
-    #ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
+#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
 	if (irq_domain_is_hierarchy(domain)) {
 		struct irq_fwspec spec;
 
@@ -1825,7 +1828,7 @@ static int gpiochip_to_irq(struct gpio_chip *gc, unsigned offset)
 
 		return irq_create_fwspec_mapping(&spec);
 	}
-    #endif
+#endif
 
 	return irq_create_mapping(domain, offset);
 }
@@ -5159,4 +5162,4 @@ static int __init gpiolib_debugfs_init(void)
 }
 subsys_initcall(gpiolib_debugfs_init);
 
-    #endif     /* FIXIT -- debug_FS */
+    #endif	/* DEBUG_FS */
