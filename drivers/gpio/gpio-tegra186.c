@@ -21,7 +21,7 @@
 #include <dt-bindings/gpio/tegra239-gpio.h>
 
 #define GPIO_DEBUG
-#define GPIO_DEBUG_VERBOSE
+// #define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
@@ -1340,6 +1340,9 @@ static inline void gpio_unhook(struct tegra_gpio *gpio) {
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 
   extern int tegra_gpio_guest_init(void);
+  extern int tegra_gpio_host_init(void);
+  extern int tegra_gpio_guest_cleanup(void);
+  extern int tegra_gpio_host_cleanup(void);
 
   #define MAX_CHIP 2    // check this value against value in gpio_host-proxy.h
 
@@ -1475,6 +1478,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	void __iomem *base;
 
   static bool guest_proxy_is_set_up = false;
+  static bool host_proxy_is_set_up = false;
 
   deb_debug("Probing gpio");
 
@@ -1593,7 +1597,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
       tegra_gte_setup(gpio);
 
     if(kernel_is_on_guest) {
-      deb_debug("GPIO Guest init section\n");
+      deb_debug("GPIO Proxy init section\n");
       if( ! guest_proxy_is_set_up ) {
         ret = tegra_gpio_guest_init();
         guest_proxy_is_set_up = true;
@@ -1602,11 +1606,16 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
       gpio_hook(gpio);
     }
     else {
+      if( ! host_proxy_is_set_up ) {
+        ret = tegra_gpio_host_init();
+        host_proxy_is_set_up = true;
+      }
       // gpio_unhook is the same as standard settings
       // unhooked pointers are for the host driver on host only
       BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver
       gpio_unhook(gpio);      // set standard function pointers
-    }
+    };
+
     gpio->gpio.base = -1;
     deb_debug("gpio function pointers are set for gpio label=%s\n", gpio->gpio.label);
   #else
@@ -1835,6 +1844,12 @@ static const struct dev_pm_ops tegra_gpio_pm = {
 
 static int tegra186_gpio_remove(struct platform_device *pdev)
 {
+  if(kernel_is_on_guest) {
+    tegra_gpio_guest_cleanup();
+  }
+  else {
+    tegra_gpio_host_cleanup();
+  }
 	return 0;
 }
 
