@@ -6,6 +6,7 @@
  */
 
 extern bool kernel_is_on_guest;
+
 extern inline u32 readl_redirect( void * addr, unsigned char type);
 extern inline void writel_redirect( u32 value, void * addr, unsigned char type);
 extern void __iomem *tegra186_gpio_get_base_redirect(unsigned char id, unsigned int pin);

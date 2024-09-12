@@ -919,12 +919,12 @@ static void tegra186_irq_ack(struct irq_data *data)
 	struct gpio_chip *gc = irq_data_get_irq_chip_data(data);
 	struct tegra_gpio *gpio = to_tegra_gpio(gc);
 	void __iomem *base;
-
-	base = tegra186_gpio_get_base_x(gpio, data->hwirq);
+	
+	base = tegra186_gpio_get_base(gpio, data->hwirq);
 	if (WARN_ON(base == NULL))
 		return;
 
-	writel_x(1, base + TEGRA186_GPIO_INTERRUPT_CLEAR);
+	writel(1, base + TEGRA186_GPIO_INTERRUPT_CLEAR);
 }
 
 // candidate for passthrough (but we still need irq in Guest)
@@ -935,13 +935,13 @@ static void tegra186_irq_mask(struct irq_data *data)
 	void __iomem *base;
 	u32 value;
 
-	base = tegra186_gpio_get_base_x(gpio, data->hwirq);
+	base = tegra186_gpio_get_base(gpio, data->hwirq);
 	if (WARN_ON(base == NULL))
 		return;
 
-	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
+	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	value &= ~TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT;
-	writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 }
 
 // candidate for passthrough (but we still need irq in Guest)
@@ -952,13 +952,13 @@ static void tegra186_irq_unmask(struct irq_data *data)
 	void __iomem *base;
 	u32 value;
 
-	base = tegra186_gpio_get_base_x(gpio, data->hwirq);
+	base = tegra186_gpio_get_base(gpio, data->hwirq);
 	if (WARN_ON(base == NULL))
 		return;
 
-	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
+	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	value |= TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT;
-	writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 }
 
 // candidate for passthrough (but we still need irq in Guest)
@@ -969,11 +969,11 @@ static int tegra186_irq_set_type(struct irq_data *data, unsigned int type)
 	void __iomem *base;
 	u32 value;
 
-	base = tegra186_gpio_get_base_x(gpio, data->hwirq);
+	base = tegra186_gpio_get_base(gpio, data->hwirq);
 	if (WARN_ON(base == NULL))
 		return -ENODEV;
 
-	value = readl_x(base + TEGRA186_GPIO_ENABLE_CONFIG);
+	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
 	value &= ~TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_MASK;
 	value &= ~TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_LEVEL;
 
@@ -1007,7 +1007,7 @@ static int tegra186_irq_set_type(struct irq_data *data, unsigned int type)
 		return -EINVAL;
 	}
 
-	writel_x(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 
 	if ((type & IRQ_TYPE_EDGE_BOTH) == 0)
 		irq_set_handler_locked(data, handle_level_irq);
@@ -1055,7 +1055,7 @@ static void tegra186_gpio_irq(struct irq_desc *desc)
 		if (j == gpio->num_irqs_per_bank)
 			goto skip;
 
-		value = readl_x(base + TEGRA186_GPIO_INTERRUPT_STATUS(1));
+		value = readl(base + TEGRA186_GPIO_INTERRUPT_STATUS(1));
 
 		for_each_set_bit(pin, &value, port->pins) {
 			irq = irq_find_mapping(domain, offset + pin);
@@ -1751,7 +1751,6 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
    *   static int gpiochip_setup_dev__redirect(struct gpio_device *gdev)
    *   int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
    * only devm_gpiochip_add_data needs to be redirected and passthrough
-   * (assuming passthrough is the solution)
    */
     if(kernel_is_on_guest) { 
       // passthrough function if we are guest

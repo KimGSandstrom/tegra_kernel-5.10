@@ -597,9 +597,6 @@ static int gpiochip_setup_dev__redirect(struct gpio_device *gdev)
 	proxy_host_gpio_dev[gpio_dev_count++] = gdev;
 	// we continue to populate gdev
 	
-// FIXIT -- debug
-//goto debug_end;
-
 	ret = gcdev_register(gdev, gpio_devt);
 
 	if (ret)
@@ -608,9 +605,6 @@ static int gpiochip_setup_dev__redirect(struct gpio_device *gdev)
 	ret = gpiochip_sysfs_register(gdev);
 	if (ret)
 		goto err_remove_device;
-
-// FIXIT --debug
-//debug_end:
 
 	/* From this point, the .release() function cleans up gpio_device */
 	gdev->dev.release = gpiodevice_release;
@@ -914,7 +908,7 @@ EXPORT_SYMBOL_GPL(gpiochip_add_data_with_key);
  */
 
 extern int of_gpiochip_add__redirect(struct gpio_chip *chip);
-extern int devm_gpiochip_add_data__redirect(struct device *dev, struct gpio_chip *gc, void *data);
+// extern int devm_gpiochip_add_data__redirect(struct device *dev, struct gpio_chip *gc, void *data);
 
 int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 {
