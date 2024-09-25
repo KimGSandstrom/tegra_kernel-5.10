@@ -110,7 +110,7 @@ struct pinctrl_dev *get_pinctrl_dev_from_devname(const char *devname)
 {
 	struct pinctrl_dev *pctldev;
 
-	// removed because prints too often 
+	// removed because prints too often
 	// deb_debug("\n");
 
 	if (!devname)
@@ -782,7 +782,7 @@ static inline void pinctrl_generic_free_groups(struct pinctrl_dev *pctldev)
 {
 }
     #endif /* CONFIG_GENERIC_PINCTRL_GROUPS */
-  
+ 
 /**
  * pinctrl_get_group_selector() - returns the group selector for a group
  * @pctldev: the pin controller handling the group

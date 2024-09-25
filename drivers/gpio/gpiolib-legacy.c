@@ -20,7 +20,7 @@
 void gpio_free(unsigned gpio)
 {
 	deb_debug("\n");
-		
+	
 	gpiod_free(gpio_to_desc(gpio));
 }
 EXPORT_SYMBOL_GPL(gpio_free);
@@ -85,7 +85,7 @@ int gpio_request(unsigned gpio, const char *label)
 	struct gpio_desc *desc = gpio_to_desc(gpio);
 
 	deb_debug("label=%s\n", label);
-	
+
 	/* Compatibility: assume unavailable "valid" GPIOs will appear later */
 	if (!desc && gpio_is_valid(gpio))
 		return -EPROBE_DEFER;
@@ -104,7 +104,7 @@ int gpio_request_array(const struct gpio *array, size_t num)
 	int i, err;
 
 	deb_debug("\n");
-	
+
 	for (i = 0; i < num; i++, array++) {
 		err = gpio_request_one(array->gpio, array->flags, array->label);
 		if (err)

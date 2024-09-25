@@ -26,7 +26,7 @@ static inline u32 readl_x( void * addr) {
   else {
     ret = readl(addr);
   }
-  return ret;  
+  return ret; 
 };
 
 static inline void writel_x( u32 value, void * addr) {
@@ -46,7 +46,7 @@ static inline u32 __raw_readl_x( void * addr) {
   else {
     ret = __raw_readl(addr);
   }
-  return ret;  
+  return ret; 
 };
 
 static inline void __raw_writel_x( u32 value, void * addr) {
@@ -66,7 +66,7 @@ static inline u32 readl_relaxed_x( void * addr) {
   else {
     ret = readl_relaxed(addr);
   }
-  return ret;  
+  return ret; 
 };
 
 static inline void writel_relaxed_x( u32 value, void * addr) {

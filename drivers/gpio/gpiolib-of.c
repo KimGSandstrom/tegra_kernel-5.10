@@ -25,7 +25,7 @@
 #include "gpiolib-of.h"
 
 #define GPIO_DEBUG
-// #define GPIO_DEBUG_VERBOSE
+#define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
@@ -873,6 +873,8 @@ int of_gpiochip_suspend(struct gpio_chip *chip)
 	int ret;
 	int i, ncells, ngpios;
 
+  deb_verbose("\n");
+
 	for_each_available_child_of_node(chip->of_node, np) {
 		if (!of_property_read_bool(np, "gpio-suspend"))
 			continue;
@@ -917,8 +919,11 @@ int of_gpiochip_suspend(struct gpio_chip *chip)
 						gpio_chip_hwgpio(desc),
 						dflags & GPIOD_FLAGS_BIT_DIR_VAL);
 				else
+          {
+          deb_verbose("chip->direction_input()\n");
 					ret = chip->direction_input(chip,
 							gpio_chip_hwgpio(desc));
+          }
 			}
 
 			if (ret < 0)
@@ -1185,7 +1190,7 @@ void of_gpiochip_remove(struct gpio_chip *chip)
 int of_gpiochip_add__redirect(struct gpio_chip *chip)
 {
 	int ret;
-  
+ 
 	if (!chip->of_node)
 		return 0;
 

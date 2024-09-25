@@ -83,14 +83,29 @@ struct linehandle_state {
 	GPIOHANDLE_REQUEST_OPEN_DRAIN | \
 	GPIOHANDLE_REQUEST_OPEN_SOURCE)
 
-// #define GPIO_DEBUG
+// define Debug  
+#define GPIO_DEBUG
+#define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
-#define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, ##__VA_ARGS__)
-#define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, ##__VA_ARGS__)
+  /*
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
+  #define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__ , kbasename(__FILE__), ##__VA_ARGS__)
+  */
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
+  #define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' -- " fmt, __func__ , ##__VA_ARGS__)
 #else
-#define deb_info(fmt, ...)
-#define deb_debug(fmt, ...)
+  #define deb_info(fmt, ...)
+  #define deb_debug(fmt, ...)
+  #define deb_error(fmt, ...)
+#endif
+
+#ifdef GPIO_DEBUG_VERBOSE
+  #define deb_verbose           deb_debug
+#else
+  #define deb_verbose(fmt, ...)
 #endif
 
 static int linehandle_validate_flags(u32 flags)
@@ -166,7 +181,7 @@ static long linehandle_set_config(struct linehandle_state *lh,
 	u32 lflags;
 
 	deb_debug("\n");
-	
+
 	if (copy_from_user(&gcnf, ip, sizeof(gcnf)))
 		return -EFAULT;
 
@@ -212,7 +227,7 @@ static long linehandle_ioctl(struct file *file, unsigned int cmd,
 	int i;
 
 	deb_debug("cmd=0x%x, user_pointer=0x%p\n", cmd, ip);
-	
+
 	if (cmd == GPIOHANDLE_GET_LINE_VALUES_IOCTL) {
 		/* NOTE: It's ok to read values of output lines. */
 		int ret = gpiod_get_array_value_complex(false,
@@ -283,7 +298,7 @@ static void linehandle_free(struct linehandle_state *lh)
 static int linehandle_release(struct inode *inode, struct file *file)
 {
 	deb_debug("\n");
-	
+
 	linehandle_free(file->private_data);
 	return 0;
 }
@@ -307,7 +322,7 @@ static int linehandle_create(struct gpio_device *gdev, void __user *ip)
 	u32 lflags;
 
 	deb_debug("\n");
-	
+
 	if (copy_from_user(&handlereq, ip, sizeof(handlereq)))
 		return -EFAULT;
 	if ((handlereq.lines == 0) || (handlereq.lines > GPIOHANDLES_MAX))
@@ -819,6 +834,11 @@ static int edge_detector_setup(struct line *line,
 			IRQF_TRIGGER_RISING : IRQF_TRIGGER_FALLING;
 	irqflags |= IRQF_ONESHOT;
 
+  #ifdef GPIO_DEBUG_VERBOSE
+  dump_stack();
+  deb_verbose("request_threaded_irq() parameters: %x, %lx, %s, %p\n",irq, irqflags, line->req->label, line);
+  #endif
+
 	/* Request a thread to read the events */
 	ret = request_threaded_irq(irq, edge_irq_handler, edge_irq_thread,
 				   irqflags, line->req->label, line);
@@ -1059,7 +1079,7 @@ static long linereq_set_values_unlocked(struct linereq *lr,
 	int ret;
 
 	deb_debug("\n");
-	
+
 	bitmap_zero(vals, GPIO_V2_LINES_MAX);
 	for (num_set = 0, i = 0; i < lr->num_lines; i++) {
 		if (lv->mask & BIT_ULL(i)) {
@@ -1100,7 +1120,7 @@ static long linereq_set_values(struct linereq *lr, void __user *ip)
 	int ret;
 
 	deb_debug("\n");
-	
+
 	if (copy_from_user(&lv, ip, sizeof(lv)))
 		return -EFAULT;
 
@@ -1188,7 +1208,7 @@ static long linereq_ioctl(struct file *file, unsigned int cmd,
 	void __user *ip = (void __user *)arg;
 
 	deb_debug("\n");
-	
+
 	if (cmd == GPIO_V2_LINE_GET_VALUES_IOCTL)
 		return linereq_get_values(lr, ip);
 	else if (cmd == GPIO_V2_LINE_SET_VALUES_IOCTL)
@@ -1320,7 +1340,7 @@ static int linereq_create(struct gpio_device *gdev, void __user *ip)
 	u64 flags;
 	unsigned int i;
 	int fd, ret;
-	
+
 	deb_debug("\n");
 
 	if (copy_from_user(&ulr, ip, sizeof(ulr)))
@@ -1729,7 +1749,7 @@ static int lineevent_create(struct gpio_device *gdev, void __user *ip)
 	int irq, irqflags = 0;
 
 	deb_debug("\n");
-	
+
 	if (copy_from_user(&eventreq, ip, sizeof(eventreq)))
 		return -EFAULT;
 
@@ -1809,6 +1829,11 @@ static int lineevent_create(struct gpio_device *gdev, void __user *ip)
 
 	INIT_KFIFO(le->events);
 	init_waitqueue_head(&le->wait);
+
+  #ifdef GPIO_DEBUG_VERBOSE
+  deb_verbose("request_threaded_irq() parameters: %x, %x, %s, %p\n",le->irq, irqflags, le->label, le);
+  dump_stack();
+  #endif
 
 	/* Request a thread to read the events */
 	ret = request_threaded_irq(le->irq,
@@ -2028,7 +2053,7 @@ static int lineinfo_get_v1(struct gpio_chardev_data *cdev, void __user *ip,
 	struct gpio_v2_line_info lineinfo_v2;
 
 	deb_debug("\n");
-	
+
 	if (copy_from_user(&lineinfo, ip, sizeof(lineinfo)))
 		return -EFAULT;
 
@@ -2065,7 +2090,7 @@ static int lineinfo_get(struct gpio_chardev_data *cdev, void __user *ip,
 	struct gpio_v2_line_info lineinfo;
 
 	deb_debug("\n");
-	
+
 	if (copy_from_user(&lineinfo, ip, sizeof(lineinfo)))
 		return -EFAULT;
 
@@ -2121,7 +2146,7 @@ static long gpio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	void __user *ip = (void __user *)arg;
 
 	deb_debug("cmd=0x%x, user_pointer=0x%p\n", cmd, ip);
-	
+
 	/* We fail any subsequent ioctl():s when the chip is gone */
 	if (!gdev->chip)
 		return -ENODEV;
@@ -2156,7 +2181,7 @@ static long gpio_ioctl_compat(struct file *file, unsigned int cmd,
 			      unsigned long arg)
 {
 	deb_debug("cmd=%d\n", cmd);
-	
+
 	return gpio_ioctl(file, cmd, (unsigned long)compat_ptr(arg));
 }
 #endif
@@ -2378,7 +2403,7 @@ int gpiolib_cdev_register(struct gpio_device *gdev, dev_t devt)
 	int ret;
 
 	deb_debug("\n");
-	
+
 	cdev_init(&gdev->chrdev, &gpio_fileops);
 	gdev->chrdev.owner = THIS_MODULE;
 	gdev->dev.devt = MKDEV(MAJOR(devt), gdev->id);
@@ -2396,6 +2421,6 @@ int gpiolib_cdev_register(struct gpio_device *gdev, dev_t devt)
 void gpiolib_cdev_unregister(struct gpio_device *gdev)
 {
 	deb_debug("\n");
-	
+
 	cdev_device_del(&gdev->chrdev, &gdev->dev);
 }

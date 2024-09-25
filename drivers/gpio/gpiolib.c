@@ -32,14 +32,21 @@
 #include <trace/events/gpio.h>
 
 #define GPIO_DEBUG
-// #define GPIO_DEBUG_VERBOSE
+#define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
+  /*
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
   #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
+  #define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__ , kbasename(__FILE__), ##__VA_ARGS__)
+  */
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
+  #define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' -- " fmt, __func__ , ##__VA_ARGS__)
 #else
   #define deb_info(fmt, ...)
   #define deb_debug(fmt, ...)
+  #define deb_error(fmt, ...)
 #endif
 
 #ifdef GPIO_DEBUG_VERBOSE
@@ -125,7 +132,7 @@ struct gpio_desc *gpio_to_desc(unsigned gpio)
 {
 	struct gpio_device *gdev;
 	unsigned long flags;
-	
+
 	deb_verbose("\n");
 
 	spin_lock_irqsave(&gpio_lock, flags);
@@ -532,7 +539,7 @@ static void gpiodevice_release(struct device *dev)
 	kfree(gdev);
 }
 
-    #ifdef CONFIG_GPIO_CDEV
+#ifdef CONFIG_GPIO_CDEV
 #define gcdev_register(gdev, devt)	gpiolib_cdev_register((gdev), (devt))
 #define gcdev_unregister(gdev)		gpiolib_cdev_unregister((gdev))
 #else
@@ -542,7 +549,7 @@ static void gpiodevice_release(struct device *dev)
  */
 #define gcdev_register(gdev, devt)	device_add(&(gdev)->dev)
 #define gcdev_unregister(gdev)		device_del(&(gdev)->dev)
-    #endif
+#endif
 
 static int gpio_dev_count = 0;
 struct gpio_device *proxy_host_gpio_dev[2] = {NULL, NULL};
@@ -596,7 +603,7 @@ static int gpiochip_setup_dev__redirect(struct gpio_device *gdev)
 		}
 	proxy_host_gpio_dev[gpio_dev_count++] = gdev;
 	// we continue to populate gdev
-	
+
 	ret = gcdev_register(gdev, gpio_devt);
 
 	if (ret)
@@ -701,13 +708,13 @@ int gpiochip_add_data_with_key(struct gpio_chip *gc, void *data,
 		gdev->dev.of_node = gc->parent->of_node;
 	}
 
-    #ifdef CONFIG_OF_GPIO
+#ifdef CONFIG_OF_GPIO
 	/* If the gpiochip has an assigned OF node this takes precedence */
 	if (gc->of_node)
 		gdev->dev.of_node = gc->of_node;
 	else
 		gc->of_node = gdev->dev.of_node;
-    #endif
+#endif
 
 	/*
 	 * Assign fwnode depending on the result of the previous calls,
@@ -799,9 +806,9 @@ int gpiochip_add_data_with_key(struct gpio_chip *gc, void *data,
 
 	BLOCKING_INIT_NOTIFIER_HEAD(&gdev->notifier);
 
-    #ifdef CONFIG_PINCTRL
+#ifdef CONFIG_PINCTRL
 	INIT_LIST_HEAD(&gdev->pin_ranges);
-    #endif
+#endif
 
 	if (gc->names)
 		ret = gpiochip_set_desc_names(gc);
@@ -908,9 +915,9 @@ EXPORT_SYMBOL_GPL(gpiochip_add_data_with_key);
  */
 
 extern int of_gpiochip_add__redirect(struct gpio_chip *chip);
-// extern int devm_gpiochip_add_data__redirect(struct device *dev, struct gpio_chip *gc, void *data);
+// extern int devm_gpiochip_add_data_with_key__redirect(struct device *dev, struct gpio_chip *gc, void *data);
 
-int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
+int gpiochip_add_data_with_key__redirect(struct gpio_chip *gc, void *data)
 {
   struct lock_class_key *lock_key = NULL;
   struct lock_class_key *request_key = NULL;
@@ -938,13 +945,13 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 		gdev->dev.of_node = gc->parent->of_node;
 	}
 
-    #ifdef CONFIG_OF_GPIO
+#ifdef CONFIG_OF_GPIO
 	/* If the gpiochip has an assigned OF node this takes precedence */
 	if (gc->of_node)
 		gdev->dev.of_node = gc->of_node;
 	else
 		gc->of_node = gdev->dev.of_node;
-    #endif
+#endif
 
 	/*
 	 * Assign fwnode depending on the result of the previous calls,
@@ -1013,7 +1020,6 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 			spin_unlock_irqrestore(&gpio_lock, flags);
 			goto err_free_label;
 		}
-
 		/*
 		 * TODO: it should not be necessary to reflect the assigned
 		 * base outside of the GPIO subsystem. Go over drivers and
@@ -1041,9 +1047,9 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 
 	BLOCKING_INIT_NOTIFIER_HEAD(&gdev->notifier);
 
-    #ifdef CONFIG_PINCTRL
+#ifdef CONFIG_PINCTRL
 	INIT_LIST_HEAD(&gdev->pin_ranges);
-    #endif
+#endif
 
 	if (gc->names)
 		ret = gpiochip_set_desc_names(gc);
@@ -1057,18 +1063,18 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 		goto err_remove_from_list;
 
 
-  /* TODO guest driver fails on of_gpiochip_add */
+	/* TODO guest driver fails on of_gpiochip_add */
 	ret = of_gpiochip_add__redirect(gc);
 	if (ret)
-{   deb_verbose("of_gpiochip_add__redirect fails, with: %d", ret); 
+	{   deb_verbose("of_gpiochip_add__redirect fails, with: %d", ret);
 		goto err_free_gpiochip_mask;
-}
+	}
 
 	ret = gpiochip_init_valid_mask(gc);
 	if (ret)
-{   deb_verbose("gpiochip_init_valid_mask fails, with: %d", ret);
+	{   deb_verbose("gpiochip_init_valid_mask fails, with: %d", ret);
 		goto err_remove_of_chip;
-}
+	}
 
 	for (i = 0; i < gc->ngpio; i++) {
 		struct gpio_desc *desc = &gdev->descs[i];
@@ -1084,9 +1090,9 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 
 	ret = gpiochip_add_pin_ranges(gc);
 	if (ret)
-{   deb_verbose("gpiochip_add_pin_ranges, with: %d", ret);
+	{   deb_verbose("gpiochip_add_pin_ranges, with: %d", ret);
 		goto err_remove_of_chip;
-}
+	}
 
 	acpi_gpiochip_add(gc);
 
@@ -1104,7 +1110,7 @@ int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data)
 	if (ret)
 		goto err_remove_irqchip_mask;
 
-  /*
+	/*
 	 * By first adding the chardev, and then adding the device,
 	 * we get a device node entry in sysfs under
 	 * /sys/bus/gpio/devices/gpiochipN/dev that can be used for
@@ -1151,7 +1157,7 @@ err_free_gdev:
 	kfree(gdev);
 	return ret;
 }
-EXPORT_SYMBOL_GPL(gpiochip_add_data__redirect);
+EXPORT_SYMBOL_GPL(gpiochip_add_data_with_key__redirect);
 
 /**
  * gpiochip_get_data() - get per-subdriver data for the chip
@@ -1270,7 +1276,7 @@ struct gpio_chip *find_chip_by_name(const char *name)
 }
 EXPORT_SYMBOL_GPL(find_chip_by_name);
 
-    #ifdef CONFIG_GPIOLIB_IRQCHIP
+#ifdef CONFIG_GPIOLIB_IRQCHIP
 
 /*
  * The following is irqchip helper code for gpiochips.
@@ -1391,7 +1397,7 @@ void gpiochip_set_nested_irqchip(struct gpio_chip *gc,
 }
 EXPORT_SYMBOL_GPL(gpiochip_set_nested_irqchip);
 
-    #ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
+#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
 
 /**
  * gpiochip_set_hierarchical_irqchip() - connects a hierarchical irqchip
@@ -1680,7 +1686,7 @@ static bool gpiochip_hierarchy_is_hierarchical(struct gpio_chip *gc)
 	return false;
 }
 
-    #endif /* CONFIG_IRQ_DOMAIN_HIERARCHY */
+#endif /* CONFIG_IRQ_DOMAIN_HIERARCHY */
 
 /**
  * gpiochip_irq_map() - maps an IRQ into a GPIO irqchip
@@ -2114,7 +2120,7 @@ int gpiochip_irqchip_add_key(struct gpio_chip *gc,
 	}
 	gc->irq.threaded = threaded;
 	of_node = gc->parent->of_node;
-    #ifdef CONFIG_OF_GPIO
+#ifdef CONFIG_OF_GPIO
 	/*
 	 * If the gpiochip has an assigned OF node this takes precedence
 	 * FIXME: get rid of this and use gc->parent->of_node
@@ -2122,7 +2128,7 @@ int gpiochip_irqchip_add_key(struct gpio_chip *gc,
 	 */
 	if (gc->of_node)
 		of_node = gc->of_node;
-    #endif
+#endif
 	/*
 	 * Specifying a default trigger is a terrible idea if DT or ACPI is
 	 * used to configure the interrupts, as you may end-up with
@@ -2201,7 +2207,7 @@ static inline int gpiochip_irqchip_init_valid_mask(struct gpio_chip *gc)
 static inline void gpiochip_irqchip_free_valid_mask(struct gpio_chip *gc)
 { }
 
-    #endif /* CONFIG_GPIOLIB_IRQCHIP */
+#endif /* CONFIG_GPIOLIB_IRQCHIP */
 
 /**
  * gpiochip_generic_request() - request the gpio function for a pin
@@ -2212,10 +2218,10 @@ int gpiochip_generic_request(struct gpio_chip *gc, unsigned offset)
 {
 	deb_verbose("chip %s, offset=%u\n", gc->label, offset);
 
-    #ifdef CONFIG_PINCTRL
+#ifdef CONFIG_PINCTRL
 	if (list_empty(&gc->gpiodev->pin_ranges))
 		return 0;
-    #endif
+#endif
 
 	return pinctrl_gpio_request(gc->gpiodev->base + offset);
 }
@@ -2229,11 +2235,11 @@ EXPORT_SYMBOL_GPL(gpiochip_generic_request);
 void gpiochip_generic_free(struct gpio_chip *gc, unsigned offset)
 {
  	deb_verbose("chip %s, offset=%u\n", gc->label, offset);
- 	
-    #ifdef CONFIG_PINCTRL
+ 
+#ifdef CONFIG_PINCTRL
 	if (list_empty(&gc->gpiodev->pin_ranges))
 		return;
-    #endif
+#endif
 
 	pinctrl_gpio_free(gc->gpiodev->base + offset);
 }
@@ -2254,7 +2260,7 @@ int gpiochip_generic_config(struct gpio_chip *gc, unsigned offset,
 }
 EXPORT_SYMBOL_GPL(gpiochip_generic_config);
 
-    #ifdef CONFIG_PINCTRL
+#ifdef CONFIG_PINCTRL
 
 /**
  * gpiochip_add_pingroup_range() - add a range for GPIO <-> pin mapping
@@ -2380,7 +2386,7 @@ void gpiochip_remove_pin_ranges(struct gpio_chip *gc)
 	struct gpio_device *gdev = gc->gpiodev;
 
 	deb_verbose("\n");
-    
+   
 	list_for_each_entry_safe(pin_range, tmp, &gdev->pin_ranges, node) {
 		list_del(&pin_range->node);
 		pinctrl_remove_gpio_range(pin_range->pctldev,
@@ -2390,7 +2396,7 @@ void gpiochip_remove_pin_ranges(struct gpio_chip *gc)
 }
 EXPORT_SYMBOL_GPL(gpiochip_remove_pin_ranges);
 
-    #endif /* CONFIG_PINCTRL */
+#endif /* CONFIG_PINCTRL */
 
 /* These "optional" allocation calls help prevent drivers from stomping
  * on each other, and help provide better diagnostics in debugfs.
@@ -2538,7 +2544,7 @@ static bool gpiod_free_commit(struct gpio_desc *desc)
 	struct gpio_chip	*gc;
 
 	deb_verbose("\n");
-    
+   
 	might_sleep();
 
 	gpiod_unexport(desc);
@@ -2565,12 +2571,12 @@ static bool gpiod_free_commit(struct gpio_desc *desc)
 		clear_bit(FLAG_EDGE_RISING, &desc->flags);
 		clear_bit(FLAG_EDGE_FALLING, &desc->flags);
 		clear_bit(FLAG_IS_HOGGED, &desc->flags);
-    #ifdef CONFIG_OF_DYNAMIC
+#ifdef CONFIG_OF_DYNAMIC
 		desc->hog = NULL;
-    #endif
-    #ifdef CONFIG_GPIO_CDEV
+#endif
+#ifdef CONFIG_GPIO_CDEV
 		WRITE_ONCE(desc->debounce_period_us, 0);
-    #endif
+#endif
 		ret = true;
 	}
 
@@ -3809,7 +3815,7 @@ EXPORT_SYMBOL_GPL(gpiod_to_irq);
 int gpiochip_lock_as_irq(struct gpio_chip *gc, unsigned int offset)
 {
 	struct gpio_desc *desc;
-	
+
 	deb_verbose("\n");
 
 	desc = gpiochip_get_desc(gc, offset);
@@ -5023,13 +5029,13 @@ static int __init gpiolib_dev_init(void)
 
 #if IS_ENABLED(CONFIG_OF_DYNAMIC) && IS_ENABLED(CONFIG_OF_GPIO)
 	WARN_ON(of_reconfig_notifier_register(&gpio_of_notifier));
-    #endif /* CONFIG_OF_DYNAMIC && CONFIG_OF_GPIO */
+#endif /* CONFIG_OF_DYNAMIC && CONFIG_OF_GPIO */
 
 	return ret;
 }
 core_initcall(gpiolib_dev_init);
 
-    #ifdef CONFIG_DEBUG_FS
+#ifdef CONFIG_DEBUG_FS
 
 static void gpiolib_dbg_show(struct seq_file *s, struct gpio_device *gdev)
 {
@@ -5156,4 +5162,4 @@ static int __init gpiolib_debugfs_init(void)
 }
 subsys_initcall(gpiolib_debugfs_init);
 
-    #endif	/* DEBUG_FS */
+#endif	/* DEBUG_FS */

@@ -534,9 +534,9 @@ EXPORT_SYMBOL_GPL(devm_gpiochip_add_data_with_key);
 // a note for redirect
 // we redirect
 
-extern int gpiochip_add_data__redirect(struct gpio_chip *gc, void *data);
+extern int gpiochip_add_data_with_key__redirect(struct gpio_chip *gc, void *data);
 
-int devm_gpiochip_add_data__redirect(struct device *dev, struct gpio_chip *gc, void *data)
+int devm_gpiochip_add_data_with_key__redirect(struct device *dev, struct gpio_chip *gc, void *data)
 {
 	struct gpio_chip **ptr;
 	int ret;
@@ -546,7 +546,7 @@ int devm_gpiochip_add_data__redirect(struct device *dev, struct gpio_chip *gc, v
 	if (!ptr)
 		return -ENOMEM;
 
-	ret = gpiochip_add_data__redirect (gc, data);
+	ret = gpiochip_add_data_with_key__redirect (gc, data);
 	if (ret < 0) {
 		devres_free(ptr);
 		return ret;
@@ -558,5 +558,5 @@ int devm_gpiochip_add_data__redirect(struct device *dev, struct gpio_chip *gc, v
 
 	return 0;
 }
-EXPORT_SYMBOL_GPL(devm_gpiochip_add_data__redirect);
+EXPORT_SYMBOL_GPL(devm_gpiochip_add_data_with_key__redirect);
 

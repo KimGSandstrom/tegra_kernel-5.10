@@ -34,8 +34,8 @@
 #define EMMC_DPD_PARKING(x)		(x << EMMC_PARKING_BIT)
 #define EMMC_PARKING_SET		0x1FFF
 
-//#define GPIO_DEBUG
-//#define GPIO_DEBUG_VERBOSE
+#define GPIO_DEBUG
+#define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
@@ -76,7 +76,7 @@ static int tegra_pinctrl_get_groups_count(struct pinctrl_dev *pctldev)
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
 	// deb_debug("\n");
-	
+
 	return pmx->soc->ngroups;
 }
 
@@ -86,7 +86,7 @@ static const char *tegra_pinctrl_get_group_name(struct pinctrl_dev *pctldev,
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
 	// deb_debug("\n");
-	
+
 	return pmx->soc->groups[group].name;
 }
 
@@ -98,7 +98,7 @@ static int tegra_pinctrl_get_group_pins(struct pinctrl_dev *pctldev,
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
 	// deb_debug("\n");
-	
+
 	*pins = pmx->soc->groups[group].pins;
 	*num_pins = pmx->soc->groups[group].npins;
 
@@ -111,7 +111,7 @@ static void tegra_pinctrl_pin_dbg_show(struct pinctrl_dev *pctldev,
 				       unsigned offset)
 {
 	// deb_debug("\n");
-	
+
 	seq_printf(s, " %s", dev_name(pctldev->dev));
 }
        #endif
@@ -272,7 +272,7 @@ static int tegra_pinctrl_get_funcs_count(struct pinctrl_dev *pctldev)
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
 	deb_debug("\n");
-	
+
 	return pmx->soc->nfunctions;
 }
 
@@ -282,7 +282,7 @@ static const char *tegra_pinctrl_get_func_name(struct pinctrl_dev *pctldev,
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
 	// deb_debug("\n");
-	
+
 	return pmx->soc->functions[function].name;
 }
 
@@ -294,7 +294,7 @@ static int tegra_pinctrl_get_func_groups(struct pinctrl_dev *pctldev,
 	struct tegra_pmx *pmx = pinctrl_dev_get_drvdata(pctldev);
 
 	// deb_debug("\n");
-	
+
 	*groups = pmx->soc->functions[function].groups;
 	*num_groups = pmx->soc->functions[function].ngroups;
 
@@ -311,7 +311,7 @@ static int tegra_pinctrl_set_mux(struct pinctrl_dev *pctldev,
 	u32 val;
 
 	// deb_debug("GPIO %s, device %s\n", pmx->dev->init_name);
-	
+
 	g = &pmx->soc->groups[group];
 
 	if (WARN_ON(g->mux_reg < 0))
@@ -345,7 +345,7 @@ static int tegra_pinctrl_gpio_save_config(struct pinctrl_dev *pctldev,
 	const unsigned *pins;
 	int ret;
 
-	deb_debug("device %s\n", pmx->dev->init_name,__FILE__);
+	deb_debug("device %s\n", pmx->dev->init_name);
 
 	for (group = 0; group < pmx->soc->ngroups; ++group) {
 		ret = tegra_pinctrl_get_group_pins(pctldev, group, &pins, &num_pins);
@@ -470,7 +470,7 @@ static void tegra_pinctrl_gpio_disable_free(struct pinctrl_dev *pctldev,
 					    unsigned int offset)
 {
 	deb_debug("\n");
-	
+
 	tegra_pinctrl_gpio_restore_config(pctldev, range, offset);
 }
 
