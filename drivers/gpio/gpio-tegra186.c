@@ -1044,6 +1044,7 @@ static void tegra186_gpio_irq(struct irq_desc *desc)
 	unsigned int parent = irq_desc_get_irq(desc);
 	unsigned int i, j, offset = 0;
 
+	deb_debug("irq_domain=%p\n", domain);
 	chained_irq_enter(chip, desc);
 
 	for (i = 0; i < gpio->soc->num_ports; i++) {
@@ -1355,23 +1356,25 @@ error:
 
 
   static inline void gpio_hook(struct tegra_gpio *gpio) {
-
-      deb_debug("Hooking functions for %s", gpio->gpio.label);
+      deb_debug("Setting hooks for functions for %s", gpio->gpio.label);
       gpio->gpio.request = gpiochip_generic_request_redirect;
       gpio->gpio.free = gpiochip_generic_free_redirect;
       gpio->gpio.get_direction = tegra186_gpio_get_direction_redirect;
-      gpio->gpio.direction_input = tegra186_gpio_direction_input_redirect;    // calling both host and guest
-      gpio->gpio.direction_output = tegra186_gpio_direction_output_redirect;  // calling both host and guest
+      gpio->gpio.direction_input = tegra186_gpio_direction_input_redirect;
+      gpio->gpio.direction_output = tegra186_gpio_direction_output_redirect;
       gpio->gpio.get = tegra186_gpio_get_redirect;
-      gpio->gpio.set = tegra186_gpio_set_redirect;                            // calling both host and guest
+      gpio->gpio.set = tegra186_gpio_set_redirect; 
       // gpio->gpio.get_multiple = N/A;
       // gpio->gpio.set_multiple = N/A
       // ??? = tegra186_gpio_get_port_redirect;   // not in struct
       // ??? = tegra186_gpio_get_base_redirect;   // not in struct
       // ??? = tegra186_gpio_get_secure_redirect; // not in struct
-      gpio->gpio.timestamp_control = tegra_gpio_timestamp_control_redirect;
-      gpio->gpio.timestamp_read = tegra_gpio_timestamp_read_redirect;
-      gpio->gpio.suspend_configure = tegra_gpio_suspend_configure_redirect;
+      gpio->gpio.timestamp_control = tegra_gpio_timestamp_control;
+      gpio->gpio.timestamp_read = tegra_gpio_timestamp_read;
+      gpio->gpio.suspend_configure = tegra_gpio_suspend_configure;
+//      gpio->gpio.timestamp_control = tegra_gpio_timestamp_control_redirect;
+//      gpio->gpio.timestamp_read = tegra_gpio_timestamp_read_redirect;
+//      gpio->gpio.suspend_configure = tegra_gpio_suspend_configure_redirect;
       // gpio->gpio.to_irq = N/A;                 // not in struct
       // gpio->gpio.dbg_show = N/A;               // not in struct
       // gpio->gpio.init_valid_mask = N/A;        // not in struct
@@ -1743,8 +1746,8 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	irq->parent_handler_data = gpio;
 	irq->num_parents = gpio->num_irq;
 
-  //DEBUG
-  deb_verbose("gpio->gpio.of_node = 0x%llx, pdev->dev.of_node = 0x%llx", (long long unsigned int)gpio->gpio.of_node, (long long unsigned int)pdev->dev.of_node);
+	//DEBUG
+	deb_verbose("gpio->gpio.of_node = 0x%llx, pdev->dev.of_node = 0x%llx", (long long unsigned int)gpio->gpio.of_node, (long long unsigned int)pdev->dev.of_node);
 
 	/*
 	* To simplify things, use a single interrupt per bank for now. Some

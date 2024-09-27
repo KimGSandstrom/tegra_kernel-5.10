@@ -38,6 +38,30 @@
 
 #define GIC_IRQ_TYPE_PARTITION	(GIC_IRQ_TYPE_LPI + 1)
 
+#define GPIO_DEBUG
+#define GPIO_DEBUG_VERBOSE
+
+#ifdef GPIO_DEBUG
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
+  #define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__ , kbasename(__FILE__), ##__VA_ARGS__)
+  /*
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
+  #define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' -- " fmt, __func__ , ##__VA_ARGS__)
+  */
+#else
+  #define deb_info(fmt, ...)
+  #define deb_debug(fmt, ...)
+  #define deb_error(fmt, ...)
+#endif
+
+#ifdef GPIO_DEBUG_VERBOSE
+  #define deb_verbose           deb_debug
+#else
+  #define deb_verbose(fmt, ...)
+#endif
+
 struct redist_region {
 	void __iomem		*redist_base;
 	phys_addr_t		phys_base;
@@ -1415,33 +1439,55 @@ static int gic_irq_domain_translate(struct irq_domain *d,
 				    unsigned long *hwirq,
 				    unsigned int *type)
 {
+	#ifdef GPIO_DEBUG_VERBOSE
+	deb_verbose(
+	    "irq_domain %p,\n"
+		"irq_fwspec %p,\n"
+		"*hwirq %ld,\n"
+		"*type %d\n",
+		d, fwspec, *hwirq, *type);
+	if (fwspec->param_count >= 2) {
+	deb_verbose("irq_fwspec %p, %d, %d, %d\n", fwspec->fwnode, fwspec->param_count, fwspec->param[0], fwspec->param[1]);
+	else
+	deb_verbose("param_count=%d\n", fwspec->param_count);
+	#endif
+	
 	if (fwspec->param_count == 1 && fwspec->param[0] < 16) {
 		*hwirq = fwspec->param[0];
 		*type = IRQ_TYPE_EDGE_RISING;
+		deb_verbose("mincase");
 		return 0;
 	}
 
 	if (is_of_node(fwspec->fwnode)) {
+		deb_verbose("trace a\n");
 		if (fwspec->param_count < 3)
 			return -EINVAL;
+		deb_verbose("trace b\n");
 
 		switch (fwspec->param[0]) {
 		case 0:			/* SPI */
+			deb_verbose("case 0");
 			*hwirq = fwspec->param[1] + 32;
 			break;
 		case 1:			/* PPI */
+			deb_verbose("case 1");
 			*hwirq = fwspec->param[1] + 16;
 			break;
 		case 2:			/* ESPI */
+			deb_verbose("case 2");
 			*hwirq = fwspec->param[1] + ESPI_BASE_INTID;
 			break;
 		case 3:			/* EPPI */
+			deb_verbose("case 3");
 			*hwirq = fwspec->param[1] + EPPI_BASE_INTID;
 			break;
 		case GIC_IRQ_TYPE_LPI:	/* LPI */
+			deb_verbose("case 4");
 			*hwirq = fwspec->param[1];
 			break;
 		case GIC_IRQ_TYPE_PARTITION:
+			deb_verbose("case 5");
 			*hwirq = fwspec->param[1];
 			if (fwspec->param[1] >= 16)
 				*hwirq += EPPI_BASE_INTID - 16;
@@ -1449,8 +1495,10 @@ static int gic_irq_domain_translate(struct irq_domain *d,
 				*hwirq += 16;
 			break;
 		default:
+			deb_verbose("case default");
 			return -EINVAL;
 		}
+		deb_verbose("trace A\n");
 
 		*type = fwspec->param[2] & IRQ_TYPE_SENSE_MASK;
 
@@ -1463,23 +1511,29 @@ static int gic_irq_domain_translate(struct irq_domain *d,
 		return 0;
 	}
 
+	deb_verbose("trace B\n");
 	if (is_fwnode_irqchip(fwspec->fwnode)) {
+		deb_verbose("trace C\n");
+
 		if(fwspec->param_count != 2)
 			return -EINVAL;
 
+		deb_verbose("trace D\n");
 		if (fwspec->param[0] < 16) {
 			pr_err(FW_BUG "Illegal GSI%d translation request\n",
 			       fwspec->param[0]);
 			return -EINVAL;
 		}
 
+		deb_verbose("trace E\n");
 		*hwirq = fwspec->param[0];
 		*type = fwspec->param[1];
 
 		WARN_ON(*type == IRQ_TYPE_NONE);
+		deb_verbose("trace F\n");
 		return 0;
 	}
-
+	deb_verbose("trace G\n");
 	return -EINVAL;
 }
 

@@ -35,14 +35,14 @@
 #define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
-  /*
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
   #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
   #define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__ , kbasename(__FILE__), ##__VA_ARGS__)
-  */
+  /*
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
   #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
   #define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' -- " fmt, __func__ , ##__VA_ARGS__)
+  */
 #else
   #define deb_info(fmt, ...)
   #define deb_debug(fmt, ...)
@@ -1323,14 +1323,28 @@ static void gpiochip_irqchip_free_valid_mask(struct gpio_chip *gc)
 bool gpiochip_irqchip_irq_valid(const struct gpio_chip *gc,
 				unsigned int offset)
 {
-	deb_verbose("\n");
-
+#ifdef GPIO_DEBUG_VERBOSE
+bool ret;
+	if (!gpiochip_line_is_valid(gc, offset)) {
+		deb_verbose("(gpiochip_line_is_valid) return: false\n");
+		return false;
+	}
+	/* No mask means all valid */
+	if (likely(!gc->irq.valid_mask)) {
+		deb_verbose("(likely) return: true\n");
+		return true;
+	}
+	ret = test_bit(offset, gc->irq.valid_mask);
+	deb_verbose("(test_bit) return: %s\n", ret? "true" : "false");
+	return ret;
+#else
 	if (!gpiochip_line_is_valid(gc, offset))
 		return false;
 	/* No mask means all valid */
 	if (likely(!gc->irq.valid_mask))
 		return true;
 	return test_bit(offset, gc->irq.valid_mask);
+#endif
 }
 EXPORT_SYMBOL_GPL(gpiochip_irqchip_irq_valid);
 
@@ -1616,7 +1630,7 @@ static int gpiochip_hierarchy_add_domain(struct gpio_chip *gc)
 		gc->irq.fwnode,
 		&gc->irq.child_irq_domain_ops,
 		gc);
-
+	deb_debug("irq_domain=%p\n", gc->irq.domain);
 	if (!gc->irq.domain)
 		return -ENOMEM;
 
@@ -1803,6 +1817,10 @@ EXPORT_SYMBOL_GPL(gpiochip_irq_domain_deactivate);
 static int gpiochip_to_irq(struct gpio_chip *gc, unsigned offset)
 {
 	struct irq_domain *domain = gc->irq.domain;
+#ifdef GPIO_DEBUG_VERBOSE
+	int ret;
+	deb_verbose("irq_domain=%p, base=%d, offset=%d\n", domain, gc->base, offset);
+#endif
 
 #ifdef CONFIG_GPIOLIB_IRQCHIP
 	/*
@@ -1810,26 +1828,38 @@ static int gpiochip_to_irq(struct gpio_chip *gc, unsigned offset)
 	 * an IRQ before the irqchip has been properly registered,
 	 * i.e. while gpiochip is still being brought up.
 	 */
+	deb_verbose("trace A\n");
 	if (!gc->irq.initialized)
 		return -EPROBE_DEFER;
 #endif
-
+	deb_verbose("trace B\n");
 	if (!gpiochip_irqchip_irq_valid(gc, offset))
 		return -ENXIO;
-
+	deb_verbose("trace C\n");
 #ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
+	
+	deb_verbose("trace D\n");
 	if (irq_domain_is_hierarchy(domain)) {
 		struct irq_fwspec spec;
+		deb_verbose("trace E\n");
 
 		spec.fwnode = domain->fwnode;
 		spec.param_count = 2;
 		spec.param[0] = gc->irq.child_offset_to_irq(gc, offset);
 		spec.param[1] = IRQ_TYPE_NONE;
-
+		
+		deb_verbose("trace F; %p, %d, %d, %d\n", spec.fwnode, spec.param_count, spec.param[0], spec.param[1]);
+#ifdef GPIO_DEBUG_VERBOSE
+		ret = irq_create_fwspec_mapping(&spec);		// BUG Guest seems to fail here
+		deb_verbose("trace G: %d\n", ret);
+        return ret;
+#else
 		return irq_create_fwspec_mapping(&spec);
+#endif
 	}
 #endif
 
+	deb_verbose("trace G\n");
 	return irq_create_mapping(domain, offset);
 }
 
@@ -1984,6 +2014,7 @@ static int gpiochip_add_irqchip(struct gpio_chip *gc,
 			gc->ngpio,
 			gc->irq.first,
 			ops, gc);
+deb_debug("irq_domain=%p\n", gc->irq.domain);
 		if (!gc->irq.domain)
 			return -EINVAL;
 	}
@@ -2152,6 +2183,7 @@ int gpiochip_irqchip_add_key(struct gpio_chip *gc,
 	gc->irq.domain = irq_domain_add_simple(of_node,
 					gc->ngpio, first_irq,
 					&gpiochip_domain_ops, gc);
+deb_debug("irq_domain=%p\n", gc->irq.domain);
 	if (!gc->irq.domain) {
 		gc->irq.chip = NULL;
 		return -EINVAL;
@@ -2175,12 +2207,13 @@ EXPORT_SYMBOL_GPL(gpiochip_irqchip_add_key);
 int gpiochip_irqchip_add_domain(struct gpio_chip *gc,
 				struct irq_domain *domain)
 {
+deb_debug("\n");
 	if (!domain)
 		return -EINVAL;
 
 	gc->to_irq = gpiochip_to_irq;
 	gc->irq.domain = domain;
-
+	deb_debug("irq_domain=%p\n", gc->irq.domain);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(gpiochip_irqchip_add_domain);
@@ -3779,17 +3812,22 @@ int gpiod_to_irq(const struct gpio_desc *desc)
 	if (!desc || IS_ERR(desc) || !desc->gdev || !desc->gdev->chip)
 		return -EINVAL;
 
+	deb_verbose("trace A\n");
 	gc = desc->gdev->chip;
 	offset = gpio_chip_hwgpio(desc);
+	deb_verbose("trace B %d\n", offset);
 	if (gc->to_irq) {
 		int retirq = gc->to_irq(gc, offset);
+		deb_verbose("trace C %d\n", retirq);
 
 		/* Zero means NO_IRQ */
 		if (!retirq)
 			return -ENXIO;
 
+		deb_verbose("trace D %d\n", retirq);
 		return retirq;
 	}
+	deb_verbose("trace E\n");
 #ifdef CONFIG_GPIOLIB_IRQCHIP
 	if (gc->irq.chip) {
 		/*
@@ -3800,6 +3838,7 @@ int gpiod_to_irq(const struct gpio_desc *desc)
 		return -EPROBE_DEFER;
 	}
 #endif
+	deb_verbose("trace F\n");
 	return -ENXIO;
 }
 EXPORT_SYMBOL_GPL(gpiod_to_irq);
