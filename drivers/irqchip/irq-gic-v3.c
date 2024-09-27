@@ -1440,6 +1440,7 @@ static int gic_irq_domain_translate(struct irq_domain *d,
 				    unsigned int *type)
 {
 	#ifdef GPIO_DEBUG_VERBOSE
+	deb_verbose("line %d\n" __LINE__);
 	deb_verbose(
 	    "irq_domain %p,\n"
 		"irq_fwspec %p,\n"
@@ -1545,85 +1546,11 @@ static int gic_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
 	unsigned int type = IRQ_TYPE_NONE;
 	struct irq_fwspec *fwspec = arg;
 
+	deb_verbose("line %d\n" __LINE__);		
 	ret = gic_irq_domain_translate(domain, fwspec, &hwirq, &type);
-	if (ret)
-		return ret;
-
-	for (i = 0; i < nr_irqs; i++) {
-		ret = gic_irq_domain_map(domain, virq + i, hwirq + i);
-		if (ret)
-			return ret;
-	}
-
-	return 0;
-}
-
-static void gic_irq_domain_free(struct irq_domain *domain, unsigned int virq,
-				unsigned int nr_irqs)
-{
-	int i;
-
-	for (i = 0; i < nr_irqs; i++) {
-		struct irq_data *d = irq_domain_get_irq_data(domain, virq + i);
-		irq_set_handler(virq + i, NULL);
-		irq_domain_reset_irq_data(d);
-	}
-}
-
-static int gic_irq_domain_select(struct irq_domain *d,
-				 struct irq_fwspec *fwspec,
-				 enum irq_domain_bus_token bus_token)
-{
-	/* Not for us */
-        if (fwspec->fwnode != d->fwnode)
-		return 0;
-
-	/* If this is not DT, then we have a single domain */
-	if (!is_of_node(fwspec->fwnode))
-		return 1;
-
-	/*
-	 * If this is a PPI and we have a 4th (non-null) parameter,
-	 * then we need to match the partition domain.
-	 */
-	if (fwspec->param_count >= 4 &&
-	    fwspec->param[0] == 1 && fwspec->param[3] != 0 &&
-	    gic_data.ppi_descs)
-		return d == partition_get_domain(gic_data.ppi_descs[fwspec->param[1]]);
-
-	return d == gic_data.domain;
-}
-
-static const struct irq_domain_ops gic_irq_domain_ops = {
-	.translate = gic_irq_domain_translate,
-	.alloc = gic_irq_domain_alloc,
-	.free = gic_irq_domain_free,
-	.select = gic_irq_domain_select,
-};
-
-static int partition_domain_translate(struct irq_domain *d,
-				      struct irq_fwspec *fwspec,
-				      unsigned long *hwirq,
-				      unsigned int *type)
-{
-	struct device_node *np;
-	int ret;
-
-	if (!gic_data.ppi_descs)
-		return -ENOMEM;
-
-	np = of_find_node_by_phandle(fwspec->param[3]);
-	if (WARN_ON(!np))
-		return -EINVAL;
-
-	ret = partition_translate_id(gic_data.ppi_descs[fwspec->param[1]],
-				     of_node_to_fwnode(np));
-	if (ret < 0)
-		return ret;
-
-	*hwirq = ret;
+	deb_verbose("trace A, ret=%d",ret)
 	*type = fwspec->param[2] & IRQ_TYPE_SENSE_MASK;
-
+	deb_verbose("trace B, type=%d", *type)
 	return 0;
 }
 
