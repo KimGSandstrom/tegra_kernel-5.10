@@ -835,8 +835,8 @@ static int edge_detector_setup(struct line *line,
 	irqflags |= IRQF_ONESHOT;
 
   #ifdef GPIO_DEBUG_VERBOSE
-  dump_stack();
   deb_verbose("request_threaded_irq() parameters: %x, %lx, %s, %p\n",irq, irqflags, line->req->label, line);
+  // dump_stack();
   #endif
 
 	/* Request a thread to read the events */
@@ -1832,7 +1832,7 @@ static int lineevent_create(struct gpio_device *gdev, void __user *ip)
 
   #ifdef GPIO_DEBUG_VERBOSE
   deb_verbose("request_threaded_irq() parameters: %x, %x, %s, %p\n",le->irq, irqflags, le->label, le);
-  dump_stack();
+  // dump_stack();
   #endif
 
 	/* Request a thread to read the events */
@@ -2019,6 +2019,8 @@ static int chipinfo_get(struct gpio_chardev_data *cdev, void __user *ip)
 {
 	struct gpio_device *gdev = cdev->gdev;
 	struct gpiochip_info chipinfo;
+	
+	deb_debug("\n");
 
 	memset(&chipinfo, 0, sizeof(chipinfo));
 
@@ -2123,7 +2125,8 @@ static int lineinfo_get(struct gpio_chardev_data *cdev, void __user *ip,
 static int lineinfo_unwatch(struct gpio_chardev_data *cdev, void __user *ip)
 {
 	__u32 offset;
-
+	deb_debug("\n");
+	
 	if (copy_from_user(&offset, ip, sizeof(offset)))
 		return -EFAULT;
 

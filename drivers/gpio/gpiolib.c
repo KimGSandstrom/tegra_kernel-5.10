@@ -1848,7 +1848,7 @@ static int gpiochip_to_irq(struct gpio_chip *gc, unsigned offset)
 		spec.param[0] = gc->irq.child_offset_to_irq(gc, offset);
 		spec.param[1] = IRQ_TYPE_NONE;
 		
-		deb_verbose("trace F; %p, %d, %d, %d\n", spec.fwnode, spec.param_count, spec.param[0], spec.param[1]);
+		deb_verbose("trace F; %p, count=%d, offset=%d, type=%d\n", spec.fwnode, spec.param_count, spec.param[0], spec.param[1]);
 #ifdef GPIO_DEBUG_VERBOSE
 		ret = irq_create_fwspec_mapping(&spec);		// BUG Guest seems to fail here
 		deb_verbose("trace G: %d\n", ret);
@@ -3817,7 +3817,7 @@ int gpiod_to_irq(const struct gpio_desc *desc)
 	offset = gpio_chip_hwgpio(desc);
 	deb_verbose("trace B %d\n", offset);
 	if (gc->to_irq) {
-		int retirq = gc->to_irq(gc, offset);
+		int retirq = gc->to_irq(gc, offset); // WARNING in irq-gic-v3.c:1461 gic_irq_domain_translate
 		deb_verbose("trace C %d\n", retirq);
 
 		/* Zero means NO_IRQ */

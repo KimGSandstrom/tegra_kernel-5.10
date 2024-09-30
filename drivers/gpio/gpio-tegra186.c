@@ -1295,25 +1295,48 @@ error:
   extern int tegra186_gpio_add_pin_ranges_redirect(struct gpio_chip *chip);
 
 
-  /* functions that are called locally and passed through */
+  /* functions that are called both locally and passed through 
+   * This addition is not necessary for output pins
+   */
 
-  /*
+  static inline int gpiochip_generic_request_both(struct gpio_chip *chip, unsigned offset) {
+    int r1=0, r2=0;
+    r2 = gpiochip_generic_request_redirect(chip, offset);
+    r1 = gpiochip_generic_request(chip, offset);
+    if( r1 != r2 ) deb_debug("return values differ %d/%d", r1 , r2);
+    return r2;
+  }
+
+  static inline void gpiochip_generic_free_both(struct gpio_chip *chip, unsigned offset) {
+    gpiochip_generic_free_redirect(chip, offset);
+    gpiochip_generic_free(chip, offset);
+  }
+
+  static inline int tegra186_gpio_get_direction_both(struct gpio_chip *chip, unsigned int offset) {
+    int r1=0, r2=0;
+    r2 = tegra186_gpio_get_direction_redirect(chip, offset);
+    r1 = tegra186_gpio_get_direction(chip, offset);
+    if( r1 != r2 ) deb_debug("return values differ %d/%d", r1 , r2);
+    return r2;
+  }
+
   static inline int tegra186_gpio_direction_input_both(struct gpio_chip *chip, unsigned int offset) {
     int r1=0, r2=0;
-    r1 = tegra186_gpio_direction_input(chip, offset);
     r2 = tegra186_gpio_direction_input_redirect(chip, offset);
+    r1 = tegra186_gpio_direction_input(chip, offset);
     if( r1 != r2 ) deb_debug("return values differ %d/%d", r1 , r2);
     return r2;
   }
 
   static inline int tegra186_gpio_direction_output_both(struct gpio_chip *chip, unsigned int offset, int level) {
     int r1=0, r2=0;
-    r1 = tegra186_gpio_direction_output(chip, offset, level);
     r2 = tegra186_gpio_direction_output_redirect(chip, offset, level);
+    r1 = tegra186_gpio_direction_output(chip, offset, level);
     if( r1 != r2 ) deb_debug("return values differ %d/%d", r1 , r2);
     return r2;
   }
  
+  /*
   static inline void tegra186_gpio_set_both(struct gpio_chip *chip, unsigned int offset, int level) {
       tegra186_gpio_set(chip, offset, level);
       tegra186_gpio_set_redirect(chip, offset, level);
@@ -1343,7 +1366,7 @@ error:
     kernel_is_on_guest = true;
   }
 
-  static int tegra186_gpio_set_config_both(struct gpio_chip *chip,
+  static inline int tegra186_gpio_set_config_both(struct gpio_chip *chip,
                 unsigned int offset,
                 unsigned long config) {
       int r1=0, r2=0;
@@ -1355,6 +1378,30 @@ error:
   */
 
 
+  static inline void gpio_hook(struct tegra_gpio *gpio) {
+      deb_debug("Setting hooks for functions for %s", gpio->gpio.label);
+      gpio->gpio.request = gpiochip_generic_request_both;
+      gpio->gpio.free = gpiochip_generic_free_both;
+      gpio->gpio.get_direction = tegra186_gpio_get_direction_both;
+      gpio->gpio.direction_input = tegra186_gpio_direction_input_both;
+      gpio->gpio.direction_output = tegra186_gpio_direction_output_both;
+      gpio->gpio.get = tegra186_gpio_get_redirect;
+      gpio->gpio.set = tegra186_gpio_set_redirect; 
+      gpio->gpio.timestamp_control = tegra_gpio_timestamp_control;
+      gpio->gpio.timestamp_read = tegra_gpio_timestamp_read;
+      gpio->gpio.suspend_configure = tegra_gpio_suspend_configure;
+//      gpio->gpio.timestamp_control = tegra_gpio_timestamp_control_redirect;
+//      gpio->gpio.timestamp_read = tegra_gpio_timestamp_read_redirect;
+//      gpio->gpio.suspend_configure = tegra_gpio_suspend_configure_redirect;
+      // gpio->gpio.to_irq = N/A;                 // not in struct
+      // gpio->gpio.dbg_show = N/A;               // not in struct
+      // gpio->gpio.init_valid_mask = N/A;        // not in struct
+      // gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges_redirect;
+      gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges;
+      gpio->gpio.base = -1;
+  }
+  
+  /*
   static inline void gpio_hook(struct tegra_gpio *gpio) {
       deb_debug("Setting hooks for functions for %s", gpio->gpio.label);
       gpio->gpio.request = gpiochip_generic_request_redirect;
@@ -1375,13 +1422,10 @@ error:
 //      gpio->gpio.timestamp_control = tegra_gpio_timestamp_control_redirect;
 //      gpio->gpio.timestamp_read = tegra_gpio_timestamp_read_redirect;
 //      gpio->gpio.suspend_configure = tegra_gpio_suspend_configure_redirect;
-      // gpio->gpio.to_irq = N/A;                 // not in struct
-      // gpio->gpio.dbg_show = N/A;               // not in struct
-      // gpio->gpio.init_valid_mask = N/A;        // not in struct
-      // gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges_redirect;
       gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges;
       gpio->gpio.base = -1;
   }
+*/  
 #endif
 
 // this function sets the standard bindings used by the host driver

@@ -1448,9 +1448,9 @@ static int gic_irq_domain_translate(struct irq_domain *d,
 		"*type %d\n",
 		d, fwspec, *hwirq, *type);
 	if (fwspec->param_count >= 2)
-    deb_verbose("irq_fwspec %p, %d, %d, %d\n", fwspec->fwnode, fwspec->param_count, fwspec->param[0], fwspec->param[1]);
+		deb_verbose("irq_fwspec %p, %d, %d, %d\n", fwspec->fwnode, fwspec->param_count, fwspec->param[0], fwspec->param[1]);
 	else
-    deb_verbose("param_count=%d\n", fwspec->param_count);
+		deb_verbose("param_count=%d\n", fwspec->param_count);
 	#endif
 	
 	if (fwspec->param_count == 1 && fwspec->param[0] < 16) {
@@ -1458,7 +1458,7 @@ static int gic_irq_domain_translate(struct irq_domain *d,
 		*type = IRQ_TYPE_EDGE_RISING;
 		deb_verbose("mincase");
 		return 0;
-	}
+	}	// WARNING: CPU: 0 PID: 5736
 
 	if (is_of_node(fwspec->fwnode)) {
 		deb_verbose("trace a\n");

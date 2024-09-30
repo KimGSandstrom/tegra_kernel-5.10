@@ -1412,6 +1412,11 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 	unsigned long flags, thread_mask = 0;
 	int ret, nested, shared = 0;
 
+	#ifdef GPIO_DEBUG_VERBOSE
+	deb_verbose("\n");
+	dump_stack();
+	#endif
+
 	if (!desc)
 		return -EINVAL;
 
@@ -1419,7 +1424,9 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 		return -ENOSYS;
 	if (!try_module_get(desc->owner))
 		return -ENODEV;
-
+		
+	deb_verbose("trace A\n");
+	
 	new->irq = irq;
 
 	/*
@@ -1724,7 +1731,9 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 	register_irq_proc(irq, desc);
 	new->dir = NULL;
 	register_handler_proc(irq, new);
+	deb_verbose("trace B\n");
 	return 0;
+
 
 mismatch:
 	if (!(new->flags & IRQF_PROBE_SHARED)) {
@@ -1762,6 +1771,7 @@ out_thread:
 	}
 out_mput:
 	module_put(desc->owner);
+	deb_verbose("trace C\n");
 	return ret;
 }
 

@@ -77,7 +77,6 @@ int devm_request_threaded_irq(struct device *dev, unsigned int irq,
 
   #ifdef GPIO_DEBUG_VERBOSE
   deb_verbose("\n");
-  dump_stack();
   #endif
 
 	dr = devres_alloc(devm_irq_release, sizeof(struct irq_devres),
