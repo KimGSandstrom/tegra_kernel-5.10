@@ -590,42 +590,6 @@ err_remove_device:
 	return ret;
 }
 
-/* redirecting function to allow guest VMto use it even if hardware is not present */
-static int gpiochip_setup_dev__redirect(struct gpio_device *gdev)
-{
-	int ret;
-
-	deb_verbose("\n");
-
-	// store GPIO char device for use by proxy host driver (In guest this is redundant)
-	if (gpio_dev_count == 2) {
-		pr_err("GPIO %s, error, found more than two devices -- file %s", __func__, __FILE__);
-		}
-	proxy_host_gpio_dev[gpio_dev_count++] = gdev;
-	// we continue to populate gdev
-
-	ret = gcdev_register(gdev, gpio_devt);
-
-	if (ret)
-		return ret;
-
-	ret = gpiochip_sysfs_register(gdev);
-	if (ret)
-		goto err_remove_device;
-
-	/* From this point, the .release() function cleans up gpio_device */
-	gdev->dev.release = gpiodevice_release;
-	pr_info("%s: registered GPIOs %d to %d on %s\n",
-		dev_name(&gdev->dev), gdev->base,
-		gdev->base + gdev->ngpio - 1, gdev->chip->label ? : "generic");
-
-	return 0;
-
-err_remove_device:
-	gcdev_unregister(gdev);
-	return ret;
-}
-
 static void gpiochip_machine_hog(struct gpio_chip *gc, struct gpiod_hog *hog)
 {
 	struct gpio_desc *desc;
@@ -1119,7 +1083,9 @@ int gpiochip_add_data_with_key__redirect(struct gpio_chip *gc, void *data)
 	 * Otherwise, defer until later.
 	 */
 	if (gpiolib_initialized) {
-		ret = gpiochip_setup_dev__redirect(gdev);
+		// TODO check if it needs to be redirected
+		// ret = gpiochip_setup_dev__redirect(gdev);
+		ret = gpiochip_setup_dev(gdev);
 		if (ret)
 			goto err_remove_irqchip;
 	}
@@ -1859,7 +1825,7 @@ static int gpiochip_to_irq(struct gpio_chip *gc, unsigned offset)
 	}
 #endif
 
-	deb_verbose("trace G\n");
+	deb_verbose("trace H\n");
 	return irq_create_mapping(domain, offset);
 }
 
@@ -1966,6 +1932,8 @@ static int gpiochip_add_irqchip(struct gpio_chip *gc,
 	struct device_node *np;
 	unsigned int type;
 	unsigned int i;
+	
+	deb_verbose("\n");
 
 	if (!irqchip)
 		return 0;

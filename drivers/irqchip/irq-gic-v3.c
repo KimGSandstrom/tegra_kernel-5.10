@@ -1458,7 +1458,7 @@ static int gic_irq_domain_translate(struct irq_domain *d,
 		*type = IRQ_TYPE_EDGE_RISING;
 		deb_verbose("mincase");
 		return 0;
-	}	// WARNING: CPU: 0 PID: 5736
+	}	// WARNING
 
 	if (is_of_node(fwspec->fwnode)) {
 		deb_verbose("trace a\n");

@@ -1210,7 +1210,7 @@ int of_gpiochip_add__redirect(struct gpio_chip *chip)
 
 	of_node_get(chip->of_node);
 
-ret = of_gpiochip_scan_gpios(chip);
+	ret = of_gpiochip_scan_gpios(chip);
 	if (ret)
 		of_node_put(chip->of_node);
 
