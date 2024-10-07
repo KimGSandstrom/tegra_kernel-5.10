@@ -47,15 +47,15 @@
 // possibly/probably declare this in gpio-tegra.c instead
 // following pattern from bpmp virtualisation
 //
+
 // TODO separate guest and host proxy configuration defines
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 
 	#include "gpiolib.h"
 	#include <linux/delay.h>
-	#include "gpio-proxy.h"  // low level inline hooks for readl and writel
 
-	bool kernel_is_on_guest = false;
-	EXPORT_SYMBOL_GPL(kernel_is_on_guest);
+  bool kernel_is_on_guest = false;
+  EXPORT_SYMBOL_GPL(kernel_is_on_guest);
 
 	int gpio_outloud = 0;
 	EXPORT_SYMBOL_GPL(gpio_outloud);
@@ -66,6 +66,7 @@
 	extern const char **tegra_chiplabel;
 
 #endif
+#include "gpio-proxy.h"  // low level inline hooks for readl and writel
 
 /* security registers */
 #define TEGRA186_GPIO_CTL_SCR 0x0c
@@ -508,6 +509,7 @@ static void __iomem *tegra186_gpio_get_base(struct tegra_gpio *gpio,
 
 inline struct tegra_gpio * find_tegra_chip_by_id(int id);
 
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 // executes tegra186_gpio_get_base in host as a proxy for guest
 void __iomem *tegra186_gpio_get_base_execute(int id, unsigned int pin)
 	{
@@ -515,15 +517,20 @@ void __iomem *tegra186_gpio_get_base_execute(int id, unsigned int pin)
 		return tegra186_gpio_get_base(gpio, pin);
 	}
 EXPORT_SYMBOL_GPL(tegra186_gpio_get_base_execute);
+#endif
 
 //checks if we are on host or guest. Guest calls the redidrec function
 static inline void __iomem *tegra186_gpio_get_base_x(struct tegra_gpio *tgpio, unsigned int pin) {
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 	if(kernel_is_on_guest) {
 		return tegra186_gpio_get_base_redirect(tgpio->gpio.gpiodev->id, pin);
 	}
 	else {
 		return tegra186_gpio_get_base(tgpio, pin);
 	}
+#else
+		return tegra186_gpio_get_base(tgpio, pin);
+#endif
 };
 
 static void __iomem *tegra186_gpio_get_secure(struct tegra_gpio *gpio,
@@ -789,6 +796,7 @@ void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
 	writel(value, base + TEGRA186_GPIO_OUTPUT_VALUE);
 }
 
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 void tegra186_gpio_set_by_name(const char *name, unsigned int offset,
 						int level)
 {
@@ -798,6 +806,7 @@ void tegra186_gpio_set_by_name(const char *name, unsigned int offset,
 		pr_err("GPIO cannot find chip by name, %s\n", name);
 	}
 }
+#endif
 
 // function has passthrough version
 static int tegra186_gpio_set_config(struct gpio_chip *chip,
@@ -1589,9 +1598,11 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	int value;
 	void __iomem *base;
 
+	#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 	static bool guest_proxy_is_set_up = false;
 	static bool host_proxy_is_set_up = false;
 	bool kernel_is_on_guest_stash = false;
+  #endif
 
 	deb_debug("Probing gpio");
 
@@ -1734,8 +1745,8 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 		deb_debug("gpio function pointers are set for gpio label=%s\n", gpio->gpio.label);
 	#else
 		// this code segment is for standard operation in a compile without PROXY configuraton
-		deb_debug("Setting standard gpio functions for a non-proxy compile of driver\n")
-		BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver, because non-proxy
+		deb_debug("Setting standard gpio functions for a non-proxy compile of driver\n");
+		// BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver, because non-proxy
 		gpio_unhook(gpio);
 	#endif
 
@@ -1885,7 +1896,9 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 			}
 			offset += port->pins;
 		}
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 		kernel_is_on_guest = kernel_is_on_guest_stash;
+#endif
 	}
 
 	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
@@ -1941,14 +1954,17 @@ static const struct dev_pm_ops tegra_gpio_pm = {
 
 static int tegra186_gpio_remove(struct platform_device *pdev)
 {
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 	if(kernel_is_on_guest) {
 		tegra_gpio_guest_cleanup();
 	}
 	else {
 		tegra_gpio_host_cleanup();
 	}
+#endif
 	return 0;
 }
+
 
 #define TEGRA186_MAIN_GPIO_PORT(_name, _bank, _port, _pins) \
 	[TEGRA186_MAIN_GPIO_PORT_##_name] = {     \

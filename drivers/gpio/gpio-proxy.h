@@ -18,6 +18,8 @@ extern const unsigned char rwl_relaxed_type;
 // TODO
 // check readl_x() and writel_x() in files: gpio-tegra.c, pinctrl-tegra.c
 
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+
 static inline u32 readl_x( void * addr) {
   u32 ret;
   if(kernel_is_on_guest) {
@@ -89,5 +91,31 @@ static inline u32 tegra_gte_readl_x( void * addr) { return 0; };
 static inline void tegra_gte_writel_x( u32 value, void * addr) {};
 */
 // note: adding more higher level functions migth take latency off the lower level functions
+#else
+
+static inline u32 readl_x( void * addr) {
+    return readl(addr);
+};
+
+static inline void writel_x( u32 value, void * addr) {
+    writel(value, addr);
+};
+
+static inline u32 __raw_readl_x( void * addr) {
+    return __raw_readl(addr);
+};
+
+static inline void __raw_writel_x( u32 value, void * addr) {
+    __raw_writel(value, addr);
+};
+
+static inline u32 readl_relaxed_x( void * addr) {
+    return readl_relaxed(addr);
+};
+
+static inline void writel_relaxed_x( u32 value, void * addr) {
+    writel_relaxed(value, addr);
+};
+#endif
 
 #endif
