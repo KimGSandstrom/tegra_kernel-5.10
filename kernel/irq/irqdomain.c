@@ -1718,7 +1718,7 @@ int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
 	if (!domain->parent)
 		return -ENOSYS;
 
-	deb_verbose("trace B:\n", __LINE__);
+	deb_verbose("trace B:%d\n", __LINE__);
 	return irq_domain_alloc_irqs_hierarchy(domain->parent, irq_base,
 					       nr_irqs, arg);
 }

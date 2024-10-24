@@ -1525,6 +1525,14 @@ static int gpiochip_hierarchy_irq_domain_alloc(struct irq_domain *d,
 			    girq->handler,
 			    NULL, NULL);
 	irq_set_probe(irq);
+	
+	deb_verbose("domain=%p, irq=%d, hwirq=%ld, chip=%p, data=%p, handler=%p",
+	        d,
+			    irq,
+			    hwirq,
+			    gc->irq.chip,
+			    gc,
+			    girq->handler);
 
 	/* This parent only handles asserted level IRQs */
 	parent_arg = girq->populate_parent_alloc_arg(gc, parent_hwirq, parent_type);
@@ -1534,7 +1542,7 @@ static int gpiochip_hierarchy_irq_domain_alloc(struct irq_domain *d,
 	chip_dbg(gc, "alloc_irqs_parent for %d parent hwirq %d\n",
 		  irq, parent_hwirq);
 	irq_set_lockdep_class(irq, gc->irq.lock_key, gc->irq.request_key);
-  deb_verbose("trace:%d, __LINE__);
+  deb_verbose("trace:%d", __LINE__);
 	ret = irq_domain_alloc_irqs_parent(d, irq, 1, parent_arg);
 	/*
 	 * If the parent irqdomain is msi, the interrupts have already
