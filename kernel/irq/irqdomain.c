@@ -1416,14 +1416,14 @@ int irq_domain_alloc_irqs_hierarchy(struct irq_domain *domain,
 				    unsigned int irq_base,
 				    unsigned int nr_irqs, void *arg)
 {
-	deb_verbose("line %d\n", __LINE__);
+	deb_verbose("trace A:line %d\n", __LINE__);
 	
 	if (!domain->ops->alloc) {
 		pr_debug("domain->ops->alloc() is NULL\n");
-		deb_debug("trace A");
+		deb_verbose("trace B:%d", __LINE__);
 		return -ENOSYS;
 	}
-	deb_debug("trace B");
+	deb_verbose("trace C:%d", __LINE__);
 	return domain->ops->alloc(domain, irq_base, nr_irqs, arg);
 }
 
