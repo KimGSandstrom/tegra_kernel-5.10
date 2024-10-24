@@ -1714,11 +1714,11 @@ int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
 				 unsigned int irq_base, unsigned int nr_irqs,
 				 void *arg)
 {
-	deb_verbose("line %d\n", __LINE__);	
+	deb_verbose("trace A:%d\n", __LINE__);	
 	if (!domain->parent)
 		return -ENOSYS;
 
-	deb_verbose("trace A\n");
+	deb_verbose("trace B:\n", __LINE__);
 	return irq_domain_alloc_irqs_hierarchy(domain->parent, irq_base,
 					       nr_irqs, arg);
 }
