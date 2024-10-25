@@ -1542,7 +1542,7 @@ static int gpiochip_hierarchy_irq_domain_alloc(struct irq_domain *d,
 	chip_dbg(gc, "alloc_irqs_parent for %d parent hwirq %d\n",
 		  irq, parent_hwirq);
 	irq_set_lockdep_class(irq, gc->irq.lock_key, gc->irq.request_key);
-  deb_verbose("trace:%d", __LINE__);
+  deb_verbose("trace:%d, parent_arg=%p", __LINE__, parent_arg);
 	ret = irq_domain_alloc_irqs_parent(d, irq, 1, parent_arg);
 	/*
 	 * If the parent irqdomain is msi, the interrupts have already
@@ -1830,7 +1830,7 @@ static int gpiochip_to_irq(struct gpio_chip *gc, unsigned offset)
 #ifdef GPIO_DEBUG_VERBOSE
 		ret = irq_create_fwspec_mapping(&spec);		// BUG Guest seems to fail here
 		deb_verbose("trace G: %d\n", ret);
-        return ret;
+    return ret;
 #else
 		return irq_create_fwspec_mapping(&spec);
 #endif

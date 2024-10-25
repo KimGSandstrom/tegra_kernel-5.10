@@ -326,13 +326,13 @@ static struct tegra_gte_info tegra194_gte_info[] = {
 
 static inline u32 tegra_gte_readl(struct tegra_gpio *tgi, u32 reg)
 {
-	return __raw_readl_x(tgi->gte_regs + reg);
+	return __raw_readl_b(tgi->gte_regs + reg);
 }
 
 static inline void tegra_gte_writel(struct tegra_gpio *tgi, u32 reg,
 		u32 val)
 {
-	__raw_writel_x(val, tgi->gte_regs + reg);
+	__raw_writel_b(val, tgi->gte_regs + reg);
 }
 
 static void tegra_gte_flush_fifo(struct tegra_gpio *tgi)
@@ -558,12 +558,12 @@ static inline bool gpio_is_accessible(struct tegra_gpio *gpio, u32 pin)
 
 	secure = tegra186_gpio_get_secure(gpio, pin);
 	if (gpio->soc->do_vm_check) {
-		val = __raw_readl_x(secure + GPIO_VM_REG);
+		val = __raw_readl_b(secure + GPIO_VM_REG);
 		if ((val & GPIO_VM_RW) != GPIO_VM_RW)
 			return false;
 	}
 
-	val = __raw_readl_x(secure + GPIO_SCR_REG);
+	val = __raw_readl_b(secure + GPIO_SCR_REG);
 	// deb_verbose("val = 0x%X, val&mask = 0x%lX\n", val, (val & (GPIO_SCR_SEC_ENABLE)));
 
 	if ((val & (GPIO_SCR_SEC_ENABLE)) == 0)
@@ -1218,9 +1218,9 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 				 */
 
 				if (j == 0) {
-					value = readl_x(base + offset);
+					value = readl_b(base + offset);
 					value = BIT(port->pins) - 1;
-					writel_x(value, base + offset);
+					writel_b(value, base + offset);
 				}
 			}
 		}
@@ -1883,17 +1883,29 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 							&gpio->soc->ports[i];
 
 			for (j = 0; j < port->pins; j++) {
-				base = tegra186_gpio_get_base_x(gpio, offset + j);
-				if (WARN_ON(base == NULL))        // BUG here, base is null
+				base = tegra186_gpio_get_base(gpio, offset + j);
+				if (WARN_ON(base == NULL))
 					return -EINVAL;
 
-				value = readl_x(base +
+				value = readl(base +
 								TEGRA186_GPIO_ENABLE_CONFIG);
 				value |=
 				TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC;
-				writel_x(value,
+				writel(value,
 							 base + TEGRA186_GPIO_ENABLE_CONFIG);
-			}
+        if(kernel_is_on_guest) {
+          base = tegra186_gpio_get_base_x(gpio, offset + j);
+          if (WARN_ON(base == NULL))
+            return -EINVAL;
+
+          value = readl_x(base +
+                  TEGRA186_GPIO_ENABLE_CONFIG);
+          value |=
+          TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC;
+          writel_x(value,
+                base + TEGRA186_GPIO_ENABLE_CONFIG);
+        }
+      }
 			offset += port->pins;
 		}
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
@@ -1914,12 +1926,17 @@ static int tegra_gpio_resume_early(struct device *dev)
 	struct tegra_gpio *gpio = dev_get_drvdata(dev);
 	struct tegra_gpio_saved_register *regs;
 	unsigned offset = 0U;
-	void __iomem *base;
+	void __iomem *base, *base_x;
 	int i;
 
-	base = tegra186_gpio_get_base_x(gpio, offset);
-	if (WARN_ON(base == NULL))
-		return -EINVAL;
+  base = tegra186_gpio_get_base(gpio, offset);
+  if (WARN_ON(base == NULL))
+    return -EINVAL;
+  if(kernel_is_on_guest) {
+    base_x = tegra186_gpio_get_base_x(gpio, offset);
+    if (WARN_ON(base_x == NULL))
+      return -EINVAL;
+  }
 
 	for (i = 0; i < gpio->gpio.ngpio; i++) {
 		regs = &gpio->gpio_rval[i];
@@ -1928,10 +1945,15 @@ static int tegra_gpio_resume_early(struct device *dev)
 
 		regs->restore_needed = false;
 
-		writel_x(regs->val,  base + TEGRA186_GPIO_OUTPUT_VALUE);
-		writel_x(regs->out,  base + TEGRA186_GPIO_OUTPUT_CONTROL);
-		writel_x(regs->conf, base + TEGRA186_GPIO_ENABLE_CONFIG);
-	}
+    writel(regs->val,  base + TEGRA186_GPIO_OUTPUT_VALUE);
+    writel(regs->out,  base + TEGRA186_GPIO_OUTPUT_CONTROL);
+    writel(regs->conf, base + TEGRA186_GPIO_ENABLE_CONFIG);
+    if(kernel_is_on_guest) {
+      writel_x(regs->val,  base_x + TEGRA186_GPIO_OUTPUT_VALUE);
+      writel_x(regs->out,  base_x + TEGRA186_GPIO_OUTPUT_CONTROL);
+      writel_x(regs->conf, base_x + TEGRA186_GPIO_ENABLE_CONFIG);
+    }
+  }
 
 	return 0;
 }
