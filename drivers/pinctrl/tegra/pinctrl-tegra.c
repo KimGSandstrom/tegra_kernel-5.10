@@ -52,7 +52,11 @@
 #endif
 
 // #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-#include "../../gpio/gpio-proxy.h"  // low level hooks for readl_x and writel_x
+// DEBUG hack:
+#define readl_x readl
+#define writel_relaxed_x writel_relaxed
+#define readl_relaxed_x readl_relaxed
+// #include "../../gpio/gpio-proxy.h"  // low level hooks for readl_x and writel_x
 // #endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
 
 static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)

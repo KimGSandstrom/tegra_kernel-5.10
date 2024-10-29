@@ -519,11 +519,18 @@ void __iomem *tegra186_gpio_get_base_execute(int id, unsigned int pin)
 EXPORT_SYMBOL_GPL(tegra186_gpio_get_base_execute);
 #endif
 
-//checks if we are on host or guest. Guest calls the redidrec function
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+// redirect function
+static inline void __iomem *tegra186_gpio_get_base_r(struct tegra_gpio *tgpio, unsigned int pin) {
+		return tegra186_gpio_get_base_redirect(tgpio->gpio.gpiodev->id, pin);
+};
+#endif
+
+//checks if we are on host or guest. Guest calls the redirect function
 static inline void __iomem *tegra186_gpio_get_base_x(struct tegra_gpio *tgpio, unsigned int pin) {
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 	if(kernel_is_on_guest) {
-		return tegra186_gpio_get_base_redirect(tgpio->gpio.gpiodev->id, pin);
+		return tegra186_gpio_get_base_r(tgpio, pin);
 	}
 	else {
 		return tegra186_gpio_get_base(tgpio, pin);
@@ -1596,7 +1603,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	int err;
 	int ret;
 	int value;
-	void __iomem *base;
+	void __iomem *base, *base_r;  // base_r is the redirected value fro host
 
 	#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 	static bool guest_proxy_is_set_up = false;
@@ -1894,16 +1901,16 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 				writel(value,
 							 base + TEGRA186_GPIO_ENABLE_CONFIG);
         if(kernel_is_on_guest) {
-          base = tegra186_gpio_get_base_x(gpio, offset + j);
-          if (WARN_ON(base == NULL))
+          base_r = tegra186_gpio_get_base_r(gpio, offset + j);
+          if (WARN_ON(base_r == NULL))
             return -EINVAL;
 
-          value = readl_x(base +
+          value = readl_x(base_r +
                   TEGRA186_GPIO_ENABLE_CONFIG);
           value |=
           TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC;
           writel_x(value,
-                base + TEGRA186_GPIO_ENABLE_CONFIG);
+                base_r + TEGRA186_GPIO_ENABLE_CONFIG);
         }
       }
 			offset += port->pins;
@@ -1926,15 +1933,15 @@ static int tegra_gpio_resume_early(struct device *dev)
 	struct tegra_gpio *gpio = dev_get_drvdata(dev);
 	struct tegra_gpio_saved_register *regs;
 	unsigned offset = 0U;
-	void __iomem *base, *base_x;
+	void __iomem *base, *base_r;
 	int i;
 
   base = tegra186_gpio_get_base(gpio, offset);
   if (WARN_ON(base == NULL))
     return -EINVAL;
   if(kernel_is_on_guest) {
-    base_x = tegra186_gpio_get_base_x(gpio, offset);
-    if (WARN_ON(base_x == NULL))
+    base_r = tegra186_gpio_get_base_r(gpio, offset);
+    if (WARN_ON(base_r == NULL))
       return -EINVAL;
   }
 
@@ -1949,9 +1956,9 @@ static int tegra_gpio_resume_early(struct device *dev)
     writel(regs->out,  base + TEGRA186_GPIO_OUTPUT_CONTROL);
     writel(regs->conf, base + TEGRA186_GPIO_ENABLE_CONFIG);
     if(kernel_is_on_guest) {
-      writel_x(regs->val,  base_x + TEGRA186_GPIO_OUTPUT_VALUE);
-      writel_x(regs->out,  base_x + TEGRA186_GPIO_OUTPUT_CONTROL);
-      writel_x(regs->conf, base_x + TEGRA186_GPIO_ENABLE_CONFIG);
+      writel_x(regs->val,  base_r + TEGRA186_GPIO_OUTPUT_VALUE);
+      writel_x(regs->out,  base_r + TEGRA186_GPIO_OUTPUT_CONTROL);
+      writel_x(regs->conf, base_r + TEGRA186_GPIO_ENABLE_CONFIG);
     }
   }
 

@@ -53,6 +53,30 @@
 #ifdef CONFIG_ARM64
 #include <asm/cpufeature.h>
 
+#define GPIO_DEBUG
+#define GPIO_DEBUG_VERBOSE
+
+#ifdef GPIO_DEBUG
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
+  #define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__ , kbasename(__FILE__), ##__VA_ARGS__)
+  /*
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
+  #define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' -- " fmt, __func__ , ##__VA_ARGS__)
+  */
+#else
+  #define deb_info(fmt, ...)
+  #define deb_debug(fmt, ...)
+  #define deb_error(fmt, ...)
+#endif
+
+#ifdef GPIO_DEBUG_VERBOSE
+  #define deb_verbose           deb_debug
+#else
+  #define deb_verbose(fmt, ...)
+#endif
+
 static void gic_check_cpu_features(void)
 {
 	WARN_TAINT_ONCE(this_cpu_has_cap(ARM64_HAS_SYSREG_GIC_CPUIF),
@@ -1371,6 +1395,16 @@ static int gic_irq_domain_translate(struct irq_domain *d,
 {
 	struct gic_chip_data *gic = d->host_data;
 
+	#ifdef GPIO_DEBUG_VERBOSE
+	deb_verbose("line %d/n"
+		"irq_domain %p,\n"
+		"irq_fwspec %p,\n"
+		"*hwirq %ld,\n"
+		"*type %d\n"
+		"param_count=%d\n", 
+		__LINE__, d, fwspec, *hwirq, *type, fwspec->param_count);
+	#endif
+	
 	if (fwspec->param_count == 1 && fwspec->param[0] < 16) {
 		*hwirq = fwspec->param[0];
 		*type = IRQ_TYPE_EDGE_RISING;

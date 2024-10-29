@@ -1440,12 +1440,12 @@ static int gic_irq_domain_translate(struct irq_domain *d,
 				    unsigned int *type)
 {
 	#ifdef GPIO_DEBUG_VERBOSE
-	deb_verbose("line %d\n", __LINE__);
-	deb_verbose(
-	    "irq_domain %p,\n"
+	deb_verbose("line %d\n"
+		"irq_domain %p,\n"
 		"irq_fwspec %p,\n"
 		"*hwirq %ld,\n"
 		"*type %d\n",
+		__LINE__,
 		d, fwspec, *hwirq, *type);
 	if (fwspec->param_count >= 2)
 		deb_verbose("irq_fwspec %p, %d, %d, %d\n", fwspec->fwnode, fwspec->param_count, fwspec->param[0], fwspec->param[1]);
