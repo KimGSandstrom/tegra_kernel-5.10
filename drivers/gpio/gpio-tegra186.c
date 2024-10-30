@@ -326,13 +326,13 @@ static struct tegra_gte_info tegra194_gte_info[] = {
 
 static inline u32 tegra_gte_readl(struct tegra_gpio *tgi, u32 reg)
 {
-	return __raw_readl_b(tgi->gte_regs + reg);
+	return __raw_readl_both(tgi->gte_regs + reg);
 }
 
 static inline void tegra_gte_writel(struct tegra_gpio *tgi, u32 reg,
 		u32 val)
 {
-	__raw_writel_b(val, tgi->gte_regs + reg);
+	__raw_writel_both(val, tgi->gte_regs + reg);
 }
 
 static void tegra_gte_flush_fifo(struct tegra_gpio *tgi)
@@ -565,12 +565,12 @@ static inline bool gpio_is_accessible(struct tegra_gpio *gpio, u32 pin)
 
 	secure = tegra186_gpio_get_secure(gpio, pin);
 	if (gpio->soc->do_vm_check) {
-		val = __raw_readl_b(secure + GPIO_VM_REG);
+		val = __raw_readl_both(secure + GPIO_VM_REG);
 		if ((val & GPIO_VM_RW) != GPIO_VM_RW)
 			return false;
 	}
 
-	val = __raw_readl_b(secure + GPIO_SCR_REG);
+	val = __raw_readl_both(secure + GPIO_SCR_REG);
 	// deb_verbose("val = 0x%X, val&mask = 0x%lX\n", val, (val & (GPIO_SCR_SEC_ENABLE)));
 
 	if ((val & (GPIO_SCR_SEC_ENABLE)) == 0)
@@ -1225,9 +1225,9 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 				 */
 
 				if (j == 0) {
-					value = readl_b(base + offset);
+					value = readl_both(base + offset);
 					value = BIT(port->pins) - 1;
-					writel_b(value, base + offset);
+					writel_both(value, base + offset);
 				}
 			}
 		}
@@ -1315,11 +1315,10 @@ error:
 	 * This addition is not necessary for output pins
 	 */
 
-	/*
 	static inline int gpiochip_generic_request_both(struct gpio_chip *chip, unsigned offset) {
 		int r1=0, r2=0;
-		r2 = gpiochip_generic_request_redirect(chip, offset);
 		r1 = gpiochip_generic_request(chip, offset);
+		r2 = gpiochip_generic_request_redirect(chip, offset);
 		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1 , r2);
 		return r2;
 	}
@@ -1331,33 +1330,58 @@ error:
 
 	static inline int tegra186_gpio_get_direction_both(struct gpio_chip *chip, unsigned int offset) {
 		int r1=0, r2=0;
-		r2 = tegra186_gpio_get_direction_redirect(chip, offset);
 		r1 = tegra186_gpio_get_direction(chip, offset);
+		r2 = tegra186_gpio_get_direction_redirect(chip, offset);
 		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1 , r2);
 		return r2;
 	}
 
 	static inline int tegra186_gpio_direction_input_both(struct gpio_chip *chip, unsigned int offset) {
 		int r1=0, r2=0;
-		r2 = tegra186_gpio_direction_input_redirect(chip, offset);
 		r1 = tegra186_gpio_direction_input(chip, offset);
+		r2 = tegra186_gpio_direction_input_redirect(chip, offset);
 		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1 , r2);
 		return r2;
 	}
 
 	static inline int tegra186_gpio_direction_output_both(struct gpio_chip *chip, unsigned int offset, int level) {
 		int r1=0, r2=0;
-		r2 = tegra186_gpio_direction_output_redirect(chip, offset, level);
 		r1 = tegra186_gpio_direction_output(chip, offset, level);
+		r2 = tegra186_gpio_direction_output_redirect(chip, offset, level);
+		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1 , r2);
+		return r2;
+	}
+
+  static int tegra186_gpio_get_both(struct gpio_chip *chip, unsigned int offset) {
+		int r1=0, r2=0;
+		r1 = tegra186_gpio_get_redirect(chip, offset);
+		r2 = tegra186_gpio_get(chip, offset);
 		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1 , r2);
 		return r2;
 	}
 
 	static inline void tegra186_gpio_set_both(struct gpio_chip *chip, unsigned int offset, int level) {
-			tegra186_gpio_set(chip, offset, level);
-			tegra186_gpio_set_redirect(chip, offset, level);
+		tegra186_gpio_set(chip, offset, level);
+		tegra186_gpio_set_redirect(chip, offset, level);
 	}
-	*/
+
+	static inline int tegra186_gpio_set_config_both(struct gpio_chip *chip,
+								unsigned int offset,
+								unsigned long config) {
+		int r1=0, r2=0;
+		r1 = tegra186_gpio_set_config_redirect(chip, offset, config);
+		r2 = tegra186_gpio_set_config(chip, offset, config);
+		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1 , r2);
+		return r2;
+	}
+
+  static int tegra186_gpio_add_pin_ranges_both(struct gpio_chip *chip) {
+		int r1=0, r2=0;
+		r1 = tegra186_gpio_add_pin_ranges(chip);
+		r2 = tegra186_gpio_add_pin_ranges_redirect(chip);
+		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1 , r2);
+		return r2;
+	}
 
 	/*
 	static inline int tegra186_gpio_direction_input_nopt(struct gpio_chip *chip, unsigned int offset) {
@@ -1381,44 +1405,29 @@ error:
 		tegra186_gpio_set(chip, offset, level);
 		kernel_is_on_guest = true;
 	}
-
-	static inline int tegra186_gpio_set_config_both(struct gpio_chip *chip,
-								unsigned int offset,
-								unsigned long config) {
-			int r1=0, r2=0;
-			r1 = tegra186_gpio_set_config(chip, offset, config);
-			r2 = tegra186_gpio_set_config_redirect(chip, offset, config);
-			if( r1 != r2 ) deb_debug("return values differ %d/%d", r1 , r2);
-			return r2;
-	}
 	*/
 
+  /* both guest and host version */
+  static inline void gpio_hook(struct tegra_gpio *gpio) {
+      deb_debug("Setting hooks for functions for %s", gpio->gpio.label);
+      gpio->gpio.request = gpiochip_generic_request_both;
+      gpio->gpio.free = gpiochip_generic_free_both;
+      gpio->gpio.get_direction = tegra186_gpio_get_direction_both;
+      gpio->gpio.direction_input = tegra186_gpio_direction_input_both;
+      gpio->gpio.direction_output = tegra186_gpio_direction_output_both;
+      gpio->gpio.get = tegra186_gpio_get_both;
+      gpio->gpio.set = tegra186_gpio_set_both;
+      gpio->gpio.timestamp_control = tegra_gpio_timestamp_control;
+      gpio->gpio.timestamp_read = tegra_gpio_timestamp_read;
+      gpio->gpio.suspend_configure = tegra_gpio_suspend_configure;
+  //      gpio->gpio.timestamp_control = tegra_gpio_timestamp_control_redirect;
+  //      gpio->gpio.timestamp_read = tegra_gpio_timestamp_read_redirect;
+  //      gpio->gpio.suspend_configure = tegra_gpio_suspend_configure_redirect;
+      gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges_both;
+      gpio->gpio.base = -1;
+  }
 
- /*
- static inline void gpio_hook(struct tegra_gpio *gpio) {
-			deb_debug("Setting hooks for functions for %s", gpio->gpio.label);
-			gpio->gpio.request = gpiochip_generic_request_both;
-			gpio->gpio.free = gpiochip_generic_free_both;
-			gpio->gpio.get_direction = tegra186_gpio_get_direction_both;
-			gpio->gpio.direction_input = tegra186_gpio_direction_input_both;
-			gpio->gpio.direction_output = tegra186_gpio_direction_output_both;
-			gpio->gpio.get = tegra186_gpio_get_redirect;
-			gpio->gpio.set = tegra186_gpio_set_redirect;
-			gpio->gpio.timestamp_control = tegra_gpio_timestamp_control;
-			gpio->gpio.timestamp_read = tegra_gpio_timestamp_read;
-			gpio->gpio.suspend_configure = tegra_gpio_suspend_configure;
-//      gpio->gpio.timestamp_control = tegra_gpio_timestamp_control_redirect;
-//      gpio->gpio.timestamp_read = tegra_gpio_timestamp_read_redirect;
-//      gpio->gpio.suspend_configure = tegra_gpio_suspend_configure_redirect;
-			// gpio->gpio.to_irq = N/A;                 // not in struct
-			// gpio->gpio.dbg_show = N/A;               // not in struct
-			// gpio->gpio.init_valid_mask = N/A;        // not in struct
-			// gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges_redirect;
-			gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges;
-			gpio->gpio.base = -1;
-	}
-
-*/
+  /* "normal" redirect version
 	static inline void gpio_hook(struct tegra_gpio *gpio) {
 			deb_debug("Setting hooks for functions for %s", gpio->gpio.label);
 			gpio->gpio.request = gpiochip_generic_request_redirect;
@@ -1442,6 +1451,7 @@ error:
 			gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges;
 			gpio->gpio.base = -1;
 	}
+  */
 #endif
 
 // this function sets the standard bindings used by the host driver
@@ -1590,8 +1600,6 @@ static inline void gpio_unhook(struct tegra_gpio *gpio) {
 	EXPORT_SYMBOL_GPL(find_tegra_chip_by_id);
 #endif
 
-extern int devm_gpiochip_add_data_with_key__redirect(struct device *dev, struct gpio_chip *gc, void *data);
-
 static int tegra186_gpio_probe(struct platform_device *pdev)
 {
 	unsigned int i, j, offset;
@@ -1603,7 +1611,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	int err;
 	int ret;
 	int value;
-	void __iomem *base, *base_r;  // base_r is the redirected value fro host
+	void __iomem *base, *base_r;  // base_r is the redirected value from host
 
 	#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 	static bool guest_proxy_is_set_up = false;

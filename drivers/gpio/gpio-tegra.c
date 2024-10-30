@@ -124,14 +124,14 @@ static inline void tegra_gpio_writel(struct tegra_gpio_info *tgi,
 {
 	deb_verbose("\n");
 
-	writel_relaxed_x(val, tgi->regs + reg);
+	writel_relaxed_both(val, tgi->regs + reg);
 }
 
 static inline u32 tegra_gpio_readl(struct tegra_gpio_info *tgi, u32 reg)
 {
 	deb_verbose("\n");
 
-	return readl_relaxed_x(tgi->regs + reg);
+	return readl_relaxed_both(tgi->regs + reg);
 }
 
 static unsigned int tegra_gpio_compose(unsigned int bank, unsigned int port,
