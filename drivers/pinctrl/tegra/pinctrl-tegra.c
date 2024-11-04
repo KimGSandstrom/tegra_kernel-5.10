@@ -51,7 +51,7 @@
   #define deb_verbose(fmt, ...)
 #endif
 
-#define GPIO_PMX_TEST
+#define GPIO_NOPT_TEST
 
 // #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 #include "../../gpio/gpio-proxy.h"  // low level hooks for readl_x and writel_x
@@ -61,7 +61,7 @@ static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
 {
 	deb_debug("\n");
 
-  #if !defined(GPIO_PMX_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
+  #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
 	return readl_both(pmx->regs[bank] + reg);
   #else
 	return readl(pmx->regs[bank] + reg);
@@ -72,7 +72,7 @@ static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 {
 	deb_debug("\n");
 
-  #if !defined(GPIO_PMX_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
+  #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
 	writel_relaxed_both(val, pmx->regs[bank] + reg);
   #else
 	writel_relaxed(val, pmx->regs[bank] + reg);
