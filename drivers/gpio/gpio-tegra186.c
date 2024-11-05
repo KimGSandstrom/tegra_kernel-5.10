@@ -44,7 +44,16 @@
 	#define deb_verbose(fmt, ...)
 #endif
 
-#define GPIO_NOPT_TEST
+#define GPIO_NOPT_TEST1 0
+#define GPIO_NOPT_TEST2 1
+#define GPIO_NOPT_TEST3 2
+#define GPIO_NOPT_TEST4 3
+#define GPIO_NOPT_TEST5 4
+#define GPIO_NOFUNC_TEST 5
+
+// construct to ease debugging. if bit is set -> then debug exception is active
+uint32_t debug_exceptions = 0;
+static inline bool is_debug_exception(int off) { return (debug_exceptions >> off) & 0x00000001;  }
 
 // possibly/probably declare this in gpio-tegra.c instead
 // following pattern from bpmp virtualisation
@@ -329,8 +338,11 @@ static struct tegra_gte_info tegra194_gte_info[] = {
 
 static inline u32 tegra_gte_readl(struct tegra_gpio *tgi, u32 reg)
 {
-  #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
-	return __raw_readl_both(tgi->gte_regs + reg);
+  #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+  if (!is_debug_exception(GPIO_NOPT_TEST1))
+	  return __raw_readl_x(tgi->gte_regs + reg);
+  else
+	  return __raw_readl(tgi->gte_regs + reg);
   #else
 	return __raw_readl(tgi->gte_regs + reg);
   #endif
@@ -339,8 +351,11 @@ static inline u32 tegra_gte_readl(struct tegra_gpio *tgi, u32 reg)
 static inline void tegra_gte_writel(struct tegra_gpio *tgi, u32 reg,
 		u32 val)
 {
-  #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
-	__raw_writel_both(val, tgi->gte_regs + reg);
+  #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+  if (!is_debug_exception(GPIO_NOPT_TEST1))
+	  __raw_writel_x(val, tgi->gte_regs + reg);
+  else
+	  __raw_writel(val, tgi->gte_regs + reg);
   #else
 	__raw_writel(val, tgi->gte_regs + reg);
   #endif
@@ -530,7 +545,7 @@ void __iomem *tegra186_gpio_get_base_execute(int id, unsigned int pin)
 EXPORT_SYMBOL_GPL(tegra186_gpio_get_base_execute);
 #endif
 
-#if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 // redirect function
 static inline void __iomem *tegra186_gpio_get_base_r(struct tegra_gpio *tgpio, unsigned int pin) {
 		return tegra186_gpio_get_base_redirect(tgpio->gpio.gpiodev->id, pin);
@@ -539,8 +554,8 @@ static inline void __iomem *tegra186_gpio_get_base_r(struct tegra_gpio *tgpio, u
 
 //checks if we are on host or guest. Guest calls the redirect function
 static inline void __iomem *tegra186_gpio_get_base_x(struct tegra_gpio *tgpio, unsigned int pin) {
-#if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
-	if(kernel_is_on_guest) {
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+	if(kernel_is_on_guest && !is_debug_exception(GPIO_NOPT_TEST2) ) {
 		return tegra186_gpio_get_base_r(tgpio, pin);
 	}
 	else {
@@ -573,17 +588,9 @@ static inline bool gpio_is_accessible(struct tegra_gpio *gpio, u32 pin)
 	u32 val;
 
 	// deb_verbose("\n");
+  // No passthroughs in this function
   
 	secure = tegra186_gpio_get_secure(gpio, pin);
-  #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
-	if (gpio->soc->do_vm_check) {
-		val = __raw_readl_both(secure + GPIO_VM_REG);
-		if ((val & GPIO_VM_RW) != GPIO_VM_RW)
-			return false;
-	}
-
-	val = __raw_readl_both(secure + GPIO_SCR_REG);
-  #else
 	if (gpio->soc->do_vm_check) {
 		val = __raw_readl(secure + GPIO_VM_REG);
 		if ((val & GPIO_VM_RW) != GPIO_VM_RW)
@@ -591,7 +598,6 @@ static inline bool gpio_is_accessible(struct tegra_gpio *gpio, u32 pin)
 	}
 
 	val = __raw_readl(secure + GPIO_SCR_REG);
-  #endif
 	// deb_verbose("val = 0x%X, val&mask = 0x%lX\n", val, (val & (GPIO_SCR_SEC_ENABLE)));
 
 	if ((val & (GPIO_SCR_SEC_ENABLE)) == 0)
@@ -1253,12 +1259,21 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 				 * interrupts via device tree.
 				 */
 
-        #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
-				if (j == 0) {
-					value = readl_both(base + offset);
-					value = BIT(port->pins) - 1;
-					writel_both(value, base + offset);
-				}
+        #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+        if( !is_debug_exception(GPIO_NOPT_TEST3)) {
+          if (j == 0) {
+            value = readl_x(base + offset);
+            value = BIT(port->pins) - 1;
+            writel_x(value, base + offset);
+          }
+        }
+        else {
+          if (j == 0) {
+            value = readl(base + offset);
+            value = BIT(port->pins) - 1;
+            writel(value, base + offset);
+          }
+        }
         #else
 				if (j == 0) {
 					value = readl(base + offset);
@@ -1352,7 +1367,7 @@ error:
 	 * This addition is not necessary for output pins
 	 */
 
-  #ifndef GPIO_NOPT_TEST
+  /*
 	static inline int gpiochip_generic_request_both(struct gpio_chip *chip, unsigned offset) {
 		int r1=0, r2=0;
     deb_verbose("chip=%s, offset=%d\n", chip->label, offset);
@@ -1427,8 +1442,7 @@ error:
 		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
 		return r2;
 	}
-
-  #endif
+  */
 
 	/*
 	static inline int tegra186_gpio_direction_input_nopt(struct gpio_chip *chip, unsigned int offset) {
@@ -1475,30 +1489,32 @@ error:
     gpio->gpio.base = -1;
   }
 
-  #if !defined(GPIO_NOPT_TEST)
-  /* "normal" redirect version
+  /* "normal" redirect version */
 	static inline void gpio_hook(struct tegra_gpio *gpio) {
 			deb_debug("Setting hooks for functions for %s", gpio->gpio.label);
-			gpio->gpio.request = gpiochip_generic_request_redirect;
-			gpio->gpio.free = gpiochip_generic_free_redirect;
-			gpio->gpio.get_direction = tegra186_gpio_get_direction_redirect;
-			gpio->gpio.direction_input = tegra186_gpio_direction_input_redirect;
-			gpio->gpio.direction_output = tegra186_gpio_direction_output_redirect;
-			gpio->gpio.get = tegra186_gpio_get_redirect;
-			gpio->gpio.set = tegra186_gpio_set_redirect;
-			// gpio->gpio.get_multiple = N/A;
-			// gpio->gpio.set_multiple = N/A
-			// ??? = tegra186_gpio_get_port_redirect;   // not in struct
-			// ??? = tegra186_gpio_get_base_redirect;   // not in struct
-			// ??? = tegra186_gpio_get_secure_redirect; // not in struct
-      gpio->gpio.timestamp_control = tegra_gpio_timestamp_control;  // no PT version exists - yet
-      gpio->gpio.timestamp_read = tegra_gpio_timestamp_read;        // no PT version exists - yet
-      gpio->gpio.suspend_configure = tegra_gpio_suspend_configure;  // no PT version exists - yet
-			gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges;
-			gpio->gpio.base = -1;
+      if(!is_debug_exception(GPIO_NOFUNC_TEST)) {
+        gpio->gpio.request = gpiochip_generic_request_redirect;
+        gpio->gpio.free = gpiochip_generic_free_redirect;
+        gpio->gpio.get_direction = tegra186_gpio_get_direction_redirect;
+        gpio->gpio.direction_input = tegra186_gpio_direction_input_redirect;
+        gpio->gpio.direction_output = tegra186_gpio_direction_output_redirect;
+        gpio->gpio.get = tegra186_gpio_get_redirect;
+        gpio->gpio.set = tegra186_gpio_set_redirect;
+        // gpio->gpio.get_multiple = N/A;
+        // gpio->gpio.set_multiple = N/A
+        // ??? = tegra186_gpio_get_port_redirect;   // not in struct
+        // ??? = tegra186_gpio_get_base_redirect;   // not in struct
+        // ??? = tegra186_gpio_get_secure_redirect; // not in struct
+        gpio->gpio.timestamp_control = tegra_gpio_timestamp_control;  // no PT version exists - yet
+        gpio->gpio.timestamp_read = tegra_gpio_timestamp_read;        // no PT version exists - yet
+        gpio->gpio.suspend_configure = tegra_gpio_suspend_configure;  // no PT version exists - yet
+        gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges;
+        gpio->gpio.base = -1;
+      }
+      else gpio_unhook(gpio); 
 	}
-  */
-  /* test both version */
+
+  /* test both version
   static inline void gpio_hook(struct tegra_gpio *gpio) {
       deb_debug("Setting hooks for functions for %s", gpio->gpio.label);
       gpio->gpio.request = gpiochip_generic_request_both;               
@@ -1514,6 +1530,7 @@ error:
       gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges_both;
       gpio->gpio.base = -1;
   }
+  */
   /* test version
   static inline void gpio_hook(struct tegra_gpio *gpio) {
       deb_debug("Setting hooks for functions for %s", gpio->gpio.label);
@@ -1531,12 +1548,6 @@ error:
       gpio->gpio.base = -1;
   }
   */
-  #else
-  static inline void gpio_hook(struct tegra_gpio *gpio) {
-      deb_debug("Not setting hooks for functions for %s", gpio->gpio.label);
-      gpio_unhook(gpio);
-  }
-  #endif
 
 	extern int tegra_gpio_guest_init(void);
 	extern int tegra_gpio_host_init(void);
@@ -1675,9 +1686,7 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 	void __iomem *base;
 
 	#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-  #ifndef GPIO_NOPT_TEST
 	void __iomem *base_r;  // base_r is the redirected value from host
-  #endif
 	static bool guest_proxy_is_set_up = false;
 	static bool host_proxy_is_set_up = false;
 	bool kernel_is_on_guest_stash = false;
@@ -1962,20 +1971,9 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
 							&gpio->soc->ports[i];
 
 			for (j = 0; j < port->pins; j++) {
-				base = tegra186_gpio_get_base(gpio, offset + j);
-				if (WARN_ON(base == NULL))
-					return -EINVAL;
-
-				value = readl(base +
-								TEGRA186_GPIO_ENABLE_CONFIG);
-				value |=
-				TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC;
-				writel(value,
-							 base + TEGRA186_GPIO_ENABLE_CONFIG);
-
-        #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
+        #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
         /* this should work with passthrough because we get 'base_r' */
-        if(kernel_is_on_guest) {
+        if(kernel_is_on_guest && !is_debug_exception(GPIO_NOPT_TEST4)) {
           base_r = tegra186_gpio_get_base_r(gpio, offset + j);
           if (WARN_ON(base_r == NULL))
             return -EINVAL;
@@ -1986,6 +1984,20 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
           TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC;
           writel_x(value,
                 base_r + TEGRA186_GPIO_ENABLE_CONFIG);
+        }
+        else {
+        #endif
+          base = tegra186_gpio_get_base(gpio, offset + j);
+          if (WARN_ON(base == NULL))
+            return -EINVAL;
+
+          value = readl(base +
+                  TEGRA186_GPIO_ENABLE_CONFIG);
+          value |=
+          TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC;
+          writel(value,
+                base + TEGRA186_GPIO_ENABLE_CONFIG);
+        #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
         }
         #endif
       }
@@ -2009,7 +2021,7 @@ static int tegra_gpio_resume_early(struct device *dev)
 	struct tegra_gpio_saved_register *regs;
 	unsigned offset = 0U;
 	void __iomem *base;
-  #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
+  #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 	void __iomem *base_r;  // base_r is the redirected value from host
   #endif
 	int i;
@@ -2017,8 +2029,8 @@ static int tegra_gpio_resume_early(struct device *dev)
   base = tegra186_gpio_get_base(gpio, offset);
   if (WARN_ON(base == NULL))
     return -EINVAL;
-  #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
-  if(kernel_is_on_guest) {
+  #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_NOPT_TEST5)) {
     base_r = tegra186_gpio_get_base_r(gpio, offset);
     if (WARN_ON(base_r == NULL))
       return -EINVAL;
@@ -2035,9 +2047,9 @@ static int tegra_gpio_resume_early(struct device *dev)
     writel(regs->val,  base + TEGRA186_GPIO_OUTPUT_VALUE);
     writel(regs->out,  base + TEGRA186_GPIO_OUTPUT_CONTROL);
     writel(regs->conf, base + TEGRA186_GPIO_ENABLE_CONFIG);
-    #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
+    #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
     /* this passthrough should work becasue we have 'base_r'*/
-    if(kernel_is_on_guest) {
+    if(kernel_is_on_guest && !is_debug_exception(GPIO_NOPT_TEST5) ) {
       writel_x(regs->val,  base_r + TEGRA186_GPIO_OUTPUT_VALUE);
       writel_x(regs->out,  base_r + TEGRA186_GPIO_OUTPUT_CONTROL);
       writel_x(regs->conf, base_r + TEGRA186_GPIO_ENABLE_CONFIG);

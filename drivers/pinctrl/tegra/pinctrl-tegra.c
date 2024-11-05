@@ -62,7 +62,7 @@ static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
 	deb_debug("\n");
 
   #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
-	return readl_both(pmx->regs[bank] + reg);
+	return readl_x(pmx->regs[bank] + reg);
   #else
 	return readl(pmx->regs[bank] + reg);
   #endif
@@ -73,7 +73,7 @@ static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 	deb_debug("\n");
 
   #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
-	writel_relaxed_both(val, pmx->regs[bank] + reg);
+	writel_relaxed_x(val, pmx->regs[bank] + reg);
   #else
 	writel_relaxed(val, pmx->regs[bank] + reg);
   #endif
