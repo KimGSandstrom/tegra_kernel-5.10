@@ -24,24 +24,24 @@
 #define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
-	/*
-	#define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
-	#define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
-	#define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__ , kbasename(__FILE__), ##__VA_ARGS__)
-	*/
-	#define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
-	#define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
-	#define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' -- " fmt, __func__ , ##__VA_ARGS__)
+  /*
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
+  #define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__ , kbasename(__FILE__), ##__VA_ARGS__)
+  */
+  #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
+  #define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
+  #define deb_error(fmt, ...)    printk(KERN_ERR "GPIO func \'%s\' -- " fmt, __func__ , ##__VA_ARGS__)
 #else
-	#define deb_info(fmt, ...)
-	#define deb_debug(fmt, ...)
-	#define deb_error(fmt, ...)
+  #define deb_info(fmt, ...)
+  #define deb_debug(fmt, ...)
+  #define deb_error(fmt, ...)
 #endif
 
 #ifdef GPIO_DEBUG_VERBOSE
-	#define deb_verbose           deb_debug
+  #define deb_verbose           deb_debug
 #else
-	#define deb_verbose(fmt, ...)
+  #define deb_verbose(fmt, ...)
 #endif
 
 #define GPIO_NOPT_TEST0 0
@@ -52,14 +52,18 @@
 #define GPIO_NOFUNC_TEST 6
 
 #ifdef GPIO_DEBUG_VERBOSE
+// Declare myexceptions as a module parameter
+static uint32_t debug_exceptions = -1;
+module_param(debug_exceptions, uint, S_IRUGO);
+MODULE_PARM_DESC(debug_exceptions, "Debug boot parameter for setting exeptions to handling of GPIO passthrough");
+
 // construct to ease debugging. if bit is set -> then debug exception is active
 static int tegra186_gpio_probe(struct platform_device *pdev);
-uint32_t debug_exceptions = 0;
 struct platform_device *pdev_backup;
 inline bool is_debug_exception(int off) { return (debug_exceptions >> off) & 0x00000001;  }
 void set_debug_exceptions(uint32_t exceptions) {
   debug_exceptions = exceptions;
-  tegra186_gpio_probe(pdev_backup);
+  // tegra186_gpio_probe(pdev_backup);
 }
 #else
 static inline bool is_debug_exception(int off) { return false; }
@@ -73,19 +77,19 @@ static inline bool is_debug_exception(int off) { return false; }
 // TODO separate guest and host proxy configuration defines
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 
-	#include "gpiolib.h"
-	#include <linux/delay.h>
+  #include "gpiolib.h"
+  #include <linux/delay.h>
 
   bool kernel_is_on_guest = false;
   EXPORT_SYMBOL_GPL(kernel_is_on_guest);
 
-	int gpio_outloud = 0;
-	EXPORT_SYMBOL_GPL(gpio_outloud);
+  int gpio_outloud = 0;
+  EXPORT_SYMBOL_GPL(gpio_outloud);
 
-	uint64_t gpio_vpa = 0;
+  uint64_t gpio_vpa = 0;
 
-	extern struct gpio_chip *find_chip_by_name(const char *name);
-	extern const char **tegra_chiplabel;
+  extern struct gpio_chip *find_chip_by_name(const char *name);
+  extern const char **tegra_chiplabel;
 
 #endif
 #include "gpio-proxy.h"  // low level inline hooks for readl and writel
@@ -107,11 +111,11 @@ static inline bool is_debug_exception(int off) { return false; }
 #define GPIO_SCR_SEC_G1W      BIT(9)
 #define GPIO_SCR_SEC_G1R      BIT(1)
 #define GPIO_FULL_ACCESS      (GPIO_SCR_SEC_WEN | \
-						 GPIO_SCR_SEC_REN | \
-						 GPIO_SCR_SEC_G1R | \
-						 GPIO_SCR_SEC_G1W)
+             GPIO_SCR_SEC_REN | \
+             GPIO_SCR_SEC_G1R | \
+             GPIO_SCR_SEC_G1W)
 #define GPIO_SCR_SEC_ENABLE     (GPIO_SCR_SEC_WEN | \
-						 GPIO_SCR_SEC_REN)
+             GPIO_SCR_SEC_REN)
 
 /* control registers */
 #define TEGRA186_GPIO_ENABLE_CONFIG 0x00
@@ -183,7 +187,7 @@ static inline bool is_debug_exception(int off) { return false; }
 #define BASE_ADDRESS_GTE_GPIO_SLICE2    0x80
 
 #define GTE_GPIO_SLICE_SIZE (BASE_ADDRESS_GTE_GPIO_SLICE1 - \
-					 BASE_ADDRESS_GTE_GPIO_SLICE0)
+           BASE_ADDRESS_GTE_GPIO_SLICE0)
 
 /* AON GPIOS are mapped to only slice 1 and slice 2 */
 /* GTE Interrupt connections. For slice 1 */
@@ -250,261 +254,261 @@ static inline bool is_debug_exception(int off) { return false; }
 /**************************************************************/
 
 struct tegra_gpio_port {
-	const char *name;
-	unsigned int bank;
-	unsigned int port;
-	unsigned int pins;
+  const char *name;
+  unsigned int bank;
+  unsigned int port;
+  unsigned int pins;
 };
 
 struct tegra186_pin_range {
-	unsigned int offset;
-	const char *group;
+  unsigned int offset;
+  const char *group;
 };
 
 struct tegra_gpio_soc {
-			 const struct tegra_gpio_port *ports;
-			 unsigned int num_ports;
-			 const char *name;
-			 unsigned int instance;
-			 unsigned int num_irqs_per_bank;
-			 bool is_hw_ts_sup;
-			 bool do_vm_check;
-			 const struct tegra186_pin_range *pin_ranges;
-			 unsigned int num_pin_ranges;
-			 const char *pinmux;
-			 const struct tegra_gte_info *gte_info;
-			 int gte_npins;
+       const struct tegra_gpio_port *ports;
+       unsigned int num_ports;
+       const char *name;
+       unsigned int instance;
+       unsigned int num_irqs_per_bank;
+       bool is_hw_ts_sup;
+       bool do_vm_check;
+       const struct tegra186_pin_range *pin_ranges;
+       unsigned int num_pin_ranges;
+       const char *pinmux;
+       const struct tegra_gte_info *gte_info;
+       int gte_npins;
 };
 
 struct tegra_gpio_saved_register {
-			 bool restore_needed;
-			 u32 val;
-			 u32 conf;
-			 u32 out;
+       bool restore_needed;
+       u32 val;
+       u32 conf;
+       u32 out;
 };
 
 struct tegra_gpio {
-	struct gpio_chip gpio;
-	struct irq_chip intc;
-	unsigned int num_irq;
-	unsigned int *irq;
+  struct gpio_chip gpio;
+  struct irq_chip intc;
+  unsigned int num_irq;
+  unsigned int *irq;
 
-	const struct tegra_gpio_soc *soc;
-	unsigned int num_irqs_per_bank;
-	unsigned int num_banks;
-	unsigned int gte_enable;
-	bool use_timestamp;
+  const struct tegra_gpio_soc *soc;
+  unsigned int num_irqs_per_bank;
+  unsigned int num_banks;
+  unsigned int gte_enable;
+  bool use_timestamp;
 
-	void __iomem *secure;
-	void __iomem *base;
-	void __iomem *gte_regs;
-	struct tegra_gpio_saved_register *gpio_rval;
+  void __iomem *secure;
+  void __iomem *base;
+  void __iomem *gte_regs;
+  struct tegra_gpio_saved_register *gpio_rval;
 };
 
 /*************************** GTE related code ********************/
 
 struct tegra_gte_info {
-	uint32_t pin_num;
-	uint32_t slice;
-	uint32_t slice_bit;
+  uint32_t pin_num;
+  uint32_t slice;
+  uint32_t slice_bit;
 };
 
 /* Structure to maintain all information about the AON GPIOs
  * that can be supported
  */
 static struct tegra_gte_info tegra194_gte_info[] = {
-	/* pin_num, slice, slice_bit*/
-	[0]  = {11, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_0},
-	[1]  = {10, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_1},
-	[2]  = {9,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_2},
-	[3]  = {8,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_3},
-	[4]  = {7,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_4},
-	[5]  = {6,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_5},
-	[6]  = {5,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_6},
-	[7]  = {4,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_7},
-	[8]  = {3,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_8},
-	[9]  = {2,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_9},
-	[10] = {1,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_10},
-	[11] = {0,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_11},
-	[12] = {26, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_12},
-	[13] = {25, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_13},
-	[14] = {24, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_14},
-	[15] = {23, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_15},
-	[16] = {22, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_16},
-	[17] = {21, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_17},
-	[18] = {20, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_18},
-	[19] = {19, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_19},
-	[20] = {18, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_20},
-	[21] = {17, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_21},
-	[22] = {16, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_22},
-	[23] = {38, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_23},
-	[24] = {37, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_24},
-	[25] = {36, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_25},
-	[26] = {35, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_26},
-	[27] = {34, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_27},
-	[28] = {33, 1, NV_AON_GTE_SLICE1_IRQ_GPIO_28},
-	[29] = {32, 1, NV_AON_GTE_SLICE1_IRQ_GPIO_29},
+  /* pin_num, slice, slice_bit*/
+  [0]  = {11, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_0},
+  [1]  = {10, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_1},
+  [2]  = {9,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_2},
+  [3]  = {8,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_3},
+  [4]  = {7,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_4},
+  [5]  = {6,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_5},
+  [6]  = {5,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_6},
+  [7]  = {4,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_7},
+  [8]  = {3,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_8},
+  [9]  = {2,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_9},
+  [10] = {1,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_10},
+  [11] = {0,  2, NV_AON_GTE_SLICE2_IRQ_GPIO_11},
+  [12] = {26, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_12},
+  [13] = {25, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_13},
+  [14] = {24, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_14},
+  [15] = {23, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_15},
+  [16] = {22, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_16},
+  [17] = {21, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_17},
+  [18] = {20, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_18},
+  [19] = {19, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_19},
+  [20] = {18, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_20},
+  [21] = {17, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_21},
+  [22] = {16, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_22},
+  [23] = {38, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_23},
+  [24] = {37, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_24},
+  [25] = {36, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_25},
+  [26] = {35, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_26},
+  [27] = {34, 2, NV_AON_GTE_SLICE2_IRQ_GPIO_27},
+  [28] = {33, 1, NV_AON_GTE_SLICE1_IRQ_GPIO_28},
+  [29] = {32, 1, NV_AON_GTE_SLICE1_IRQ_GPIO_29},
 };
 
 static inline u32 tegra_gte_readl(struct tegra_gpio *tgi, u32 reg)
 {
   #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
   if (!is_debug_exception(GPIO_NOPT_TEST0))
-	  return __raw_readl_x(tgi->gte_regs + reg);
+    return __raw_readl_x(tgi->gte_regs + reg);
   else {
     deb_verbose("Debug exception %d R", GPIO_NOPT_TEST0);
-	  return __raw_readl(tgi->gte_regs + reg);
+    return __raw_readl(tgi->gte_regs + reg);
   }
   #else
-	return __raw_readl(tgi->gte_regs + reg);
+  return __raw_readl(tgi->gte_regs + reg);
   #endif
 }
 
 static inline void tegra_gte_writel(struct tegra_gpio *tgi, u32 reg,
-		u32 val)
+    u32 val)
 {
   #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
   if (!is_debug_exception(GPIO_NOPT_TEST0))
-	  __raw_writel_x(val, tgi->gte_regs + reg);
+    __raw_writel_x(val, tgi->gte_regs + reg);
   else {
     deb_verbose("Debug exception %d W", GPIO_NOPT_TEST0);
-	  __raw_writel(val, tgi->gte_regs + reg);
+    __raw_writel(val, tgi->gte_regs + reg);
   }
   #else
-	__raw_writel(val, tgi->gte_regs + reg);
+  __raw_writel(val, tgi->gte_regs + reg);
   #endif
 }
 
 static void tegra_gte_flush_fifo(struct tegra_gpio *tgi)
 {
-	/* Check if FIFO is empty */
-	while ((tegra_gte_readl(tgi, GTE_GPIO_TESTATUS) >>
-		GTE_GPIO_TESTATUS_OCCUPANCY_SHIFT) &
-		GTE_GPIO_TESTATUS_OCCUPANCY_MASK) {
-		/* Pop this entry, go to next */
-		tegra_gte_writel(tgi, GTE_GPIO_TECMD, GTE_GPIO_TECMD_CMD_POP);
-	}
+  /* Check if FIFO is empty */
+  while ((tegra_gte_readl(tgi, GTE_GPIO_TESTATUS) >>
+    GTE_GPIO_TESTATUS_OCCUPANCY_SHIFT) &
+    GTE_GPIO_TESTATUS_OCCUPANCY_MASK) {
+    /* Pop this entry, go to next */
+    tegra_gte_writel(tgi, GTE_GPIO_TECMD, GTE_GPIO_TECMD_CMD_POP);
+  }
 }
 
 u64 tegra_gte_read_fifo(struct tegra_gpio *tgi, u32 offset)
 {
-	u32 src_slice;
-	u32 tsh, tsl;
-	u64 ts = 0;
-	u32 precv, curcv, xorcv;
-	u32 aon_bits;
-	u32 bit_index = 0;
+  u32 src_slice;
+  u32 tsh, tsl;
+  u64 ts = 0;
+  u32 precv, curcv, xorcv;
+  u32 aon_bits;
+  u32 bit_index = 0;
 
-	// deb_verbose("\n");
+  // deb_verbose("\n");
 
-	/* Check if FIFO is empty */
-	while ((tegra_gte_readl(tgi, GTE_GPIO_TESTATUS) >>
-		GTE_GPIO_TESTATUS_OCCUPANCY_SHIFT) &
-		GTE_GPIO_TESTATUS_OCCUPANCY_MASK) {
-		src_slice = (tegra_gte_readl(tgi, GTE_GPIO_TESRC) >>
-				GTE_GPIO_TESRC_SLICE_SHIFT) &
-			GTE_GPIO_TESRC_SLICE_DEFAULT_MASK;
+  /* Check if FIFO is empty */
+  while ((tegra_gte_readl(tgi, GTE_GPIO_TESTATUS) >>
+    GTE_GPIO_TESTATUS_OCCUPANCY_SHIFT) &
+    GTE_GPIO_TESTATUS_OCCUPANCY_MASK) {
+    src_slice = (tegra_gte_readl(tgi, GTE_GPIO_TESRC) >>
+        GTE_GPIO_TESRC_SLICE_SHIFT) &
+      GTE_GPIO_TESRC_SLICE_DEFAULT_MASK;
 
-		if (src_slice == AON_GPIO_SLICE1_INDEX ||
-				src_slice == AON_GPIO_SLICE2_INDEX) {
-			precv = tegra_gte_readl(tgi, GTE_GPIO_TEPCV);
-			curcv = tegra_gte_readl(tgi, GTE_GPIO_TECCV);
+    if (src_slice == AON_GPIO_SLICE1_INDEX ||
+        src_slice == AON_GPIO_SLICE2_INDEX) {
+      precv = tegra_gte_readl(tgi, GTE_GPIO_TEPCV);
+      curcv = tegra_gte_readl(tgi, GTE_GPIO_TECCV);
 
-			/* Save TSC high and low 32 bits value */
-			tsh = tegra_gte_readl(tgi, GTE_GPIO_TETSCH);
-			tsl = tegra_gte_readl(tgi, GTE_GPIO_TETSCL);
+      /* Save TSC high and low 32 bits value */
+      tsh = tegra_gte_readl(tgi, GTE_GPIO_TETSCH);
+      tsl = tegra_gte_readl(tgi, GTE_GPIO_TETSCL);
 
-			/* TSC countre as 64 bits */
-			ts  = (((uint64_t)tsh << 32) | tsl);
+      /* TSC countre as 64 bits */
+      ts  = (((uint64_t)tsh << 32) | tsl);
 
-			xorcv = precv ^ curcv;
-			if (src_slice == AON_GPIO_SLICE1_INDEX)
-				aon_bits = xorcv & AON_GPIO_SLICE1_MAP;
-			else
-				aon_bits = xorcv & AON_GPIO_SLICE2_MAP;
+      xorcv = precv ^ curcv;
+      if (src_slice == AON_GPIO_SLICE1_INDEX)
+        aon_bits = xorcv & AON_GPIO_SLICE1_MAP;
+      else
+        aon_bits = xorcv & AON_GPIO_SLICE2_MAP;
 
-			bit_index = ffs(aon_bits) - 1;
-		}
-		/* Pop this entry, go to next */
-		tegra_gte_writel(tgi, GTE_GPIO_TECMD, GTE_GPIO_TECMD_CMD_POP);
-		tegra_gte_readl(tgi, GTE_GPIO_TESRC);
-	}
+      bit_index = ffs(aon_bits) - 1;
+    }
+    /* Pop this entry, go to next */
+    tegra_gte_writel(tgi, GTE_GPIO_TECMD, GTE_GPIO_TECMD_CMD_POP);
+    tegra_gte_readl(tgi, GTE_GPIO_TESRC);
+  }
 
-	return (tgi->soc->gte_info[bit_index].pin_num == offset) ? ts : 0;
+  return (tgi->soc->gte_info[bit_index].pin_num == offset) ? ts : 0;
 }
 
 int tegra_gte_enable_ts(struct tegra_gpio *tgi, u32 offset)
 {
-	u32 val, mask, reg;
-	int i = 0;
+  u32 val, mask, reg;
+  int i = 0;
 
-	// deb_verbose("\n");
+  // deb_verbose("\n");
 
-	if (tgi->gte_enable == 1) {
-		dev_err(tgi->gpio.parent, "timestamp is already enabled for gpio\n");
-		return -EINVAL;
-	}
+  if (tgi->gte_enable == 1) {
+    dev_err(tgi->gpio.parent, "timestamp is already enabled for gpio\n");
+    return -EINVAL;
+  }
 
-	/* Configure Timestamping AON GPIO to SLICEx mapping */
-	for (i = 0; i < tgi->soc->gte_npins; i++) {
-		if (tgi->soc->gte_info[i].pin_num == offset) {
-			reg = (tgi->soc->gte_info[i].slice *
-						 GTE_GPIO_SLICE_SIZE) + GTE_GPIO_SLICE0_TETEN;
-			val = (1 << tgi->soc->gte_info[i].slice_bit);
-			tegra_gte_writel(tgi, reg, val);
-			break;
-		}
-	}
+  /* Configure Timestamping AON GPIO to SLICEx mapping */
+  for (i = 0; i < tgi->soc->gte_npins; i++) {
+    if (tgi->soc->gte_info[i].pin_num == offset) {
+      reg = (tgi->soc->gte_info[i].slice *
+             GTE_GPIO_SLICE_SIZE) + GTE_GPIO_SLICE0_TETEN;
+      val = (1 << tgi->soc->gte_info[i].slice_bit);
+      tegra_gte_writel(tgi, reg, val);
+      break;
+    }
+  }
 
-	val = tegra_gte_readl(tgi, GTE_GPIO_TECTRL);
-	mask = (GTE_GPIO_TECTRL_ENABLE_MASK << GTE_GPIO_TECTRL_ENABLE_SHIFT);
-	val &= ~mask;
-	val |= (GTE_GPIO_TECTRL_ENABLE_ENABLE << GTE_GPIO_TECTRL_ENABLE_SHIFT);
-	tegra_gte_writel(tgi, GTE_GPIO_TECTRL, val);
+  val = tegra_gte_readl(tgi, GTE_GPIO_TECTRL);
+  mask = (GTE_GPIO_TECTRL_ENABLE_MASK << GTE_GPIO_TECTRL_ENABLE_SHIFT);
+  val &= ~mask;
+  val |= (GTE_GPIO_TECTRL_ENABLE_ENABLE << GTE_GPIO_TECTRL_ENABLE_SHIFT);
+  tegra_gte_writel(tgi, GTE_GPIO_TECTRL, val);
 
-	tegra_gte_flush_fifo(tgi);
+  tegra_gte_flush_fifo(tgi);
 
-	tgi->gte_enable = 1;
+  tgi->gte_enable = 1;
 
-	return 0;
+  return 0;
 }
 
 int tegra_gte_disable_ts(struct tegra_gpio *tgi, u32 offset)
 {
-	u32 val, mask;
+  u32 val, mask;
 
-	// deb_verbose("\n");
+  // deb_verbose("\n");
 
-	if (tgi->gte_enable == 0) {
-		dev_err(tgi->gpio.parent, "timestamp is already disabled\n");
-		return 0;
-	}
+  if (tgi->gte_enable == 0) {
+    dev_err(tgi->gpio.parent, "timestamp is already disabled\n");
+    return 0;
+  }
 
-	val = tegra_gte_readl(tgi, GTE_GPIO_TECTRL);
-	mask = (GTE_GPIO_TECTRL_ENABLE_MASK << GTE_GPIO_TECTRL_ENABLE_SHIFT);
-	val &= ~mask;
-	val |= (GTE_GPIO_TECTRL_ENABLE_DISABLE << GTE_GPIO_TECTRL_ENABLE_SHIFT);
-	tegra_gte_writel(tgi, GTE_GPIO_TECTRL, val);
+  val = tegra_gte_readl(tgi, GTE_GPIO_TECTRL);
+  mask = (GTE_GPIO_TECTRL_ENABLE_MASK << GTE_GPIO_TECTRL_ENABLE_SHIFT);
+  val &= ~mask;
+  val |= (GTE_GPIO_TECTRL_ENABLE_DISABLE << GTE_GPIO_TECTRL_ENABLE_SHIFT);
+  tegra_gte_writel(tgi, GTE_GPIO_TECTRL, val);
 
-	/* Disable Slice mapping as well */
-	tegra_gte_writel(tgi, (AON_GPIO_SLICE1_INDEX * GTE_GPIO_SLICE_SIZE) +
-			GTE_GPIO_SLICE0_TETEN, 0);
-	tegra_gte_writel(tgi, (AON_GPIO_SLICE2_INDEX * GTE_GPIO_SLICE_SIZE) +
-			GTE_GPIO_SLICE0_TETEN, 0);
+  /* Disable Slice mapping as well */
+  tegra_gte_writel(tgi, (AON_GPIO_SLICE1_INDEX * GTE_GPIO_SLICE_SIZE) +
+      GTE_GPIO_SLICE0_TETEN, 0);
+  tegra_gte_writel(tgi, (AON_GPIO_SLICE2_INDEX * GTE_GPIO_SLICE_SIZE) +
+      GTE_GPIO_SLICE0_TETEN, 0);
 
-	tgi->gte_enable = 0;
+  tgi->gte_enable = 0;
 
-	return 0;
+  return 0;
 }
 
 int tegra_gte_setup(struct tegra_gpio *tgi)
 {
-	// deb_verbose("\n");
+  // deb_verbose("\n");
 
-	tegra_gte_writel(tgi, GTE_GPIO_TECTRL, 0);
-	tgi->gte_enable = 0;
+  tegra_gte_writel(tgi, GTE_GPIO_TECTRL, 0);
+  tgi->gte_enable = 0;
 
-	return 0;
+  return 0;
 }
 
 /*****************************************************************/
@@ -512,39 +516,39 @@ int tegra_gte_setup(struct tegra_gpio *tgi)
 static const struct tegra_gpio_port *
 tegra186_gpio_get_port(struct tegra_gpio *gpio, unsigned int *pin)
 {
-	unsigned int start = 0, i;
+  unsigned int start = 0, i;
 
-	// deb_verbose("GPIO, chip \n", gpio->gpio.label);
+  // deb_verbose("GPIO, chip \n", gpio->gpio.label);
 
-	for (i = 0; i < gpio->soc->num_ports; i++) {
-		const struct tegra_gpio_port *port = &gpio->soc->ports[i];
+  for (i = 0; i < gpio->soc->num_ports; i++) {
+    const struct tegra_gpio_port *port = &gpio->soc->ports[i];
 
-		if (*pin >= start && *pin < start + port->pins) {
-			*pin -= start;
-			return port;
-		}
+    if (*pin >= start && *pin < start + port->pins) {
+      *pin -= start;
+      return port;
+    }
 
-		start += port->pins;
-	}
+    start += port->pins;
+  }
 
-	return NULL;
+  return NULL;
 }
 
 static void __iomem *tegra186_gpio_get_base(struct tegra_gpio *gpio,
-							unsigned int pin)
+              unsigned int pin)
 {
-	const struct tegra_gpio_port *port;
-	unsigned int offset;
+  const struct tegra_gpio_port *port;
+  unsigned int offset;
 
-	// deb_verbose("GPIO, chip \n", gpio->gpio.label);
+  // deb_verbose("GPIO, chip \n", gpio->gpio.label);
 
-	port = tegra186_gpio_get_port(gpio, &pin);
-	if (!port)
-		return NULL;
+  port = tegra186_gpio_get_port(gpio, &pin);
+  if (!port)
+    return NULL;
 
-	offset = port->bank * 0x1000 + port->port * 0x200;
+  offset = port->bank * 0x1000 + port->port * 0x200;
 
-	return gpio->base + offset + pin * 0x20;
+  return gpio->base + offset + pin * 0x20;
 }
 
 inline struct tegra_gpio * find_tegra_chip_by_id(int id);
@@ -552,431 +556,443 @@ inline struct tegra_gpio * find_tegra_chip_by_id(int id);
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 // executes tegra186_gpio_get_base in host as a proxy for guest
 void __iomem *tegra186_gpio_get_base_execute(int id, unsigned int pin)
-	{
-		struct tegra_gpio *gpio = find_tegra_chip_by_id(id);
-		return tegra186_gpio_get_base(gpio, pin);
-	}
+  {
+    struct tegra_gpio *gpio = find_tegra_chip_by_id(id);
+    return tegra186_gpio_get_base(gpio, pin);
+  }
 EXPORT_SYMBOL_GPL(tegra186_gpio_get_base_execute);
 #endif
 
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 // redirect function
 static inline void __iomem *tegra186_gpio_get_base_r(struct tegra_gpio *tgpio, unsigned int pin) {
-		return tegra186_gpio_get_base_redirect(tgpio->gpio.gpiodev->id, pin);
+    return tegra186_gpio_get_base_redirect(tgpio->gpio.gpiodev->id, pin);
 };
 #endif
 
 //checks if we are on host or guest. Guest calls the redirect function
 static inline void __iomem *tegra186_gpio_get_base_x(struct tegra_gpio *tgpio, unsigned int pin) {
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-	if(kernel_is_on_guest && !is_debug_exception(GPIO_NOPT_TEST1) ) {
-		return tegra186_gpio_get_base_r(tgpio, pin);
-	}
-	else {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_NOPT_TEST1) ) {
+    return tegra186_gpio_get_base_r(tgpio, pin);
+  }
+  else {
     deb_verbose("Debug exception %d get base", GPIO_NOPT_TEST1);
-		return tegra186_gpio_get_base(tgpio, pin);
-	}
+    return tegra186_gpio_get_base(tgpio, pin);
+  }
 #else
-		return tegra186_gpio_get_base(tgpio, pin);
+    return tegra186_gpio_get_base(tgpio, pin);
 #endif
 };
 
 static void __iomem *tegra186_gpio_get_secure(struct tegra_gpio *gpio,
-							unsigned int pin)
+              unsigned int pin)
 {
-	const struct tegra_gpio_port *port;
-	unsigned int offset;
+  const struct tegra_gpio_port *port;
+  unsigned int offset;
 
-	// deb_verbose("GPIO, chip \n", gpio->gpio.label);
+  // deb_verbose("GPIO, chip \n", gpio->gpio.label);
 
-	port = tegra186_gpio_get_port(gpio, &pin);
-	if (!port)
-		return NULL;
-	offset = port->bank * 0x1000 + port->port * GPIO_SCR_BASE_DIFF;
+  port = tegra186_gpio_get_port(gpio, &pin);
+  if (!port)
+    return NULL;
+  offset = port->bank * 0x1000 + port->port * GPIO_SCR_BASE_DIFF;
 
-	return gpio->secure + offset + pin * GPIO_SCR_DIFF;
+  return gpio->secure + offset + pin * GPIO_SCR_DIFF;
 }
 
 static inline bool gpio_is_accessible(struct tegra_gpio *gpio, u32 pin)
 {
-	void __iomem *secure;
-	u32 val;
+  void __iomem *secure;
+  u32 val;
 
-	// deb_verbose("\n");
+  // deb_verbose("\n");
   // No passthroughs in this function
   
-	secure = tegra186_gpio_get_secure(gpio, pin);
-	if (gpio->soc->do_vm_check) {
-		val = __raw_readl(secure + GPIO_VM_REG);
-		if ((val & GPIO_VM_RW) != GPIO_VM_RW)
-			return false;
-	}
+  secure = tegra186_gpio_get_secure(gpio, pin);
+  if (gpio->soc->do_vm_check) {
+    val = __raw_readl(secure + GPIO_VM_REG);
+    deb_verbose("Access check reading %p (secure=%p): %d", secure + GPIO_VM_REG, secure, val);
+    if ((val & GPIO_VM_RW) != GPIO_VM_RW)
+      return false;
+  }
 
-	val = __raw_readl(secure + GPIO_SCR_REG);
-	// deb_verbose("val = 0x%X, val&mask = 0x%lX\n", val, (val & (GPIO_SCR_SEC_ENABLE)));
+  val = __raw_readl(secure + GPIO_SCR_REG);
+  // deb_verbose("val = 0x%X, val&mask = 0x%lX\n", val, (val & (GPIO_SCR_SEC_ENABLE)));
 
-	if ((val & (GPIO_SCR_SEC_ENABLE)) == 0)
-		return true;
+  if ((val & (GPIO_SCR_SEC_ENABLE)) == 0)
+    return true;
 
-	if ((val & (GPIO_FULL_ACCESS)) == GPIO_FULL_ACCESS)
-		return true;
+  if ((val & (GPIO_FULL_ACCESS)) == GPIO_FULL_ACCESS)
+    return true;
 
-	return false;
+  return false;
 }
 
 // function has passthrough version
 int tegra186_gpio_get_direction(struct gpio_chip *chip,
-							 unsigned int offset)
+               unsigned int offset)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(chip);
-	void __iomem *base;
-	u32 value;
+  struct tegra_gpio *gpio = gpiochip_get_data(chip);
+  void __iomem *base;
+  u32 value;
 
-	deb_verbose("GPIO, chip %s, offset %u\n", chip->label, offset);
+  deb_verbose("GPIO, chip %s, offset %u\n", chip->label, offset);
 
-	if (!gpio_is_accessible(gpio, offset))
-		return -EPERM;
-
-  deb_verbose("trace:%d", __LINE__);
-	base = tegra186_gpio_get_base(gpio, offset);
-	if (WARN_ON(base == NULL))
-		return -ENODEV;
+  if (!gpio_is_accessible(gpio, offset)) {
+    deb_verbose("GPIO error: gpio is not accessible %d", __LINE__);
+    return -EPERM;
+  }
 
   deb_verbose("trace:%d", __LINE__);
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
-  deb_verbose("trace:%d", __LINE__);
-	if (value & TEGRA186_GPIO_ENABLE_CONFIG_OUT)
-		return GPIO_LINE_DIRECTION_OUT;
+  base = tegra186_gpio_get_base(gpio, offset);
+  if (WARN_ON(base == NULL))
+    return -ENODEV;
 
-	deb_verbose("OK\n");
-	return GPIO_LINE_DIRECTION_IN;
+  deb_verbose("trace:%d", __LINE__);
+  value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+  deb_verbose("trace:%d", __LINE__);
+  if (value & TEGRA186_GPIO_ENABLE_CONFIG_OUT) {
+    deb_verbose("Direction: LINE_OUT\n");
+    return GPIO_LINE_DIRECTION_OUT;
+  }
+
+  deb_verbose("Direction: LINE_IN\n");
+  return GPIO_LINE_DIRECTION_IN;
 }
 
 // function has passthrough version
 int tegra186_gpio_direction_input(struct gpio_chip *chip,
-					 unsigned int offset)
+           unsigned int offset)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(chip);
-	void __iomem *base;
-	u32 value;
-	int ret = 0;
+  struct tegra_gpio *gpio = gpiochip_get_data(chip);
+  void __iomem *base;
+  u32 value;
+  int ret = 0;
 
-	deb_verbose("GPIO, chip %s, offset %u\n", chip->label, offset);
+  deb_verbose("GPIO, chip %s, offset %u\n", chip->label, offset);
 
-	if (!gpio_is_accessible(gpio, offset))
-		return -EPERM;
+  if (!gpio_is_accessible(gpio, offset)) {
+    deb_verbose("GPIO error: gpio is not accessible %d", __LINE__);
+    return -EPERM;
+  }
 
-	base = tegra186_gpio_get_base(gpio, offset);
-	if (WARN_ON(base == NULL))
-		return -ENODEV;
+  base = tegra186_gpio_get_base(gpio, offset);
+  if (WARN_ON(base == NULL))
+    return -ENODEV;
 
-	value = readl(base + TEGRA186_GPIO_OUTPUT_CONTROL);
-	value |= TEGRA186_GPIO_OUTPUT_CONTROL_FLOATED;
-	writel(value, base + TEGRA186_GPIO_OUTPUT_CONTROL);
+  value = readl(base + TEGRA186_GPIO_OUTPUT_CONTROL);
+  value |= TEGRA186_GPIO_OUTPUT_CONTROL_FLOATED;
+  writel(value, base + TEGRA186_GPIO_OUTPUT_CONTROL);
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
-	value |= TEGRA186_GPIO_ENABLE_CONFIG_ENABLE;
-	value &= ~TEGRA186_GPIO_ENABLE_CONFIG_OUT;
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+  value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+  value |= TEGRA186_GPIO_ENABLE_CONFIG_ENABLE;
+  value &= ~TEGRA186_GPIO_ENABLE_CONFIG_OUT;
+  writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 
-	ret = pinctrl_gpio_direction_input(chip->base + offset);
-	if (ret < 0)
-		dev_err(chip->parent,
-			"Failed to set input direction: %d\n", ret);
-	return ret;
+  ret = pinctrl_gpio_direction_input(chip->base + offset);
+  if (ret < 0)
+    dev_err(chip->parent,
+      "Failed to set input direction: %d\n", ret);
+  return ret;
 }
 
 // function has passthrough version
 int tegra186_gpio_direction_output(struct gpio_chip *chip,
-						unsigned int offset, int level)
+            unsigned int offset, int level)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(chip);
-	void __iomem *base;
-	u32 value;
-	int ret = 0;
+  struct tegra_gpio *gpio = gpiochip_get_data(chip);
+  void __iomem *base;
+  u32 value;
+  int ret = 0;
 
-	deb_verbose("GPIO, chip %s, offset %u, level %d\n", chip->label, offset, level);
+  deb_verbose("GPIO, chip %s, offset %u, level %d\n", chip->label, offset, level);
 
-	if (!gpio_is_accessible(gpio, offset))
-		return -EPERM;
+  if (!gpio_is_accessible(gpio, offset)) {
+    deb_verbose("GPIO error: gpio is not accessible %d", __LINE__);
+    return -EPERM;
+  }
 
-	/* configure output level first */
-	chip->set(chip, offset, level);
+  /* configure output level first */
+  chip->set(chip, offset, level);
 
-	base = tegra186_gpio_get_base(gpio, offset);
-	if (WARN_ON(base == NULL))
-		return -EINVAL;
+  base = tegra186_gpio_get_base(gpio, offset);
+  if (WARN_ON(base == NULL))
+    return -EINVAL;
 
-	/* set the direction */
-	value = readl(base + TEGRA186_GPIO_OUTPUT_CONTROL);
-	value &= ~TEGRA186_GPIO_OUTPUT_CONTROL_FLOATED;
-	writel(value, base + TEGRA186_GPIO_OUTPUT_CONTROL);
+  /* set the direction */
+  value = readl(base + TEGRA186_GPIO_OUTPUT_CONTROL);
+  value &= ~TEGRA186_GPIO_OUTPUT_CONTROL_FLOATED;
+  writel(value, base + TEGRA186_GPIO_OUTPUT_CONTROL);
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
-	value |= TEGRA186_GPIO_ENABLE_CONFIG_ENABLE;
-	value |= TEGRA186_GPIO_ENABLE_CONFIG_OUT;
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
-	ret = pinctrl_gpio_direction_output(chip->base + offset);
+  value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+  value |= TEGRA186_GPIO_ENABLE_CONFIG_ENABLE;
+  value |= TEGRA186_GPIO_ENABLE_CONFIG_OUT;
+  writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+  ret = pinctrl_gpio_direction_output(chip->base + offset);
 
-	if (ret < 0)
-		dev_err(chip->parent,
-			"Failed to set output direction: %d\n", ret);
-	return ret;
+  if (ret < 0)
+    dev_err(chip->parent,
+      "Failed to set output direction: %d\n", ret);
+  return ret;
 }
 
 // function has passthrough version
 static int tegra_gpio_suspend_configure(struct gpio_chip *chip, unsigned offset,
-					enum gpiod_flags dflags)
+          enum gpiod_flags dflags)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(chip);
-	struct tegra_gpio_saved_register *regs;
-	void __iomem *base;
+  struct tegra_gpio *gpio = gpiochip_get_data(chip);
+  struct tegra_gpio_saved_register *regs;
+  void __iomem *base;
 
-	deb_verbose("GPIO chip %s, offset %u\n", chip->label, offset);
+  deb_verbose("GPIO chip %s, offset %u\n", chip->label, offset);
 
-	if (!gpio_is_accessible(gpio, offset))
-		return -EPERM;
+  if (!gpio_is_accessible(gpio, offset)) {
+    deb_verbose("GPIO error: gpio is not accessible %d", __LINE__);
+    return -EPERM;
+  }
 
-	base = tegra186_gpio_get_base(gpio, offset);
-	if (WARN_ON(base == NULL))
-		return -EINVAL;
+  base = tegra186_gpio_get_base(gpio, offset);
+  if (WARN_ON(base == NULL))
+    return -EINVAL;
 
-	regs = &gpio->gpio_rval[offset];
-	regs->conf = readl(base + TEGRA186_GPIO_ENABLE_CONFIG),
-	regs->out = readl(base + TEGRA186_GPIO_OUTPUT_CONTROL),
-	regs->val = readl(base + TEGRA186_GPIO_OUTPUT_VALUE),
-	regs->restore_needed = true;
+  regs = &gpio->gpio_rval[offset];
+  regs->conf = readl(base + TEGRA186_GPIO_ENABLE_CONFIG),
+  regs->out = readl(base + TEGRA186_GPIO_OUTPUT_CONTROL),
+  regs->val = readl(base + TEGRA186_GPIO_OUTPUT_VALUE),
+  regs->restore_needed = true;
 
-	if (dflags & GPIOD_FLAGS_BIT_DIR_OUT)
-		return tegra186_gpio_direction_output(chip, offset,
-					dflags & GPIOD_FLAGS_BIT_DIR_VAL);
+  if (dflags & GPIOD_FLAGS_BIT_DIR_OUT)
+    return tegra186_gpio_direction_output(chip, offset,
+          dflags & GPIOD_FLAGS_BIT_DIR_VAL);
 
-	return tegra186_gpio_direction_input(chip, offset);
+  return tegra186_gpio_direction_input(chip, offset);
 }
 
 // function has passthrough version
 static int tegra_gpio_timestamp_control(struct gpio_chip *chip, unsigned offset,
-					int enable)
+          int enable)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(chip);
-	void __iomem *base;
-	int value;
-	int ret;
+  struct tegra_gpio *gpio = gpiochip_get_data(chip);
+  void __iomem *base;
+  int value;
+  int ret;
 
-	deb_verbose("GPIO, chip %s, offset %u\n", chip->label, offset);
+  deb_verbose("GPIO, chip %s, offset %u\n", chip->label, offset);
 
-	base = tegra186_gpio_get_base(gpio, offset);
-	if (WARN_ON(base == NULL))
-		return -EINVAL;
+  base = tegra186_gpio_get_base(gpio, offset);
+  if (WARN_ON(base == NULL))
+    return -EINVAL;
 
-	if (gpio->use_timestamp) {
-		value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
-		value |= TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC;
-		writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
-		if (enable)
-			ret = tegra_gte_enable_ts(gpio, offset);
-		else
-			ret = tegra_gte_disable_ts(gpio, offset);
-	} else
-		ret = -EOPNOTSUPP;
+  if (gpio->use_timestamp) {
+    value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+    value |= TEGRA186_GPIO_ENABLE_CONFIG_TIMESTAMP_FUNC;
+    writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+    if (enable)
+      ret = tegra_gte_enable_ts(gpio, offset);
+    else
+      ret = tegra_gte_disable_ts(gpio, offset);
+  } else
+    ret = -EOPNOTSUPP;
 
-	return ret;
+  return ret;
 }
 
 static int tegra_gpio_timestamp_read(struct gpio_chip *chip, unsigned offset,
-						 u64 *ts)
+             u64 *ts)
 {
-	struct tegra_gpio *tgi = gpiochip_get_data(chip);
-	int ret;
+  struct tegra_gpio *tgi = gpiochip_get_data(chip);
+  int ret;
 
-	deb_verbose("GPIO chip %s, offset %u\n", chip->label, offset);
+  deb_verbose("GPIO chip %s, offset %u\n", chip->label, offset);
 
-	if (tgi->use_timestamp) {
-		*ts = tegra_gte_read_fifo(tgi, offset);
-		ret = 0;
-	} else
-		ret = -EOPNOTSUPP;
+  if (tgi->use_timestamp) {
+    *ts = tegra_gte_read_fifo(tgi, offset);
+    ret = 0;
+  } else
+    ret = -EOPNOTSUPP;
 
-	return ret;
+  return ret;
 }
 
 // function has passthrough version
 static int tegra186_gpio_get(struct gpio_chip *chip, unsigned int offset)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(chip);
-	void __iomem *base;
-	u32 value;
+  struct tegra_gpio *gpio = gpiochip_get_data(chip);
+  void __iomem *base;
+  u32 value;
 
-	deb_verbose("GPIO chip %s, offset %u\n", chip->label, offset);
+  deb_verbose("GPIO chip %s, offset %u\n", chip->label, offset);
 
-	base = tegra186_gpio_get_base(gpio, offset);
-	if (WARN_ON(base == NULL))
-		return -ENODEV;
+  base = tegra186_gpio_get_base(gpio, offset);
+  if (WARN_ON(base == NULL))
+    return -ENODEV;
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
-	if (value & TEGRA186_GPIO_ENABLE_CONFIG_OUT)
-		value = readl(base + TEGRA186_GPIO_OUTPUT_VALUE);
-	else
-		value = readl(base + TEGRA186_GPIO_INPUT);
+  value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+  if (value & TEGRA186_GPIO_ENABLE_CONFIG_OUT)
+    value = readl(base + TEGRA186_GPIO_OUTPUT_VALUE);
+  else
+    value = readl(base + TEGRA186_GPIO_INPUT);
 
-	return value & BIT(0);
+  return value & BIT(0);
 }
 
 // function has passthrough version
 void tegra186_gpio_set(struct gpio_chip *chip, unsigned int offset,
-						int level)
+            int level)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(chip);
-	void __iomem *base;
-	u32 value;
+  struct tegra_gpio *gpio = gpiochip_get_data(chip);
+  void __iomem *base;
+  u32 value;
 
-	if (!gpio_is_accessible(gpio, offset)) {
-		pr_err("GPIO error: gpio is not accessible, Chip %s, Offset %d", gpio->gpio.label, offset);
-		return;
-	}
-	base = tegra186_gpio_get_base(gpio, offset);
+  if (!gpio_is_accessible(gpio, offset)) {
+    deb_verbose("GPIO error: gpio is not accessible %d", __LINE__);
+    pr_err("GPIO error: gpio is not accessible, Chip %s, Offset %d", gpio->gpio.label, offset);
+    return;
+  }
+  base = tegra186_gpio_get_base(gpio, offset);
 
-	if (WARN_ON(base == NULL))
-		return;
+  if (WARN_ON(base == NULL))
+    return;
 
-	value = readl(base + TEGRA186_GPIO_OUTPUT_VALUE);
-	if (level == 0)
-		value &= ~TEGRA186_GPIO_OUTPUT_VALUE_HIGH;
-	else
-		value |= TEGRA186_GPIO_OUTPUT_VALUE_HIGH;
+  value = readl(base + TEGRA186_GPIO_OUTPUT_VALUE);
+  if (level == 0)
+    value &= ~TEGRA186_GPIO_OUTPUT_VALUE_HIGH;
+  else
+    value |= TEGRA186_GPIO_OUTPUT_VALUE_HIGH;
 
-	writel(value, base + TEGRA186_GPIO_OUTPUT_VALUE);
+  writel(value, base + TEGRA186_GPIO_OUTPUT_VALUE);
 }
 
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 void tegra186_gpio_set_by_name(const char *name, unsigned int offset,
-						int level)
+            int level)
 {
-	struct gpio_chip *chip = find_chip_by_name(name);
-	if (chip) { tegra186_gpio_set(chip, offset, level); }
-	else {
-		pr_err("GPIO cannot find chip by name, %s\n", name);
-	}
+  struct gpio_chip *chip = find_chip_by_name(name);
+  if (chip) { tegra186_gpio_set(chip, offset, level); }
+  else {
+    pr_err("GPIO cannot find chip by name, %s\n", name);
+  }
 }
 #endif
 
 // function has passthrough version
 static int tegra186_gpio_set_config(struct gpio_chip *chip,
-						unsigned int offset,
-						unsigned long config)
+            unsigned int offset,
+            unsigned long config)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(chip);
-	u32 debounce, value;
-	void __iomem *base;
+  struct tegra_gpio *gpio = gpiochip_get_data(chip);
+  u32 debounce, value;
+  void __iomem *base;
 
-	deb_verbose("GPIO, chip %s, offset %u\n", chip->label, offset);
+  deb_verbose("GPIO, chip %s, offset %u\n", chip->label, offset);
 
-	base = tegra186_gpio_get_base(gpio, offset);
-	if (base == NULL)
-		return -ENXIO;
+  base = tegra186_gpio_get_base(gpio, offset);
+  if (base == NULL)
+    return -ENXIO;
 
-	if (pinconf_to_config_param(config) != PIN_CONFIG_INPUT_DEBOUNCE)
-		return -ENOTSUPP;
+  if (pinconf_to_config_param(config) != PIN_CONFIG_INPUT_DEBOUNCE)
+    return -ENOTSUPP;
 
-	debounce = pinconf_to_config_argument(config);
+  debounce = pinconf_to_config_argument(config);
 
-	/*
-	 * The Tegra186 GPIO controller supports a maximum of 255 ms debounce
-	 * time.
-	 */
-	if (debounce > 255000)
-		return -EINVAL;
+  /*
+   * The Tegra186 GPIO controller supports a maximum of 255 ms debounce
+   * time.
+   */
+  if (debounce > 255000)
+    return -EINVAL;
 
-	debounce = DIV_ROUND_UP(debounce, USEC_PER_MSEC);
+  debounce = DIV_ROUND_UP(debounce, USEC_PER_MSEC);
 
-	value = TEGRA186_GPIO_DEBOUNCE_CONTROL_THRESHOLD(debounce);
-	writel(value, base + TEGRA186_GPIO_DEBOUNCE_CONTROL);
+  value = TEGRA186_GPIO_DEBOUNCE_CONTROL_THRESHOLD(debounce);
+  writel(value, base + TEGRA186_GPIO_DEBOUNCE_CONTROL);
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
-	value |= TEGRA186_GPIO_ENABLE_CONFIG_DEBOUNCE;
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+  value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+  value |= TEGRA186_GPIO_ENABLE_CONFIG_DEBOUNCE;
+  writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 
-	return 0;
+  return 0;
 }
 
 // passthrough but passthrough function is not used
 static int tegra186_gpio_add_pin_ranges(struct gpio_chip *chip)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(chip);
-	struct pinctrl_dev *pctldev;
-	struct device_node *np;
-	unsigned int i, j;
-	int err;
+  struct tegra_gpio *gpio = gpiochip_get_data(chip);
+  struct pinctrl_dev *pctldev;
+  struct device_node *np;
+  unsigned int i, j;
+  int err;
 
-	deb_verbose("GPIO chip %s\n", chip->label);
+  deb_verbose("GPIO chip %s\n", chip->label);
 
-	if (!gpio->soc->pinmux || gpio->soc->num_pin_ranges == 0)
-		return 0;
+  if (!gpio->soc->pinmux || gpio->soc->num_pin_ranges == 0)
+    return 0;
 
-	np = of_find_compatible_node(NULL, NULL, gpio->soc->pinmux);
-	if (!np)
-		return -ENODEV;
+  np = of_find_compatible_node(NULL, NULL, gpio->soc->pinmux);
+  if (!np)
+    return -ENODEV;
 
-	pctldev = of_pinctrl_get(np);
-	of_node_put(np);
-	if (!pctldev)
-		return -EPROBE_DEFER;
+  pctldev = of_pinctrl_get(np);
+  of_node_put(np);
+  if (!pctldev)
+    return -EPROBE_DEFER;
 
-	for (i = 0; i < gpio->soc->num_pin_ranges; i++) {
-		unsigned int pin = gpio->soc->pin_ranges[i].offset, port;
-		const char *group = gpio->soc->pin_ranges[i].group;
+  for (i = 0; i < gpio->soc->num_pin_ranges; i++) {
+    unsigned int pin = gpio->soc->pin_ranges[i].offset, port;
+    const char *group = gpio->soc->pin_ranges[i].group;
 
-		port = pin / 8;
-		pin = pin % 8;
+    port = pin / 8;
+    pin = pin % 8;
 
-		if (port >= gpio->soc->num_ports) {
-			dev_warn(chip->parent, "invalid port %u for %s\n",
-				 port, group);
-			continue;
-		}
+    if (port >= gpio->soc->num_ports) {
+      dev_warn(chip->parent, "invalid port %u for %s\n",
+         port, group);
+      continue;
+    }
 
-		for (j = 0; j < port; j++)
-			pin += gpio->soc->ports[j].pins;
+    for (j = 0; j < port; j++)
+      pin += gpio->soc->ports[j].pins;
 
-		err = gpiochip_add_pingroup_range(chip, pctldev, pin, group);
-		if (err < 0)
-			return err;
-	}
+    err = gpiochip_add_pingroup_range(chip, pctldev, pin, group);
+    if (err < 0)
+      return err;
+  }
 
-	return 0;
+  return 0;
 }
 
 // candidate for passthrough (but we still need irq in Guest)
 static int tegra186_gpio_of_xlate(struct gpio_chip *chip,
-					const struct of_phandle_args *spec,
-					u32 *flags)
+          const struct of_phandle_args *spec,
+          u32 *flags)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(chip);
-	unsigned int port, pin, i, offset = 0;
+  struct tegra_gpio *gpio = gpiochip_get_data(chip);
+  unsigned int port, pin, i, offset = 0;
 
-	deb_verbose("GPIO chip %s\n", chip->label);
+  deb_verbose("GPIO chip %s\n", chip->label);
 
-	if (WARN_ON(chip->of_gpio_n_cells < 2))
-		return -EINVAL;
+  if (WARN_ON(chip->of_gpio_n_cells < 2))
+    return -EINVAL;
 
-	if (WARN_ON(spec->args_count < chip->of_gpio_n_cells))
-		return -EINVAL;
+  if (WARN_ON(spec->args_count < chip->of_gpio_n_cells))
+    return -EINVAL;
 
-	port = spec->args[0] / 8;
-	pin = spec->args[0] % 8;
+  port = spec->args[0] / 8;
+  pin = spec->args[0] % 8;
 
-	if (port >= gpio->soc->num_ports) {
-		dev_err(chip->parent, "invalid port number: %u\n", port);
-		return -EINVAL;
-	}
+  if (port >= gpio->soc->num_ports) {
+    dev_err(chip->parent, "invalid port number: %u\n", port);
+    return -EINVAL;
+  }
 
-	for (i = 0; i < port; i++)
-		offset += gpio->soc->ports[i].pins;
+  for (i = 0; i < port; i++)
+    offset += gpio->soc->ports[i].pins;
 
-	if (flags)
-		*flags = spec->args[1];
+  if (flags)
+    *flags = spec->args[1];
 
-	return offset + pin;
+  return offset + pin;
 }
 
 #define to_tegra_gpio(x) container_of((x), struct tegra_gpio, gpio)
@@ -984,295 +1000,295 @@ static int tegra186_gpio_of_xlate(struct gpio_chip *chip,
 // candidate for passthrough (but we still need irq in Guest)
 static void tegra186_irq_ack(struct irq_data *data)
 {
-	struct gpio_chip *gc = irq_data_get_irq_chip_data(data);
-	struct tegra_gpio *gpio = to_tegra_gpio(gc);
-	void __iomem *base;
+  struct gpio_chip *gc = irq_data_get_irq_chip_data(data);
+  struct tegra_gpio *gpio = to_tegra_gpio(gc);
+  void __iomem *base;
 
-	base = tegra186_gpio_get_base(gpio, data->hwirq);
-	if (WARN_ON(base == NULL))
-		return;
+  base = tegra186_gpio_get_base(gpio, data->hwirq);
+  if (WARN_ON(base == NULL))
+    return;
 
-	writel(1, base + TEGRA186_GPIO_INTERRUPT_CLEAR);
+  writel(1, base + TEGRA186_GPIO_INTERRUPT_CLEAR);
 }
 
 // candidate for passthrough (but we still need irq in Guest)
 static void tegra186_irq_mask(struct irq_data *data)
 {
-	struct gpio_chip *gc = irq_data_get_irq_chip_data(data);
-	struct tegra_gpio *gpio = to_tegra_gpio(gc);
-	void __iomem *base;
-	u32 value;
+  struct gpio_chip *gc = irq_data_get_irq_chip_data(data);
+  struct tegra_gpio *gpio = to_tegra_gpio(gc);
+  void __iomem *base;
+  u32 value;
 
-	base = tegra186_gpio_get_base(gpio, data->hwirq);
-	if (WARN_ON(base == NULL))
-		return;
+  base = tegra186_gpio_get_base(gpio, data->hwirq);
+  if (WARN_ON(base == NULL))
+    return;
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
-	value &= ~TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT;
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+  value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+  value &= ~TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT;
+  writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 }
 
 // candidate for passthrough (but we still need irq in Guest)
 static void tegra186_irq_unmask(struct irq_data *data)
 {
-	struct gpio_chip *gc = irq_data_get_irq_chip_data(data);
-	struct tegra_gpio *gpio = to_tegra_gpio(gc);
-	void __iomem *base;
-	u32 value;
+  struct gpio_chip *gc = irq_data_get_irq_chip_data(data);
+  struct tegra_gpio *gpio = to_tegra_gpio(gc);
+  void __iomem *base;
+  u32 value;
 
-	base = tegra186_gpio_get_base(gpio, data->hwirq);
-	if (WARN_ON(base == NULL))
-		return;
+  base = tegra186_gpio_get_base(gpio, data->hwirq);
+  if (WARN_ON(base == NULL))
+    return;
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
-	value |= TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT;
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+  value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+  value |= TEGRA186_GPIO_ENABLE_CONFIG_INTERRUPT;
+  writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 }
 
 // candidate for passthrough (but we still need irq in Guest)
 static int tegra186_irq_set_type(struct irq_data *data, unsigned int type)
 {
-	struct gpio_chip *gc = irq_data_get_irq_chip_data(data);
-	struct tegra_gpio *gpio = to_tegra_gpio(gc);
-	void __iomem *base;
-	u32 value;
+  struct gpio_chip *gc = irq_data_get_irq_chip_data(data);
+  struct tegra_gpio *gpio = to_tegra_gpio(gc);
+  void __iomem *base;
+  u32 value;
 
-	base = tegra186_gpio_get_base(gpio, data->hwirq);
-	if (WARN_ON(base == NULL))
-		return -ENODEV;
+  base = tegra186_gpio_get_base(gpio, data->hwirq);
+  if (WARN_ON(base == NULL))
+    return -ENODEV;
 
-	value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
-	value &= ~TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_MASK;
-	value &= ~TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_LEVEL;
+  value = readl(base + TEGRA186_GPIO_ENABLE_CONFIG);
+  value &= ~TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_MASK;
+  value &= ~TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_LEVEL;
 
-	switch (type & IRQ_TYPE_SENSE_MASK) {
-	case IRQ_TYPE_NONE:
-		break;
+  switch (type & IRQ_TYPE_SENSE_MASK) {
+  case IRQ_TYPE_NONE:
+    break;
 
-	case IRQ_TYPE_EDGE_RISING:
-		value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_SINGLE_EDGE;
-		value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_LEVEL;
-		break;
+  case IRQ_TYPE_EDGE_RISING:
+    value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_SINGLE_EDGE;
+    value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_LEVEL;
+    break;
 
-	case IRQ_TYPE_EDGE_FALLING:
-		value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_SINGLE_EDGE;
-		break;
+  case IRQ_TYPE_EDGE_FALLING:
+    value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_SINGLE_EDGE;
+    break;
 
-	case IRQ_TYPE_EDGE_BOTH:
-		value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_DOUBLE_EDGE;
-		break;
+  case IRQ_TYPE_EDGE_BOTH:
+    value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_DOUBLE_EDGE;
+    break;
 
-	case IRQ_TYPE_LEVEL_HIGH:
-		value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_LEVEL;
-		value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_LEVEL;
-		break;
+  case IRQ_TYPE_LEVEL_HIGH:
+    value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_LEVEL;
+    value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_LEVEL;
+    break;
 
-	case IRQ_TYPE_LEVEL_LOW:
-		value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_LEVEL;
-		break;
+  case IRQ_TYPE_LEVEL_LOW:
+    value |= TEGRA186_GPIO_ENABLE_CONFIG_TRIGGER_TYPE_LEVEL;
+    break;
 
-	default:
-		return -EINVAL;
-	}
+  default:
+    return -EINVAL;
+  }
 
-	writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
+  writel(value, base + TEGRA186_GPIO_ENABLE_CONFIG);
 
-	if ((type & IRQ_TYPE_EDGE_BOTH) == 0)
-		irq_set_handler_locked(data, handle_level_irq);
-	else
-		irq_set_handler_locked(data, handle_edge_irq);
+  if ((type & IRQ_TYPE_EDGE_BOTH) == 0)
+    irq_set_handler_locked(data, handle_level_irq);
+  else
+    irq_set_handler_locked(data, handle_edge_irq);
 
-	if (data->parent_data)
-		return irq_chip_set_type_parent(data, type);
+  if (data->parent_data)
+    return irq_chip_set_type_parent(data, type);
 
-	return 0;
+  return 0;
 }
 
 static int tegra186_irq_set_wake(struct irq_data *data, unsigned int on)
 {
-	if (data->parent_data)
-		return irq_chip_set_wake_parent(data, on);
+  if (data->parent_data)
+    return irq_chip_set_wake_parent(data, on);
 
-	return 0;
+  return 0;
 }
 
 // candidate for passthrough (but we still need irq in Guest)
 static void tegra186_gpio_irq(struct irq_desc *desc)
 {
-	struct tegra_gpio *gpio = irq_desc_get_handler_data(desc);
-	struct irq_domain *domain = gpio->gpio.irq.domain;
-	struct irq_chip *chip = irq_desc_get_chip(desc);
-	unsigned int parent = irq_desc_get_irq(desc);
-	unsigned int i, j, offset = 0;
+  struct tegra_gpio *gpio = irq_desc_get_handler_data(desc);
+  struct irq_domain *domain = gpio->gpio.irq.domain;
+  struct irq_chip *chip = irq_desc_get_chip(desc);
+  unsigned int parent = irq_desc_get_irq(desc);
+  unsigned int i, j, offset = 0;
 
-	deb_debug("irq_domain=%p\n", domain);
-	chained_irq_enter(chip, desc);
+  deb_debug("irq_domain=%p\n", domain);
+  chained_irq_enter(chip, desc);
 
-	for (i = 0; i < gpio->soc->num_ports; i++) {
-		const struct tegra_gpio_port *port = &gpio->soc->ports[i];
-		unsigned int pin, irq;
-		unsigned long value;
-		void __iomem *base;
+  for (i = 0; i < gpio->soc->num_ports; i++) {
+    const struct tegra_gpio_port *port = &gpio->soc->ports[i];
+    unsigned int pin, irq;
+    unsigned long value;
+    void __iomem *base;
 
-		base = gpio->base + port->bank * 0x1000 + port->port * 0x200;
+    base = gpio->base + port->bank * 0x1000 + port->port * 0x200;
 
-		for (j = 0; j < gpio->num_irqs_per_bank; j++) {
-			if (parent == gpio->irq[port->bank * gpio->num_irqs_per_bank + j])
-				break;
-		}
+    for (j = 0; j < gpio->num_irqs_per_bank; j++) {
+      if (parent == gpio->irq[port->bank * gpio->num_irqs_per_bank + j])
+        break;
+    }
 
-		if (j == gpio->num_irqs_per_bank)
-			goto skip;
+    if (j == gpio->num_irqs_per_bank)
+      goto skip;
 
-		value = readl(base + TEGRA186_GPIO_INTERRUPT_STATUS(1));
+    value = readl(base + TEGRA186_GPIO_INTERRUPT_STATUS(1));
 
-		for_each_set_bit(pin, &value, port->pins) {
-			irq = irq_find_mapping(domain, offset + pin);
-			if (WARN_ON(irq == 0))
-				continue;
+    for_each_set_bit(pin, &value, port->pins) {
+      irq = irq_find_mapping(domain, offset + pin);
+      if (WARN_ON(irq == 0))
+        continue;
 
-			generic_handle_irq(irq);
-		}
+      generic_handle_irq(irq);
+    }
 
 skip:
-		offset += port->pins;
-	}
+    offset += port->pins;
+  }
 
-	chained_irq_exit(chip, desc);
+  chained_irq_exit(chip, desc);
 }
 
 static int tegra186_gpio_irq_domain_translate(struct irq_domain *domain,
-								struct irq_fwspec *fwspec,
-								unsigned long *hwirq,
-								unsigned int *type)
+                struct irq_fwspec *fwspec,
+                unsigned long *hwirq,
+                unsigned int *type)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(domain->host_data);
-	unsigned int port, pin, i, offset = 0;
+  struct tegra_gpio *gpio = gpiochip_get_data(domain->host_data);
+  unsigned int port, pin, i, offset = 0;
 
-	if (WARN_ON(gpio->gpio.of_gpio_n_cells < 2))
-		return -EINVAL;
+  if (WARN_ON(gpio->gpio.of_gpio_n_cells < 2))
+    return -EINVAL;
 
-	if (WARN_ON(fwspec->param_count < gpio->gpio.of_gpio_n_cells))
-		return -EINVAL;
+  if (WARN_ON(fwspec->param_count < gpio->gpio.of_gpio_n_cells))
+    return -EINVAL;
 
-	port = fwspec->param[0] / 8;
-	pin = fwspec->param[0] % 8;
+  port = fwspec->param[0] / 8;
+  pin = fwspec->param[0] % 8;
 
-	if (port >= gpio->soc->num_ports)
-		return -EINVAL;
+  if (port >= gpio->soc->num_ports)
+    return -EINVAL;
 
-	for (i = 0; i < port; i++)
-		offset += gpio->soc->ports[i].pins;
+  for (i = 0; i < port; i++)
+    offset += gpio->soc->ports[i].pins;
 
-	*type = fwspec->param[1] & IRQ_TYPE_SENSE_MASK;
-	*hwirq = offset + pin;
+  *type = fwspec->param[1] & IRQ_TYPE_SENSE_MASK;
+  *hwirq = offset + pin;
 
-	return 0;
+  return 0;
 }
 
 static void *tegra186_gpio_populate_parent_fwspec(struct gpio_chip *chip,
-						 unsigned int parent_hwirq,
-						 unsigned int parent_type)
+             unsigned int parent_hwirq,
+             unsigned int parent_type)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(chip);
-	struct irq_fwspec *fwspec;
+  struct tegra_gpio *gpio = gpiochip_get_data(chip);
+  struct irq_fwspec *fwspec;
 
-	fwspec = kmalloc(sizeof(*fwspec), GFP_KERNEL);
-	if (!fwspec)
-		return NULL;
+  fwspec = kmalloc(sizeof(*fwspec), GFP_KERNEL);
+  if (!fwspec)
+    return NULL;
 
-	fwspec->fwnode = chip->irq.parent_domain->fwnode;
-	fwspec->param_count = 3;
-	fwspec->param[0] = gpio->soc->instance;
-	fwspec->param[1] = parent_hwirq;
-	fwspec->param[2] = parent_type;
+  fwspec->fwnode = chip->irq.parent_domain->fwnode;
+  fwspec->param_count = 3;
+  fwspec->param[0] = gpio->soc->instance;
+  fwspec->param[1] = parent_hwirq;
+  fwspec->param[2] = parent_type;
 
-	return fwspec;
+  return fwspec;
 }
 
 static int tegra186_gpio_child_to_parent_hwirq(struct gpio_chip *chip,
-								 unsigned int hwirq,
-								 unsigned int type,
-								 unsigned int *parent_hwirq,
-								 unsigned int *parent_type)
+                 unsigned int hwirq,
+                 unsigned int type,
+                 unsigned int *parent_hwirq,
+                 unsigned int *parent_type)
 {
-	*parent_hwirq = chip->irq.child_offset_to_irq(chip, hwirq);
-	*parent_type = type;
+  *parent_hwirq = chip->irq.child_offset_to_irq(chip, hwirq);
+  *parent_type = type;
 
-	return 0;
+  return 0;
 }
 
 static unsigned int tegra186_gpio_child_offset_to_irq(struct gpio_chip *chip,
-									unsigned int offset)
+                  unsigned int offset)
 {
-	struct tegra_gpio *gpio = gpiochip_get_data(chip);
-	unsigned int i;
+  struct tegra_gpio *gpio = gpiochip_get_data(chip);
+  unsigned int i;
 
-	for (i = 0; i < gpio->soc->num_ports; i++) {
-		if (offset < gpio->soc->ports[i].pins)
-			break;
+  for (i = 0; i < gpio->soc->num_ports; i++) {
+    if (offset < gpio->soc->ports[i].pins)
+      break;
 
-		offset -= gpio->soc->ports[i].pins;
-	}
+    offset -= gpio->soc->ports[i].pins;
+  }
 
-	return offset + i * 8;
+  return offset + i * 8;
 }
 
 static const struct of_device_id tegra186_pmc_of_match[] = {
-	{ .compatible = "nvidia,tegra186-pmc" },
-	{ .compatible = "nvidia,tegra194-pmc" },
-	{ .compatible = "nvidia,tegra234-pmc" },
-	{ /* sentinel */ }
+  { .compatible = "nvidia,tegra186-pmc" },
+  { .compatible = "nvidia,tegra194-pmc" },
+  { .compatible = "nvidia,tegra234-pmc" },
+  { /* sentinel */ }
 };
 
 // readl and writel are called
 static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
 {
-	struct device *dev = gpio->gpio.parent;
-	unsigned int i, j;
-	u32 value;
+  struct device *dev = gpio->gpio.parent;
+  unsigned int i, j;
+  u32 value;
 
-	// deb_verbose("GPIO, chip \n", gpio->gpio.label);
+  // deb_verbose("GPIO, chip \n", gpio->gpio.label);
 
-	for (i = 0; i < gpio->soc->num_ports; i++) {
-		const struct tegra_gpio_port *port = &gpio->soc->ports[i];
-		unsigned int offset, p = port->port;
-		void __iomem *base;
+  for (i = 0; i < gpio->soc->num_ports; i++) {
+    const struct tegra_gpio_port *port = &gpio->soc->ports[i];
+    unsigned int offset, p = port->port;
+    void __iomem *base;
 
-		base = gpio->secure + port->bank * 0x1000 + 0x800;
+    base = gpio->secure + port->bank * 0x1000 + 0x800;
 
-		/* this cannot work as passthroug because 'base' and 'gpio->secure' has local value based on guest
+    /* this cannot work as passthroug because 'base' and 'gpio->secure' has local value based on guest
      * we should pass this from host: gpio->secure = devm_platform_ioremap_resource_byname(pdev, "security");
     value = readl_x(base + TEGRA186_GPIO_CTL_SCR);
     * and yet: routing should be done locally?
     */
     value = readl(base + TEGRA186_GPIO_CTL_SCR);
 
-		/*
-		 * For controllers that haven't been locked down yet, make
-		 * sure to program the default interrupt route mapping.
-		 */
-		if ((value & TEGRA186_GPIO_CTL_SCR_SEC_REN) == 0 &&
-				(value & TEGRA186_GPIO_CTL_SCR_SEC_WEN) == 0) {
-			/*
-			 * On Tegra194 and later, each pin can be routed to one or more
-			 * interrupts.
-			 */
-			for (j = 0; j < gpio->num_irqs_per_bank; j++) {
-				dev_dbg(dev, "programming default interrupt routing for port %s\n",
-					port->name);
+    /*
+     * For controllers that haven't been locked down yet, make
+     * sure to program the default interrupt route mapping.
+     */
+    if ((value & TEGRA186_GPIO_CTL_SCR_SEC_REN) == 0 &&
+        (value & TEGRA186_GPIO_CTL_SCR_SEC_WEN) == 0) {
+      /*
+       * On Tegra194 and later, each pin can be routed to one or more
+       * interrupts.
+       */
+      for (j = 0; j < gpio->num_irqs_per_bank; j++) {
+        dev_dbg(dev, "programming default interrupt routing for port %s\n",
+          port->name);
 
-				offset = TEGRA186_GPIO_INT_ROUTE_MAPPING(p, j);
+        offset = TEGRA186_GPIO_INT_ROUTE_MAPPING(p, j);
 
-				/*
-				 * By default we only want to route GPIO pins to IRQ 0. This works
-				 * only under the assumption that we're running as the host kernel
-				 * and hence all GPIO pins are owned by Linux.
-				 *
-				 * For cases where Linux is the guest OS, the hypervisor will have
-				 * to configure the interrupt routing and pass only the valid
-				 * interrupts via device tree.
-				 */
+        /*
+         * By default we only want to route GPIO pins to IRQ 0. This works
+         * only under the assumption that we're running as the host kernel
+         * and hence all GPIO pins are owned by Linux.
+         *
+         * For cases where Linux is the guest OS, the hypervisor will have
+         * to configure the interrupt routing and pass only the valid
+         * interrupts via device tree.
+         */
 
         #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
         if( !is_debug_exception(GPIO_NOPT_TEST2)) {
@@ -1291,198 +1307,198 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
           }
         }
         #else
-				if (j == 0) {
-					value = readl(base + offset);
-					value = BIT(port->pins) - 1;
-					writel(value, base + offset);
-				}
+        if (j == 0) {
+          value = readl(base + offset);
+          value = BIT(port->pins) - 1;
+          writel(value, base + offset);
+        }
         #endif
-			}
-		}
-	}
+      }
+    }
+  }
 }
 
 static unsigned int tegra186_gpio_irqs_per_bank(struct tegra_gpio *gpio)
 {
-	struct device *dev = gpio->gpio.parent;
+  struct device *dev = gpio->gpio.parent;
 
-	if (gpio->num_irq > gpio->num_banks) {
-		if (gpio->num_irq % gpio->num_banks != 0)
-			goto error;
-	}
+  if (gpio->num_irq > gpio->num_banks) {
+    if (gpio->num_irq % gpio->num_banks != 0)
+      goto error;
+  }
 
-	if (gpio->num_irq < gpio->num_banks)
-		goto error;
+  if (gpio->num_irq < gpio->num_banks)
+    goto error;
 
-	gpio->num_irqs_per_bank = gpio->num_irq / gpio->num_banks;
+  gpio->num_irqs_per_bank = gpio->num_irq / gpio->num_banks;
 
-	if (gpio->num_irqs_per_bank > gpio->soc->num_irqs_per_bank)
-		goto error;
+  if (gpio->num_irqs_per_bank > gpio->soc->num_irqs_per_bank)
+    goto error;
 
-	return 0;
+  return 0;
 
 error:
-	dev_err(dev, "invalid number of interrupts (%u) for %u banks\n",
-		gpio->num_irq, gpio->num_banks);
-	return -EINVAL;
+  dev_err(dev, "invalid number of interrupts (%u) for %u banks\n",
+    gpio->num_irq, gpio->num_banks);
+  return -EINVAL;
 }
 
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 
-	// functions that are passed through. Function body is in gpio-guest-proxy.c
-	extern int gpiochip_generic_request_redirect(struct gpio_chip *gc, unsigned offset);
+  // functions that are passed through. Function body is in gpio-guest-proxy.c
+  extern int gpiochip_generic_request_redirect(struct gpio_chip *gc, unsigned offset);
 
-	extern void gpiochip_generic_free_redirect(struct gpio_chip *gc, unsigned offset);
+  extern void gpiochip_generic_free_redirect(struct gpio_chip *gc, unsigned offset);
 
-	extern int tegra186_gpio_get_direction_redirect(struct gpio_chip *chip,
-								unsigned int offset);
+  extern int tegra186_gpio_get_direction_redirect(struct gpio_chip *chip,
+                unsigned int offset);
 
-	extern int tegra186_gpio_direction_input_redirect(struct gpio_chip *chip,
-						unsigned int offset);
+  extern int tegra186_gpio_direction_input_redirect(struct gpio_chip *chip,
+            unsigned int offset);
 
-	extern int tegra186_gpio_direction_output_redirect(struct gpio_chip *chip,
-							unsigned int offset, int level);
+  extern int tegra186_gpio_direction_output_redirect(struct gpio_chip *chip,
+              unsigned int offset, int level);
 
-	extern int tegra186_gpio_get_redirect(struct gpio_chip *chip, unsigned int offset);
+  extern int tegra186_gpio_get_redirect(struct gpio_chip *chip, unsigned int offset);
 
-	extern void tegra186_gpio_set_redirect(struct gpio_chip *chip, unsigned int offset,
-							int level);
+  extern void tegra186_gpio_set_redirect(struct gpio_chip *chip, unsigned int offset,
+              int level);
 
-	extern void tegra186_gpio_set_by_name_redirect(const char *name, unsigned int offset,   // TODO, seems to work without
-							int level);
+  extern void tegra186_gpio_set_by_name_redirect(const char *name, unsigned int offset,   // TODO, seems to work without
+              int level);
 
-	extern int tegra186_gpio_set_config_redirect(struct gpio_chip *chip,
-							unsigned int offset,
-							unsigned long config);
-
-	/*
-	extern const struct tegra_gpio_port *
-	tegra186_gpio_get_port_redirect(struct tegra_gpio *gpio, unsigned int *pin);
-
-	extern void __iomem *tegra186_gpio_get_base_redirect(unsigned char id,
-
-							unsigned int pin);
-
-	extern void __iomem *tegra186_gpio_get_secure_redirect(struct tegra_gpio *gpio,
-							unsigned int pin);
-	*/
-
-	extern int tegra_gpio_timestamp_control_redirect(struct gpio_chip *chip, unsigned offset,
-						int enable);
-
-	extern int tegra_gpio_timestamp_read_redirect(struct gpio_chip *chip, unsigned offset,
-							u64 *ts);
-
-	extern int tegra_gpio_suspend_configure_redirect(struct gpio_chip *chip, unsigned offset,
-						enum gpiod_flags dflags);
-
-	extern int tegra186_gpio_add_pin_ranges_redirect(struct gpio_chip *chip);
-
-
-	/* functions that are called both locally and passed through
-	 * This addition is not necessary for output pins
-	 */
+  extern int tegra186_gpio_set_config_redirect(struct gpio_chip *chip,
+              unsigned int offset,
+              unsigned long config);
 
   /*
-	static inline int gpiochip_generic_request_both(struct gpio_chip *chip, unsigned offset) {
-		int r1=0, r2=0;
-    deb_verbose("chip=%s, offset=%d\n", chip->label, offset);
-		r1 = gpiochip_generic_request(chip, offset);
-		r2 = gpiochip_generic_request_redirect(chip, offset);
-		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
-		return r2;
-	}
+  extern const struct tegra_gpio_port *
+  tegra186_gpio_get_port_redirect(struct tegra_gpio *gpio, unsigned int *pin);
 
-	static inline void gpiochip_generic_free_both(struct gpio_chip *chip, unsigned offset) {
-    deb_verbose("chip=%s, offset=%d\n", chip->label, offset);
-		gpiochip_generic_free_redirect(chip, offset);
-		gpiochip_generic_free(chip, offset);
-	}
+  extern void __iomem *tegra186_gpio_get_base_redirect(unsigned char id,
 
-	static inline int tegra186_gpio_get_direction_both(struct gpio_chip *chip, unsigned int offset) {
-		int r1=0, r2=0;
-    deb_verbose("chip=%s, offset=%d\n", chip->label, offset);
-		r1 = tegra186_gpio_get_direction(chip, offset);
-		r2 = tegra186_gpio_get_direction_redirect(chip, offset);
-		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
-		return r2;
-	}
+              unsigned int pin);
 
-	static inline int tegra186_gpio_direction_input_both(struct gpio_chip *chip, unsigned int offset) {
-		int r1=0, r2=0;
-    deb_verbose("chip=%s, offset=%d\n", chip->label, offset);
-		r1 = tegra186_gpio_direction_input(chip, offset);
-		r2 = tegra186_gpio_direction_input_redirect(chip, offset);
-		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
-		return r2;
-	}
-
-	static inline int tegra186_gpio_direction_output_both(struct gpio_chip *chip, unsigned int offset, int level) {
-		int r1=0, r2=0;
-    deb_verbose("chip=%s, offset=%d\n level=%d", chip->label, offset, level);
-		r1 = tegra186_gpio_direction_output(chip, offset, level);
-		r2 = tegra186_gpio_direction_output_redirect(chip, offset, level);
-		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
-		return r2;
-	}
-
-  static int tegra186_gpio_get_both(struct gpio_chip *chip, unsigned int offset) {
-		int r1=0, r2=0;
-		r1 = tegra186_gpio_get_redirect(chip, offset);
-		r2 = tegra186_gpio_get(chip, offset);
-		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
-		return r2;
-	}
-
-	static inline void tegra186_gpio_set_both(struct gpio_chip *chip, unsigned int offset, int level) {
-		tegra186_gpio_set(chip, offset, level);
-		tegra186_gpio_set_redirect(chip, offset, level);
-	}
-
-	static inline int tegra186_gpio_set_config_both(struct gpio_chip *chip,
-								unsigned int offset,
-								unsigned long config) {
-		int r1=0, r2=0;
-    deb_verbose("chip=%s, offset=%d\n", chip->label, offset);
-		r1 = tegra186_gpio_set_config_redirect(chip, offset, config);
-		r2 = tegra186_gpio_set_config(chip, offset, config);
-		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
-		return r2;
-	}
-
-  static int tegra186_gpio_add_pin_ranges_both(struct gpio_chip *chip) {
-		int r1=0, r2=0;
-    deb_verbose("chip=%s\n", chip->label);
-		r1 = tegra186_gpio_add_pin_ranges(chip);
-		r2 = tegra186_gpio_add_pin_ranges_redirect(chip);
-		if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
-		return r2;
-	}
+  extern void __iomem *tegra186_gpio_get_secure_redirect(struct tegra_gpio *gpio,
+              unsigned int pin);
   */
 
-	/*
-	static inline int tegra186_gpio_direction_input_nopt(struct gpio_chip *chip, unsigned int offset) {
-		int r;
-		kernel_is_on_guest = false; // inhibit passthrough
-		r = tegra186_gpio_direction_input(chip, offset);
-		kernel_is_on_guest = true;
-		return r;
-	}
+  extern int tegra_gpio_timestamp_control_redirect(struct gpio_chip *chip, unsigned offset,
+            int enable);
 
-	static inline int tegra186_gpio_direction_output_nopt(struct gpio_chip *chip, unsigned int offset, int level) {
-		int r;
-		kernel_is_on_guest = false; // inhibit passthrough
-		r = tegra186_gpio_direction_output(chip, offset, level);
-		kernel_is_on_guest = true;
-		return r;
-	}
+  extern int tegra_gpio_timestamp_read_redirect(struct gpio_chip *chip, unsigned offset,
+              u64 *ts);
 
-	static inline void tegra186_gpio_set_nopt(struct gpio_chip *chip, unsigned int offset, int level) {
-		kernel_is_on_guest = false; // inhibit passthrough
-		tegra186_gpio_set(chip, offset, level);
-		kernel_is_on_guest = true;
-	}
-	*/
+  extern int tegra_gpio_suspend_configure_redirect(struct gpio_chip *chip, unsigned offset,
+            enum gpiod_flags dflags);
+
+  extern int tegra186_gpio_add_pin_ranges_redirect(struct gpio_chip *chip);
+
+
+  /* functions that are called both locally and passed through
+   * This addition is not necessary for output pins
+   */
+
+  /*
+  static inline int gpiochip_generic_request_both(struct gpio_chip *chip, unsigned offset) {
+    int r1=0, r2=0;
+    deb_verbose("chip=%s, offset=%d\n", chip->label, offset);
+    r1 = gpiochip_generic_request(chip, offset);
+    r2 = gpiochip_generic_request_redirect(chip, offset);
+    if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
+    return r2;
+  }
+
+  static inline void gpiochip_generic_free_both(struct gpio_chip *chip, unsigned offset) {
+    deb_verbose("chip=%s, offset=%d\n", chip->label, offset);
+    gpiochip_generic_free_redirect(chip, offset);
+    gpiochip_generic_free(chip, offset);
+  }
+
+  static inline int tegra186_gpio_get_direction_both(struct gpio_chip *chip, unsigned int offset) {
+    int r1=0, r2=0;
+    deb_verbose("chip=%s, offset=%d\n", chip->label, offset);
+    r1 = tegra186_gpio_get_direction(chip, offset);
+    r2 = tegra186_gpio_get_direction_redirect(chip, offset);
+    if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
+    return r2;
+  }
+
+  static inline int tegra186_gpio_direction_input_both(struct gpio_chip *chip, unsigned int offset) {
+    int r1=0, r2=0;
+    deb_verbose("chip=%s, offset=%d\n", chip->label, offset);
+    r1 = tegra186_gpio_direction_input(chip, offset);
+    r2 = tegra186_gpio_direction_input_redirect(chip, offset);
+    if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
+    return r2;
+  }
+
+  static inline int tegra186_gpio_direction_output_both(struct gpio_chip *chip, unsigned int offset, int level) {
+    int r1=0, r2=0;
+    deb_verbose("chip=%s, offset=%d\n level=%d", chip->label, offset, level);
+    r1 = tegra186_gpio_direction_output(chip, offset, level);
+    r2 = tegra186_gpio_direction_output_redirect(chip, offset, level);
+    if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
+    return r2;
+  }
+
+  static int tegra186_gpio_get_both(struct gpio_chip *chip, unsigned int offset) {
+    int r1=0, r2=0;
+    r1 = tegra186_gpio_get_redirect(chip, offset);
+    r2 = tegra186_gpio_get(chip, offset);
+    if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
+    return r2;
+  }
+
+  static inline void tegra186_gpio_set_both(struct gpio_chip *chip, unsigned int offset, int level) {
+    tegra186_gpio_set(chip, offset, level);
+    tegra186_gpio_set_redirect(chip, offset, level);
+  }
+
+  static inline int tegra186_gpio_set_config_both(struct gpio_chip *chip,
+                unsigned int offset,
+                unsigned long config) {
+    int r1=0, r2=0;
+    deb_verbose("chip=%s, offset=%d\n", chip->label, offset);
+    r1 = tegra186_gpio_set_config_redirect(chip, offset, config);
+    r2 = tegra186_gpio_set_config(chip, offset, config);
+    if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
+    return r2;
+  }
+
+  static int tegra186_gpio_add_pin_ranges_both(struct gpio_chip *chip) {
+    int r1=0, r2=0;
+    deb_verbose("chip=%s\n", chip->label);
+    r1 = tegra186_gpio_add_pin_ranges(chip);
+    r2 = tegra186_gpio_add_pin_ranges_redirect(chip);
+    if( r1 != r2 ) deb_debug("return values differ %d/%d", r1, r2);
+    return r2;
+  }
+  */
+
+  /*
+  static inline int tegra186_gpio_direction_input_nopt(struct gpio_chip *chip, unsigned int offset) {
+    int r;
+    kernel_is_on_guest = false; // inhibit passthrough
+    r = tegra186_gpio_direction_input(chip, offset);
+    kernel_is_on_guest = true;
+    return r;
+  }
+
+  static inline int tegra186_gpio_direction_output_nopt(struct gpio_chip *chip, unsigned int offset, int level) {
+    int r;
+    kernel_is_on_guest = false; // inhibit passthrough
+    r = tegra186_gpio_direction_output(chip, offset, level);
+    kernel_is_on_guest = true;
+    return r;
+  }
+
+  static inline void tegra186_gpio_set_nopt(struct gpio_chip *chip, unsigned int offset, int level) {
+    kernel_is_on_guest = false; // inhibit passthrough
+    tegra186_gpio_set(chip, offset, level);
+    kernel_is_on_guest = true;
+  }
+  */
 
   // this function sets the standard bindings used by the host driver
   static inline void gpio_unhook(struct tegra_gpio *gpio) {
@@ -1506,7 +1522,7 @@ error:
   }
 
   /* "normal" redirect version */
-	static inline void gpio_hook(struct tegra_gpio *gpio) {
+  static inline void gpio_hook(struct tegra_gpio *gpio) {
     deb_debug("Setting hooks for functions for %s", gpio->gpio.label);
     // this test will not work. When debug exception is set this 'if' has already been evaluated
     if(!is_debug_exception(GPIO_NOFUNC_TEST)) {
@@ -1569,430 +1585,420 @@ error:
   }
   */
 
-	extern int tegra_gpio_guest_init(void);
-	extern int tegra_gpio_host_init(void);
-	extern int tegra_gpio_guest_cleanup(void);
-	extern int tegra_gpio_host_cleanup(void);
+  extern int tegra_gpio_guest_init(void);
+  extern int tegra_gpio_host_init(void);
+  extern int tegra_gpio_guest_cleanup(void);
+  extern int tegra_gpio_host_cleanup(void);
 
-	#define MAX_CHIP 2    // check this value against value in gpio_host-proxy.h
+  #define MAX_CHIP 2    // check this value against value in gpio_host-proxy.h
 
-	struct tegra_gpio *tegra_gpio_hosts[MAX_CHIP] = {NULL, NULL};
-	atomic_t tegra_gpio_hosts_ready = ATOMIC_INIT(0);
+  struct tegra_gpio *tegra_gpio_hosts[MAX_CHIP] = {NULL, NULL};
+  atomic_t tegra_gpio_hosts_ready = ATOMIC_INIT(0);
 
-	/* note for reference:
-	struct tegra_gpio {
-		struct gpio_chip gpio;
-		struct irq_chip intc;
-		unsigned int num_irq;
-		unsigned int *irq;
-		[...]
-	}
+  /* note for reference:
+  struct tegra_gpio {
+    struct gpio_chip gpio;
+    struct irq_chip intc;
+    unsigned int num_irq;
+    unsigned int *irq;
+    [...]
+  }
 
-	struct gpio_chip {
-		const char    *label;
-		struct gpio_device  *gpiodev;
-		struct device   *parent;
-		struct module   *owner;
-		[...]
-	}
+  struct gpio_chip {
+    const char    *label;
+    struct gpio_device  *gpiodev;
+    struct device   *parent;
+    struct module   *owner;
+    [...]
+  }
 
-	struct gpio_device  *gpiodev {
-		int     id;
-		struct device   dev;
-	}
+  struct gpio_device  *gpiodev {
+    int     id;
+    struct device   dev;
+  }
 
-	*/
+  */
 
-	/* preserve_tegrachip() and unpreserve_all_tegrachips() functions
-	 *
-	 * store the tegra_gpio and gpio_chip pointers for direct use by proxy drivers
-	 * the preserve functionsalso assist in allocation and deallocaton, setting up and unseting
-	 * of proxy related data */
-	static void preserve_tegrachip(struct tegra_gpio *tegrachip) {
-		struct gpio_chip *gpiochip = &(tegrachip->gpio);
-		static int gpio_chip_count = 0;
-		deb_debug("entering with gpio_chip_count = %d\n", gpio_chip_count);
+  /* preserve_tegrachip() and unpreserve_all_tegrachips() functions
+   *
+   * store the tegra_gpio and gpio_chip pointers for direct use by proxy drivers
+   * the preserve functionsalso assist in allocation and deallocaton, setting up and unseting
+   * of proxy related data */
+  static void preserve_tegrachip(struct tegra_gpio *tegrachip) {
+    struct gpio_chip *gpiochip = &(tegrachip->gpio);
+    static int gpio_chip_count = 0;
+    deb_debug("entering with gpio_chip_count = %d\n", gpio_chip_count);
 
-		if (gpio_chip_count >= MAX_CHIP) {
-			pr_err("GPIO, *ERROR* maximum chip count is exceeded (%d)", gpio_chip_count);
-		}
-		else {
-			tegra_gpio_hosts[gpio_chip_count] = tegrachip;
-			deb_debug("put chip %s in list for passthrough in slot %d [0..1]\n", gpiochip->label, gpio_chip_count);
-		};
-		atomic_set(&tegra_gpio_hosts_ready, ++gpio_chip_count);
-	}
+    if (gpio_chip_count >= MAX_CHIP) {
+      pr_err("GPIO, *ERROR* maximum chip count is exceeded (%d)", gpio_chip_count);
+    }
+    else {
+      tegra_gpio_hosts[gpio_chip_count] = tegrachip;
+      deb_debug("put chip %s in list for passthrough in slot %d [0..1]\n", gpiochip->label, gpio_chip_count);
+    };
+    atomic_set(&tegra_gpio_hosts_ready, ++gpio_chip_count);
+  }
 
 
-	/* deactivates tegra_gpio_hosts array, function is called by guest proxy.
-	 * allocations and hooks are not needed if guest proxy driver unloads
-	 * (paranoia because drivers are built in) */
-	void unpreserve_all_tegrachips(void) {
-		struct tegra_gpio ** tegrachip;
-		int i, timeout = 0;
+  /* deactivates tegra_gpio_hosts array, function is called by guest proxy.
+   * allocations and hooks are not needed if guest proxy driver unloads
+   * (paranoia because drivers are built in) */
+  void unpreserve_all_tegrachips(void) {
+    struct tegra_gpio ** tegrachip;
+    int i, timeout = 0;
 
-		// wait until tegra driver has set the tegra_gpio_hosts array -- this seems a bit paranoid
-		while (atomic_read(&tegra_gpio_hosts_ready) != MAX_CHIP) {
-			msleep(100); // Sleep briefly instead of looping infinitely.
-			if( timeout++ > 120 ) {
-				pr_err("GPIO could not access tegra_gpio chip array\n");
-				return;
-			}
-		}
-		for( i = 0 ; i < MAX_CHIP ; i++){
-			tegrachip = &tegra_gpio_hosts[i];
-			if(*tegrachip)
-				gpio_unhook(*tegrachip);
-			*tegrachip = NULL;
-		}
-	}
-	EXPORT_SYMBOL_GPL(unpreserve_all_tegrachips);
+    // wait until tegra driver has set the tegra_gpio_hosts array -- this seems a bit paranoid
+    while (atomic_read(&tegra_gpio_hosts_ready) != MAX_CHIP) {
+      msleep(100); // Sleep briefly instead of looping infinitely.
+      if( timeout++ > 120 ) {
+        pr_err("GPIO could not access tegra_gpio chip array\n");
+        return;
+      }
+    }
+    for( i = 0 ; i < MAX_CHIP ; i++){
+      tegrachip = &tegra_gpio_hosts[i];
+      if(*tegrachip)
+        gpio_unhook(*tegrachip);
+      *tegrachip = NULL;
+    }
+  }
+  EXPORT_SYMBOL_GPL(unpreserve_all_tegrachips);
 
-	/* find_chip_by_id
-	 * replacement for find_chip_by_name, because it is slightly faster
-	 * one doubtful assumption is that chip pointers are numbered by the driver
-	 * in the same order preserve_tegrachip records them */
-	inline struct gpio_chip * find_chip_by_id(int id) {
-		int i = 0, r;
-		while ( (r = atomic_read(&tegra_gpio_hosts_ready)) != MAX_CHIP) {
-			msleep(100); // Sleep briefly instead of looping infinitely.
-			if( i++ > 10 ) {
-				pr_err("GPIO tegra_gpio_host chip table setup error: id=%d, count=%d\n", id, r);
-				if(r == 1) return &tegra_gpio_hosts[0]->gpio;
-				else return NULL;
-			}
-		}
-		if(id & ~0x00000001) {
-			pr_err("GPIO, *ERROR* Illegal chip number (%d)", id);
-			return NULL;
-		}
-		else
-			return &tegra_gpio_hosts[id]->gpio;
-	}
-	EXPORT_SYMBOL_GPL(find_chip_by_id);
+  /* find_chip_by_id
+   * replacement for find_chip_by_name, because it is slightly faster
+   * one doubtful assumption is that chip pointers are numbered by the driver
+   * in the same order preserve_tegrachip records them */
+  inline struct gpio_chip * find_chip_by_id(int id) {
+    int i = 0, r;
+    while ( (r = atomic_read(&tegra_gpio_hosts_ready)) != MAX_CHIP) {
+      msleep(100); // Sleep briefly instead of looping infinitely.
+      if( i++ > 10 ) {
+        pr_err("GPIO tegra_gpio_host chip table setup error: id=%d, count=%d\n", id, r);
+        if(r == 1) return &tegra_gpio_hosts[0]->gpio;
+        else return NULL;
+      }
+    }
+    if(id & ~0x00000001) {
+      pr_err("GPIO, *ERROR* Illegal chip number (%d)", id);
+      return NULL;
+    }
+    else
+      return &tegra_gpio_hosts[id]->gpio;
+  }
+  EXPORT_SYMBOL_GPL(find_chip_by_id);
 
-	inline struct tegra_gpio * find_tegra_chip_by_id(int id) {
-		/*
-		int i = 0;
-		while (atomic_read(&tegra_gpio_hosts_ready) != MAX_CHIP) {
-			msleep(100); // Sleep briefly instead of looping infinitely.
-			if( i++ > 120 ) {
-				pr_err("GPIO tegra_gpio_hosts setup error: id=%d, count=%d\n", id, atomic_read(&tegra_gpio_hosts_ready));
-				return NULL;
-			}
-		}
-		*/
-		if(id & ~0x00000001) {
-			pr_err("GPIO, *ERROR* Illegal chip number (%d)", id);
-			return NULL;
-		}
-		else
-			return tegra_gpio_hosts[id];
-	}
-	EXPORT_SYMBOL_GPL(find_tegra_chip_by_id);
+  inline struct tegra_gpio * find_tegra_chip_by_id(int id) {
+    /*
+    int i = 0;
+    while (atomic_read(&tegra_gpio_hosts_ready) != MAX_CHIP) {
+      msleep(100); // Sleep briefly instead of looping infinitely.
+      if( i++ > 120 ) {
+        pr_err("GPIO tegra_gpio_hosts setup error: id=%d, count=%d\n", id, atomic_read(&tegra_gpio_hosts_ready));
+        return NULL;
+      }
+    }
+    */
+    if(id & ~0x00000001) {
+      pr_err("GPIO, *ERROR* Illegal chip number (%d)", id);
+      return NULL;
+    }
+    else
+      return tegra_gpio_hosts[id];
+  }
+  EXPORT_SYMBOL_GPL(find_tegra_chip_by_id);
 #endif
 
 static int tegra186_gpio_probe(struct platform_device *pdev)
 {
-	unsigned int i, j, offset;
-	struct gpio_irq_chip *irq;
-	struct tegra_gpio *gpio;
-	struct device_node *np;
-	struct resource *res;
-	char **names;
-	int err;
-	int ret;
-	int value;
-	void __iomem *base;
+  unsigned int i, j, offset;
+  struct gpio_irq_chip *irq;
+  struct tegra_gpio *gpio;
+  struct device_node *np;
+  struct resource *res;
+  char **names;
+  int err;
+  int ret;
+  int value;
+  void __iomem *base;
 
-	#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-	void __iomem *base_r;  // base_r is the redirected value from host
-	static bool guest_proxy_is_set_up = false;
-	static bool host_proxy_is_set_up = false;
-	bool kernel_is_on_guest_stash = false;
+  #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+  void __iomem *base_r;  // base_r is the redirected value from host
+  static bool guest_proxy_is_set_up = false;
+  static bool host_proxy_is_set_up = false;
+  bool kernel_is_on_guest_stash = false;
 
   pdev_backup = pdev;
   #endif
 
-	deb_debug("Probing gpio");
+  deb_debug("Probing gpio");
 
-	gpio = devm_kzalloc(&pdev->dev, sizeof(*gpio), GFP_KERNEL);
-	if (!gpio) {
-		pr_err("GPIO devm_kzalloc error");
-		return -ENOMEM;
-	}
+  gpio = devm_kzalloc(&pdev->dev, sizeof(*gpio), GFP_KERNEL);
+  if (!gpio) {
+    pr_err("GPIO devm_kzalloc error");
+    return -ENOMEM;
+  }
 
-	#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+  #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 
-		deb_debug("GPIO Proxy code\n");
+    deb_debug("GPIO Proxy code\n");
 
-		// If virtual-pa node is defined, it means that we are using a GPIO proxy
-		err = of_property_read_u64(pdev->dev.of_node, "virtual-pa", &gpio_vpa);
-		if(!err) {
-			// error in reading virtual-pa is non fatal, it only means we are on host.
-			deb_info("GPIO kernel is on guest, virtual-pa: 0x%llx\n", gpio_vpa);
-			// kernel_is_on_guest = true;
-			kernel_is_on_guest_stash = true;
-		}
-	#endif
+    // If virtual-pa node is defined, it means that we are using a GPIO proxy
+    err = of_property_read_u64(pdev->dev.of_node, "virtual-pa", &gpio_vpa);
+    if(!err) {
+      // error in reading virtual-pa is non fatal, it only means we are on host.
+      deb_info("GPIO kernel is on guest, virtual-pa: 0x%llx\n", gpio_vpa);
+      // kernel_is_on_guest = true;
+      kernel_is_on_guest_stash = true;
+    }
+  #endif
 
-	gpio->soc = of_device_get_match_data(&pdev->dev);
-	gpio->gpio.label = gpio->soc->name;
-	gpio->gpio.parent = &pdev->dev;
+  gpio->soc = of_device_get_match_data(&pdev->dev);
+  gpio->gpio.label = gpio->soc->name;
+  gpio->gpio.parent = &pdev->dev;
 
-	gpio->secure = devm_platform_ioremap_resource_byname(pdev, "security");
-	if (IS_ERR(gpio->secure)) {
-		pr_err("GPIO *ERROR* devm_platform_ioremap_resource_byname pdev->name=\"%s\"", pdev->name);
-		return PTR_ERR(gpio->secure);
-	}
+  gpio->secure = devm_platform_ioremap_resource_byname(pdev, "security");
+  if (IS_ERR(gpio->secure)) {
+    pr_err("GPIO *ERROR* devm_platform_ioremap_resource_byname pdev->name=\"%s\"", pdev->name);
+    return PTR_ERR(gpio->secure);
+  }
 
-	deb_verbose("num of ports = %d", gpio->soc->num_ports);
+  deb_verbose("num of ports = %d", gpio->soc->num_ports);
 
-	/* count the number of banks in the controller */
-	for (i = 0; i < gpio->soc->num_ports; i++)
-		if (gpio->soc->ports[i].bank > gpio->num_banks)
-			gpio->num_banks = gpio->soc->ports[i].bank;
+  /* count the number of banks in the controller */
+  for (i = 0; i < gpio->soc->num_ports; i++)
+    if (gpio->soc->ports[i].bank > gpio->num_banks)
+      gpio->num_banks = gpio->soc->ports[i].bank;
 
-	gpio->num_banks++;
+  gpio->num_banks++;
 
-	deb_verbose("num of banks = %d", gpio->num_banks);
+  deb_verbose("num of banks = %d", gpio->num_banks);
 
-	gpio->base = devm_platform_ioremap_resource_byname(pdev, "gpio");
-	if (IS_ERR(gpio->base))
-		return PTR_ERR(gpio->base);
+  gpio->base = devm_platform_ioremap_resource_byname(pdev, "gpio");
+  if (IS_ERR(gpio->base))
+    return PTR_ERR(gpio->base);
 
-	deb_verbose("gpio base = 0x%llx", (long long unsigned int)gpio->base);
+  deb_verbose("gpio base = 0x%llx", (long long unsigned int)gpio->base);
 
-	gpio->gpio_rval = devm_kzalloc(&pdev->dev, gpio->soc->num_ports * 8 *
-							sizeof(*gpio->gpio_rval), GFP_KERNEL);
-	if (!gpio->gpio_rval)
-		return -ENOMEM;
+  gpio->gpio_rval = devm_kzalloc(&pdev->dev, gpio->soc->num_ports * 8 *
+              sizeof(*gpio->gpio_rval), GFP_KERNEL);
+  if (!gpio->gpio_rval)
+    return -ENOMEM;
 
-	np = pdev->dev.of_node;
-	if (!np) {
-		dev_err(&pdev->dev, "No valid device node, probe failed\n");
-		return -EINVAL;
-	}
+  np = pdev->dev.of_node;
+  if (!np) {
+    dev_err(&pdev->dev, "No valid device node, probe failed\n");
+    return -EINVAL;
+  }
 
-	deb_verbose("node pointer = 0x%llx", (long long unsigned int)np);
+  deb_verbose("node pointer = 0x%llx", (long long unsigned int)np);
 
-	gpio->use_timestamp = of_property_read_bool(np, "use-timestamp");
+  gpio->use_timestamp = of_property_read_bool(np, "use-timestamp");
 
-	if (gpio->use_timestamp) {
-		deb_verbose("use_timestamp");
-		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "gte");
-		if (!res) {
-			dev_err(&pdev->dev, "Missing gte MEM resource\n");
-			return -ENODEV;
-		}
-		gpio->gte_regs = devm_ioremap_resource(&pdev->dev, res);
-		if (IS_ERR(gpio->gte_regs)) {
-			ret = PTR_ERR(gpio->gte_regs);
-			dev_err(&pdev->dev,
-				"Failed to iomap for gte: %d\n", ret);
-			return ret;
-		}
-	}
+  if (gpio->use_timestamp) {
+    deb_verbose("use_timestamp");
+    res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "gte");
+    if (!res) {
+      dev_err(&pdev->dev, "Missing gte MEM resource\n");
+      return -ENODEV;
+    }
+    gpio->gte_regs = devm_ioremap_resource(&pdev->dev, res);
+    if (IS_ERR(gpio->gte_regs)) {
+      ret = PTR_ERR(gpio->gte_regs);
+      dev_err(&pdev->dev,
+        "Failed to iomap for gte: %d\n", ret);
+      return ret;
+    }
+  }
 
-	err = platform_irq_count(pdev);
-	if (err < 0) {
-		pr_err("GPIO platform_irq_count\n");
-		return err;
-	}
+  err = platform_irq_count(pdev);
+  if (err < 0) {
+    pr_err("GPIO platform_irq_count\n");
+    return err;
+  }
 
-	gpio->num_irq = err;
+  gpio->num_irq = err;
 
-	deb_verbose("num_irq = %d", gpio->num_irq);
+  deb_verbose("num_irq = %d", gpio->num_irq);
 
-	err = tegra186_gpio_irqs_per_bank(gpio);
-	if (err < 0) {
-		pr_err("GPIO tegra186_gpio_irqs_per_bank\n");
-		return err;
-	}
+  err = tegra186_gpio_irqs_per_bank(gpio);
+  if (err < 0) {
+    pr_err("GPIO tegra186_gpio_irqs_per_bank\n");
+    return err;
+  }
 
-	gpio->irq = devm_kcalloc(&pdev->dev, gpio->num_irq, sizeof(*gpio->irq),
-				 GFP_KERNEL);
-	if (!gpio->irq)
-		return -ENOMEM;
+  gpio->irq = devm_kcalloc(&pdev->dev, gpio->num_irq, sizeof(*gpio->irq),
+         GFP_KERNEL);
+  if (!gpio->irq)
+    return -ENOMEM;
 
-	for (i = 0; i < gpio->num_irq; i++) {
-		err = platform_get_irq(pdev, i);
-		if (err < 0) {
-			pr_err("GPIO platform_get_irq");
-			return err;
-		}
+  for (i = 0; i < gpio->num_irq; i++) {
+    err = platform_get_irq(pdev, i);
+    if (err < 0) {
+      pr_err("GPIO platform_get_irq");
+      return err;
+    }
 
-		gpio->irq[i] = err;
-	}
+    gpio->irq[i] = err;
+  }
 
-	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
-
-
-		if (gpio->use_timestamp)
-			tegra_gte_setup(gpio);
-
-		if(kernel_is_on_guest_stash) {
-			deb_debug("GPIO Proxy init section\n");
-			if( ! guest_proxy_is_set_up ) {
-				ret = tegra_gpio_guest_init();
-				guest_proxy_is_set_up = true;
-			}
-			// guest should use gpio_hook() for its "host" driver
-			gpio_hook(gpio);
-		}
-		else {
-			if( ! host_proxy_is_set_up ) {
-				ret = tegra_gpio_host_init();
-				host_proxy_is_set_up = true;
-			}
-			// gpio_unhook is the same as standard settings
-			// unhooked pointers are for the host driver on host only
-			BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver
-			gpio_unhook(gpio);      // set standard function pointers
-		};
-
-		gpio->gpio.base = -1;
-		deb_debug("gpio function pointers are set for gpio label=%s\n", gpio->gpio.label);
-	#else
-		// this code segment is for standard operation in a compile without PROXY configuraton
-		deb_debug("Setting standard gpio functions for a non-proxy compile of driver\n");
-		// BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver, because non-proxy
-		gpio_unhook(gpio);
-	#endif
-
-	for (i = 0; i < gpio->soc->num_ports; i++)
-		gpio->gpio.ngpio += gpio->soc->ports[i].pins;
-
-	names = devm_kcalloc(gpio->gpio.parent, gpio->gpio.ngpio,
-					 sizeof(*names), GFP_KERNEL);
-	if (!names)
-		return -ENOMEM;
-
-	for (i = 0, offset = 0; i < gpio->soc->num_ports; i++) {
-		const struct tegra_gpio_port *port = &gpio->soc->ports[i];
-		char *name;
-
-		for (j = 0; j < port->pins; j++) {
-			name = devm_kasprintf(gpio->gpio.parent, GFP_KERNEL,
-								"P%s.%02x", port->name, j);
-			if (!name)
-				return -ENOMEM;
-
-			names[offset + j] = name;
-			// deb_verbose("GPIO, name=\n", name);
-		}
-
-		offset += port->pins;
-	}
-
-	gpio->gpio.names = (const char * const *)names;
-
-	gpio->gpio.of_node = pdev->dev.of_node;
-	gpio->gpio.of_gpio_n_cells = 2;
-	gpio->gpio.of_xlate = tegra186_gpio_of_xlate;
-
-	gpio->intc.name = pdev->dev.of_node->name;
-	gpio->intc.irq_ack = tegra186_irq_ack;
-	gpio->intc.irq_mask = tegra186_irq_mask;
-	gpio->intc.irq_unmask = tegra186_irq_unmask;
-	gpio->intc.irq_set_type = tegra186_irq_set_type;
-	gpio->intc.irq_set_wake = tegra186_irq_set_wake;
-
-	irq = &gpio->gpio.irq;
-	irq->chip = &gpio->intc;
-	irq->fwnode = of_node_to_fwnode(pdev->dev.of_node);
-	irq->child_to_parent_hwirq = tegra186_gpio_child_to_parent_hwirq;
-	irq->populate_parent_alloc_arg = tegra186_gpio_populate_parent_fwspec;
-	irq->child_offset_to_irq = tegra186_gpio_child_offset_to_irq;
-	irq->child_irq_domain_ops.translate = tegra186_gpio_irq_domain_translate;
-	irq->handler = handle_simple_irq;
-	irq->default_type = IRQ_TYPE_NONE;
-	irq->parent_handler = tegra186_gpio_irq;
-	irq->parent_handler_data = gpio;
-	irq->num_parents = gpio->num_irq;
-
-	//DEBUG
-	deb_verbose("gpio->gpio.of_node = 0x%llx, pdev->dev.of_node = 0x%llx", (long long unsigned int)gpio->gpio.of_node, (long long unsigned int)pdev->dev.of_node);
-
-	/*
-	* To simplify things, use a single interrupt per bank for now. Some
-	* chips support up to 8 interrupts per bank, which can be useful to
-	* distribute the load and decrease the processing latency for GPIOs
-	* but it also requires a more complicated interrupt routing than we
-	* currently program.
-	*/
-	if (gpio->num_irqs_per_bank > 1) {
-		irq->parents = devm_kcalloc(&pdev->dev, gpio->num_banks,
-						sizeof(*irq->parents), GFP_KERNEL);
-		if (!irq->parents)
-			return -ENOMEM;
-
-		for (i = 0; i < gpio->num_banks; i++)
-			irq->parents[i] = gpio->irq[i * gpio->num_irqs_per_bank];
-
-		irq->num_parents = gpio->num_banks;
-	} else {
-		irq->num_parents = gpio->num_irq;
-		irq->parents = gpio->irq;
-	}
-
-	if (gpio->soc->num_irqs_per_bank > 1)
-	/*
-	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
-		if(kernel_is_on_guest_stash) {
-			tegra186_gpio_init_route_mapping_redirect(gpio);
-		}
-		else {
-			tegra186_gpio_init_route_mapping(gpio);
-		}
-	#else
-	*/
-		tegra186_gpio_init_route_mapping(gpio);
-	// #endif
-
-	np = of_find_matching_node(NULL, tegra186_pmc_of_match);
-	if (!of_device_is_available(np))
-		np = of_irq_find_parent(pdev->dev.of_node);
-
-	if (of_device_is_available(np)) {
-		irq->parent_domain = irq_find_host(np);
-		of_node_put(np);
-
-		if (!irq->parent_domain)
-			return -EPROBE_DEFER;
-	}
+  #if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
 
 
-	irq->map = devm_kcalloc(&pdev->dev, gpio->gpio.ngpio,
-				sizeof(*irq->map), GFP_KERNEL);
-	if (!irq->map)
-		return -ENOMEM;
+    if (gpio->use_timestamp)
+      tegra_gte_setup(gpio);
 
-	for (i = 0, offset = 0; i < gpio->soc->num_ports; i++) {
-		const struct tegra_gpio_port *port = &gpio->soc->ports[i];
+    if(kernel_is_on_guest_stash) {
+      deb_debug("GPIO Proxy guest init section\n");
+      if( ! guest_proxy_is_set_up ) {
+        ret = tegra_gpio_guest_init();
+        guest_proxy_is_set_up = true;
+      }
+      // guest should use gpio_hook() for its "host" driver
+      gpio_hook(gpio);
+    }
+    else {
+      deb_debug("GPIO Proxy host init section\n");
+      if( ! host_proxy_is_set_up ) {
+        ret = tegra_gpio_host_init();
+        host_proxy_is_set_up = true;
+      }
+      // gpio_unhook is the same as standard settings
+      // unhooked pointers are for the host driver on host only
+      BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver
+      gpio_unhook(gpio);      // set standard function pointers
+    };
 
-		for (j = 0; j < port->pins; j++)
-			irq->map[offset + j] = irq->parents[port->bank];
+    gpio->gpio.base = -1;
+    deb_debug("gpio function pointers are set for gpio label=%s\n", gpio->gpio.label);
+  #else
+    // this code segment is for standard operation in a compile without PROXY configuraton
+    deb_debug("Setting standard gpio functions for a non-proxy compile of driver\n");
+    // BUG_ON(gpio_vpa != 0);  // assert we do not set up the vpa driver, because non-proxy
+    gpio_unhook(gpio);
+  #endif
 
-		offset += port->pins;
-	}
+  for (i = 0; i < gpio->soc->num_ports; i++)
+    gpio->gpio.ngpio += gpio->soc->ports[i].pins;
 
-	platform_set_drvdata(pdev, gpio);
-	
-	err = devm_gpiochip_add_data(&pdev->dev, &gpio->gpio, gpio);
-	if (err < 0) {
-		pr_err("GPIO *ERROR* devm_gpiochip_add_data\n");
-		return err;
-	}
+  names = devm_kcalloc(gpio->gpio.parent, gpio->gpio.ngpio,
+           sizeof(*names), GFP_KERNEL);
+  if (!names)
+    return -ENOMEM;
 
-	/* on guest, we could possibly passsthrough the whole loop below for better performance */
+  for (i = 0, offset = 0; i < gpio->soc->num_ports; i++) {
+    const struct tegra_gpio_port *port = &gpio->soc->ports[i];
+    char *name;
 
-	if (gpio->soc->is_hw_ts_sup) {
-		for (i = 0, offset = 0; i < gpio->soc->num_ports; i++) {
-			const struct tegra_gpio_port *port =
-							&gpio->soc->ports[i];
+    for (j = 0; j < port->pins; j++) {
+      name = devm_kasprintf(gpio->gpio.parent, GFP_KERNEL,
+                "P%s.%02x", port->name, j);
+      if (!name)
+        return -ENOMEM;
 
-			for (j = 0; j < port->pins; j++) {
+      names[offset + j] = name;
+      // deb_verbose("GPIO, name=\n", name);
+    }
+
+    offset += port->pins;
+  }
+
+  gpio->gpio.names = (const char * const *)names;
+
+  gpio->gpio.of_node = pdev->dev.of_node;
+  gpio->gpio.of_gpio_n_cells = 2;
+  gpio->gpio.of_xlate = tegra186_gpio_of_xlate;
+
+  gpio->intc.name = pdev->dev.of_node->name;
+  gpio->intc.irq_ack = tegra186_irq_ack;
+  gpio->intc.irq_mask = tegra186_irq_mask;
+  gpio->intc.irq_unmask = tegra186_irq_unmask;
+  gpio->intc.irq_set_type = tegra186_irq_set_type;
+  gpio->intc.irq_set_wake = tegra186_irq_set_wake;
+
+  irq = &gpio->gpio.irq;
+  irq->chip = &gpio->intc;
+  irq->fwnode = of_node_to_fwnode(pdev->dev.of_node);
+  irq->child_to_parent_hwirq = tegra186_gpio_child_to_parent_hwirq;
+  irq->populate_parent_alloc_arg = tegra186_gpio_populate_parent_fwspec;
+  irq->child_offset_to_irq = tegra186_gpio_child_offset_to_irq;
+  irq->child_irq_domain_ops.translate = tegra186_gpio_irq_domain_translate;
+  irq->handler = handle_simple_irq;
+  irq->default_type = IRQ_TYPE_NONE;
+  irq->parent_handler = tegra186_gpio_irq;
+  irq->parent_handler_data = gpio;
+  irq->num_parents = gpio->num_irq;
+
+  //DEBUG
+  deb_verbose("gpio->gpio.of_node = 0x%llx, pdev->dev.of_node = 0x%llx", (long long unsigned int)gpio->gpio.of_node, (long long unsigned int)pdev->dev.of_node);
+
+  /*
+  * To simplify things, use a single interrupt per bank for now. Some
+  * chips support up to 8 interrupts per bank, which can be useful to
+  * distribute the load and decrease the processing latency for GPIOs
+  * but it also requires a more complicated interrupt routing than we
+  * currently program.
+  */
+  if (gpio->num_irqs_per_bank > 1) {
+    irq->parents = devm_kcalloc(&pdev->dev, gpio->num_banks,
+            sizeof(*irq->parents), GFP_KERNEL);
+    if (!irq->parents)
+      return -ENOMEM;
+
+    for (i = 0; i < gpio->num_banks; i++)
+      irq->parents[i] = gpio->irq[i * gpio->num_irqs_per_bank];
+
+    irq->num_parents = gpio->num_banks;
+  } else {
+    irq->num_parents = gpio->num_irq;
+    irq->parents = gpio->irq;
+  }
+
+  if (gpio->soc->num_irqs_per_bank > 1)
+    tegra186_gpio_init_route_mapping(gpio);
+
+  np = of_find_matching_node(NULL, tegra186_pmc_of_match);
+  if (!of_device_is_available(np))
+    np = of_irq_find_parent(pdev->dev.of_node);
+
+  if (of_device_is_available(np)) {
+    irq->parent_domain = irq_find_host(np);
+    of_node_put(np);
+
+    if (!irq->parent_domain)
+      return -EPROBE_DEFER;
+  }
+
+
+  irq->map = devm_kcalloc(&pdev->dev, gpio->gpio.ngpio,
+        sizeof(*irq->map), GFP_KERNEL);
+  if (!irq->map)
+    return -ENOMEM;
+
+  for (i = 0, offset = 0; i < gpio->soc->num_ports; i++) {
+    const struct tegra_gpio_port *port = &gpio->soc->ports[i];
+
+    for (j = 0; j < port->pins; j++)
+      irq->map[offset + j] = irq->parents[port->bank];
+
+    offset += port->pins;
+  }
+
+  platform_set_drvdata(pdev, gpio);
+  
+  err = devm_gpiochip_add_data(&pdev->dev, &gpio->gpio, gpio);
+  if (err < 0) {
+    pr_err("GPIO *ERROR* devm_gpiochip_add_data\n");
+    return err;
+  }
+
+  /* on guest, we could possibly passsthrough the whole loop below for better performance */
+
+  if (gpio->soc->is_hw_ts_sup) {
+    for (i = 0, offset = 0; i < gpio->soc->num_ports; i++) {
+      const struct tegra_gpio_port *port =
+              &gpio->soc->ports[i];
+
+      for (j = 0; j < port->pins; j++) {
         #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
         /* this should work with passthrough because we get 'base_r' */
         if(kernel_is_on_guest && !is_debug_exception(GPIO_NOPT_TEST3)) {
@@ -2024,30 +2030,30 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
         }
         #endif
       }
-			offset += port->pins;
-		}
+      offset += port->pins;
+    }
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-		kernel_is_on_guest = kernel_is_on_guest_stash;
+    kernel_is_on_guest = kernel_is_on_guest_stash;
 #endif
-	}
+  }
 
-	#if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
-	preserve_tegrachip(gpio);
-	#endif
-	return 0;
+  #if defined(CONFIG_TEGRA_GPIO_HOST_PROXY) || defined(CONFIG_TEGRA_GPIO_GUEST_PROXY)
+  preserve_tegrachip(gpio);
+  #endif
+  return 0;
 }
 
 #ifdef CONFIG_PM_SLEEP
 static int tegra_gpio_resume_early(struct device *dev)
 {
-	struct tegra_gpio *gpio = dev_get_drvdata(dev);
-	struct tegra_gpio_saved_register *regs;
-	unsigned offset = 0U;
-	void __iomem *base;
+  struct tegra_gpio *gpio = dev_get_drvdata(dev);
+  struct tegra_gpio_saved_register *regs;
+  unsigned offset = 0U;
+  void __iomem *base;
   #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-	void __iomem *base_r;  // base_r is the redirected value from host
+  void __iomem *base_r;  // base_r is the redirected value from host
   #endif
-	int i;
+  int i;
 
   base = tegra186_gpio_get_base(gpio, offset);
   if (WARN_ON(base == NULL))
@@ -2061,12 +2067,12 @@ static int tegra_gpio_resume_early(struct device *dev)
   else deb_verbose("Debug exception %d", GPIO_NOPT_TEST4);
   #endif
 
-	for (i = 0; i < gpio->gpio.ngpio; i++) {
-		regs = &gpio->gpio_rval[i];
-		if (!regs->restore_needed)
-			continue;
+  for (i = 0; i < gpio->gpio.ngpio; i++) {
+    regs = &gpio->gpio_rval[i];
+    if (!regs->restore_needed)
+      continue;
 
-		regs->restore_needed = false;
+    regs->restore_needed = false;
 
     #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
     /* this passthrough should work becasue we have 'base_r'*/
@@ -2086,19 +2092,19 @@ static int tegra_gpio_resume_early(struct device *dev)
     #endif
   }
 
-	return 0;
+  return 0;
 }
 
 static int tegra_gpio_suspend_late(struct device *dev)
 {
-	struct tegra_gpio *gpio = dev_get_drvdata(dev);
+  struct tegra_gpio *gpio = dev_get_drvdata(dev);
 
-	return of_gpiochip_suspend(&gpio->gpio);
+  return of_gpiochip_suspend(&gpio->gpio);
 }
 
 static const struct dev_pm_ops tegra_gpio_pm = {
-	.suspend_late = tegra_gpio_suspend_late,
-	.resume_early = tegra_gpio_resume_early,
+  .suspend_late = tegra_gpio_suspend_late,
+  .resume_early = tegra_gpio_resume_early,
 };
 #define TEGRA_GPIO_PM   &tegra_gpio_pm
 #else
@@ -2108,344 +2114,344 @@ static const struct dev_pm_ops tegra_gpio_pm = {
 static int tegra186_gpio_remove(struct platform_device *pdev)
 {
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-	if(kernel_is_on_guest) {
-		tegra_gpio_guest_cleanup();
-	}
-	else {
-		tegra_gpio_host_cleanup();
-	}
+  if(kernel_is_on_guest) {
+    tegra_gpio_guest_cleanup();
+  }
+  else {
+    tegra_gpio_host_cleanup();
+  }
 #endif
-	return 0;
+  return 0;
 }
 
 
 #define TEGRA186_MAIN_GPIO_PORT(_name, _bank, _port, _pins) \
-	[TEGRA186_MAIN_GPIO_PORT_##_name] = {     \
-		.name = #_name,         \
-		.bank = _bank,          \
-		.port = _port,          \
-		.pins = _pins,          \
-	}
+  [TEGRA186_MAIN_GPIO_PORT_##_name] = {     \
+    .name = #_name,         \
+    .bank = _bank,          \
+    .port = _port,          \
+    .pins = _pins,          \
+  }
 
 static const struct tegra_gpio_port tegra186_main_ports[] = {
-	TEGRA186_MAIN_GPIO_PORT( A, 2, 0, 7),
-	TEGRA186_MAIN_GPIO_PORT( B, 3, 0, 7),
-	TEGRA186_MAIN_GPIO_PORT( C, 3, 1, 7),
-	TEGRA186_MAIN_GPIO_PORT( D, 3, 2, 6),
-	TEGRA186_MAIN_GPIO_PORT( E, 2, 1, 8),
-	TEGRA186_MAIN_GPIO_PORT( F, 2, 2, 6),
-	TEGRA186_MAIN_GPIO_PORT( G, 4, 1, 6),
-	TEGRA186_MAIN_GPIO_PORT( H, 1, 0, 7),
-	TEGRA186_MAIN_GPIO_PORT( I, 0, 4, 8),
-	TEGRA186_MAIN_GPIO_PORT( J, 5, 0, 8),
-	TEGRA186_MAIN_GPIO_PORT( K, 5, 1, 1),
-	TEGRA186_MAIN_GPIO_PORT( L, 1, 1, 8),
-	TEGRA186_MAIN_GPIO_PORT( M, 5, 3, 6),
-	TEGRA186_MAIN_GPIO_PORT( N, 0, 0, 7),
-	TEGRA186_MAIN_GPIO_PORT( O, 0, 1, 4),
-	TEGRA186_MAIN_GPIO_PORT( P, 4, 0, 7),
-	TEGRA186_MAIN_GPIO_PORT( Q, 0, 2, 6),
-	TEGRA186_MAIN_GPIO_PORT( R, 0, 5, 6),
-	TEGRA186_MAIN_GPIO_PORT( T, 0, 3, 4),
-	TEGRA186_MAIN_GPIO_PORT( X, 1, 2, 8),
-	TEGRA186_MAIN_GPIO_PORT( Y, 1, 3, 7),
-	TEGRA186_MAIN_GPIO_PORT(BB, 2, 3, 2),
-	TEGRA186_MAIN_GPIO_PORT(CC, 5, 2, 4),
+  TEGRA186_MAIN_GPIO_PORT( A, 2, 0, 7),
+  TEGRA186_MAIN_GPIO_PORT( B, 3, 0, 7),
+  TEGRA186_MAIN_GPIO_PORT( C, 3, 1, 7),
+  TEGRA186_MAIN_GPIO_PORT( D, 3, 2, 6),
+  TEGRA186_MAIN_GPIO_PORT( E, 2, 1, 8),
+  TEGRA186_MAIN_GPIO_PORT( F, 2, 2, 6),
+  TEGRA186_MAIN_GPIO_PORT( G, 4, 1, 6),
+  TEGRA186_MAIN_GPIO_PORT( H, 1, 0, 7),
+  TEGRA186_MAIN_GPIO_PORT( I, 0, 4, 8),
+  TEGRA186_MAIN_GPIO_PORT( J, 5, 0, 8),
+  TEGRA186_MAIN_GPIO_PORT( K, 5, 1, 1),
+  TEGRA186_MAIN_GPIO_PORT( L, 1, 1, 8),
+  TEGRA186_MAIN_GPIO_PORT( M, 5, 3, 6),
+  TEGRA186_MAIN_GPIO_PORT( N, 0, 0, 7),
+  TEGRA186_MAIN_GPIO_PORT( O, 0, 1, 4),
+  TEGRA186_MAIN_GPIO_PORT( P, 4, 0, 7),
+  TEGRA186_MAIN_GPIO_PORT( Q, 0, 2, 6),
+  TEGRA186_MAIN_GPIO_PORT( R, 0, 5, 6),
+  TEGRA186_MAIN_GPIO_PORT( T, 0, 3, 4),
+  TEGRA186_MAIN_GPIO_PORT( X, 1, 2, 8),
+  TEGRA186_MAIN_GPIO_PORT( Y, 1, 3, 7),
+  TEGRA186_MAIN_GPIO_PORT(BB, 2, 3, 2),
+  TEGRA186_MAIN_GPIO_PORT(CC, 5, 2, 4),
 };
 
 static const struct tegra_gpio_soc tegra186_main_soc = {
-	.num_ports = ARRAY_SIZE(tegra186_main_ports),
-	.ports = tegra186_main_ports,
-	.name = "tegra186-gpio",
-	.instance = 0,
-	.num_irqs_per_bank = 1,
+  .num_ports = ARRAY_SIZE(tegra186_main_ports),
+  .ports = tegra186_main_ports,
+  .name = "tegra186-gpio",
+  .instance = 0,
+  .num_irqs_per_bank = 1,
 };
 
 #define TEGRA186_AON_GPIO_PORT(_name, _bank, _port, _pins)  \
-	[TEGRA186_AON_GPIO_PORT_##_name] = {      \
-		.name = #_name,         \
-		.bank = _bank,          \
-		.port = _port,          \
-		.pins = _pins,          \
-	}
+  [TEGRA186_AON_GPIO_PORT_##_name] = {      \
+    .name = #_name,         \
+    .bank = _bank,          \
+    .port = _port,          \
+    .pins = _pins,          \
+  }
 
 static const struct tegra_gpio_port tegra186_aon_ports[] = {
-	TEGRA186_AON_GPIO_PORT( S, 0, 1, 5),
-	TEGRA186_AON_GPIO_PORT( U, 0, 2, 6),
-	TEGRA186_AON_GPIO_PORT( V, 0, 4, 8),
-	TEGRA186_AON_GPIO_PORT( W, 0, 5, 8),
-	TEGRA186_AON_GPIO_PORT( Z, 0, 7, 4),
-	TEGRA186_AON_GPIO_PORT(AA, 0, 6, 8),
-	TEGRA186_AON_GPIO_PORT(EE, 0, 3, 3),
-	TEGRA186_AON_GPIO_PORT(FF, 0, 0, 5),
+  TEGRA186_AON_GPIO_PORT( S, 0, 1, 5),
+  TEGRA186_AON_GPIO_PORT( U, 0, 2, 6),
+  TEGRA186_AON_GPIO_PORT( V, 0, 4, 8),
+  TEGRA186_AON_GPIO_PORT( W, 0, 5, 8),
+  TEGRA186_AON_GPIO_PORT( Z, 0, 7, 4),
+  TEGRA186_AON_GPIO_PORT(AA, 0, 6, 8),
+  TEGRA186_AON_GPIO_PORT(EE, 0, 3, 3),
+  TEGRA186_AON_GPIO_PORT(FF, 0, 0, 5),
 };
 
 static const struct tegra_gpio_soc tegra186_aon_soc = {
-	.num_ports = ARRAY_SIZE(tegra186_aon_ports),
-	.ports = tegra186_aon_ports,
-	.name = "tegra186-gpio-aon",
-	.instance = 1,
-	.num_irqs_per_bank = 1,
+  .num_ports = ARRAY_SIZE(tegra186_aon_ports),
+  .ports = tegra186_aon_ports,
+  .name = "tegra186-gpio-aon",
+  .instance = 1,
+  .num_irqs_per_bank = 1,
 };
 
 #define TEGRA194_MAIN_GPIO_PORT(_name, _bank, _port, _pins) \
-	[TEGRA194_MAIN_GPIO_PORT_##_name] = {     \
-		.name = #_name,         \
-		.bank = _bank,          \
-		.port = _port,          \
-		.pins = _pins,          \
-	}
+  [TEGRA194_MAIN_GPIO_PORT_##_name] = {     \
+    .name = #_name,         \
+    .bank = _bank,          \
+    .port = _port,          \
+    .pins = _pins,          \
+  }
 
 static const struct tegra_gpio_port tegra194_main_ports[] = {
-	TEGRA194_MAIN_GPIO_PORT( A, 1, 2, 8),
-	TEGRA194_MAIN_GPIO_PORT( B, 4, 7, 2),
-	TEGRA194_MAIN_GPIO_PORT( C, 4, 3, 8),
-	TEGRA194_MAIN_GPIO_PORT( D, 4, 4, 4),
-	TEGRA194_MAIN_GPIO_PORT( E, 4, 5, 8),
-	TEGRA194_MAIN_GPIO_PORT( F, 4, 6, 6),
-	TEGRA194_MAIN_GPIO_PORT( G, 4, 0, 8),
-	TEGRA194_MAIN_GPIO_PORT( H, 4, 1, 8),
-	TEGRA194_MAIN_GPIO_PORT( I, 4, 2, 5),
-	TEGRA194_MAIN_GPIO_PORT( J, 5, 1, 6),
-	TEGRA194_MAIN_GPIO_PORT( K, 3, 0, 8),
-	TEGRA194_MAIN_GPIO_PORT( L, 3, 1, 4),
-	TEGRA194_MAIN_GPIO_PORT( M, 2, 3, 8),
-	TEGRA194_MAIN_GPIO_PORT( N, 2, 4, 3),
-	TEGRA194_MAIN_GPIO_PORT( O, 5, 0, 6),
-	TEGRA194_MAIN_GPIO_PORT( P, 2, 5, 8),
-	TEGRA194_MAIN_GPIO_PORT( Q, 2, 6, 8),
-	TEGRA194_MAIN_GPIO_PORT( R, 2, 7, 6),
-	TEGRA194_MAIN_GPIO_PORT( S, 3, 3, 8),
-	TEGRA194_MAIN_GPIO_PORT( T, 3, 4, 8),
-	TEGRA194_MAIN_GPIO_PORT( U, 3, 5, 1),
-	TEGRA194_MAIN_GPIO_PORT( V, 1, 0, 8),
-	TEGRA194_MAIN_GPIO_PORT( W, 1, 1, 2),
-	TEGRA194_MAIN_GPIO_PORT( X, 2, 0, 8),
-	TEGRA194_MAIN_GPIO_PORT( Y, 2, 1, 8),
-	TEGRA194_MAIN_GPIO_PORT( Z, 2, 2, 8),
-	TEGRA194_MAIN_GPIO_PORT(FF, 3, 2, 2),
-	TEGRA194_MAIN_GPIO_PORT(GG, 0, 0, 2)
+  TEGRA194_MAIN_GPIO_PORT( A, 1, 2, 8),
+  TEGRA194_MAIN_GPIO_PORT( B, 4, 7, 2),
+  TEGRA194_MAIN_GPIO_PORT( C, 4, 3, 8),
+  TEGRA194_MAIN_GPIO_PORT( D, 4, 4, 4),
+  TEGRA194_MAIN_GPIO_PORT( E, 4, 5, 8),
+  TEGRA194_MAIN_GPIO_PORT( F, 4, 6, 6),
+  TEGRA194_MAIN_GPIO_PORT( G, 4, 0, 8),
+  TEGRA194_MAIN_GPIO_PORT( H, 4, 1, 8),
+  TEGRA194_MAIN_GPIO_PORT( I, 4, 2, 5),
+  TEGRA194_MAIN_GPIO_PORT( J, 5, 1, 6),
+  TEGRA194_MAIN_GPIO_PORT( K, 3, 0, 8),
+  TEGRA194_MAIN_GPIO_PORT( L, 3, 1, 4),
+  TEGRA194_MAIN_GPIO_PORT( M, 2, 3, 8),
+  TEGRA194_MAIN_GPIO_PORT( N, 2, 4, 3),
+  TEGRA194_MAIN_GPIO_PORT( O, 5, 0, 6),
+  TEGRA194_MAIN_GPIO_PORT( P, 2, 5, 8),
+  TEGRA194_MAIN_GPIO_PORT( Q, 2, 6, 8),
+  TEGRA194_MAIN_GPIO_PORT( R, 2, 7, 6),
+  TEGRA194_MAIN_GPIO_PORT( S, 3, 3, 8),
+  TEGRA194_MAIN_GPIO_PORT( T, 3, 4, 8),
+  TEGRA194_MAIN_GPIO_PORT( U, 3, 5, 1),
+  TEGRA194_MAIN_GPIO_PORT( V, 1, 0, 8),
+  TEGRA194_MAIN_GPIO_PORT( W, 1, 1, 2),
+  TEGRA194_MAIN_GPIO_PORT( X, 2, 0, 8),
+  TEGRA194_MAIN_GPIO_PORT( Y, 2, 1, 8),
+  TEGRA194_MAIN_GPIO_PORT( Z, 2, 2, 8),
+  TEGRA194_MAIN_GPIO_PORT(FF, 3, 2, 2),
+  TEGRA194_MAIN_GPIO_PORT(GG, 0, 0, 2)
 };
 
 static const struct tegra_gpio_soc tegra194_main_soc = {
-	.num_ports = ARRAY_SIZE(tegra194_main_ports),
-	.ports = tegra194_main_ports,
-	.name = "tegra194-gpio",
-	.instance = 0,
-	.num_irqs_per_bank = 8,
-	.do_vm_check = true,
+  .num_ports = ARRAY_SIZE(tegra194_main_ports),
+  .ports = tegra194_main_ports,
+  .name = "tegra194-gpio",
+  .instance = 0,
+  .num_irqs_per_bank = 8,
+  .do_vm_check = true,
 };
 
 #define TEGRA194_AON_GPIO_PORT(_name, _bank, _port, _pins)  \
-	[TEGRA194_AON_GPIO_PORT_##_name] = {      \
-		.name = #_name,         \
-		.bank = _bank,          \
-		.port = _port,          \
-		.pins = _pins,          \
-	}
+  [TEGRA194_AON_GPIO_PORT_##_name] = {      \
+    .name = #_name,         \
+    .bank = _bank,          \
+    .port = _port,          \
+    .pins = _pins,          \
+  }
 
 static const struct tegra_gpio_port tegra194_aon_ports[] = {
-	TEGRA194_AON_GPIO_PORT(AA, 0, 3, 8),
-	TEGRA194_AON_GPIO_PORT(BB, 0, 4, 4),
-	TEGRA194_AON_GPIO_PORT(CC, 0, 1, 8),
-	TEGRA194_AON_GPIO_PORT(DD, 0, 2, 3),
-	TEGRA194_AON_GPIO_PORT(EE, 0, 0, 7)
+  TEGRA194_AON_GPIO_PORT(AA, 0, 3, 8),
+  TEGRA194_AON_GPIO_PORT(BB, 0, 4, 4),
+  TEGRA194_AON_GPIO_PORT(CC, 0, 1, 8),
+  TEGRA194_AON_GPIO_PORT(DD, 0, 2, 3),
+  TEGRA194_AON_GPIO_PORT(EE, 0, 0, 7)
 };
 
 static const struct tegra_gpio_soc tegra194_aon_soc = {
-	.num_ports = ARRAY_SIZE(tegra194_aon_ports),
-	.ports = tegra194_aon_ports,
-	.name = "tegra194-gpio-aon",
-	.gte_info = tegra194_gte_info,
-	.gte_npins = ARRAY_SIZE(tegra194_gte_info),
-	.instance = 1,
-	.num_irqs_per_bank = 8,
-	.is_hw_ts_sup = true,
-	.do_vm_check = false,
+  .num_ports = ARRAY_SIZE(tegra194_aon_ports),
+  .ports = tegra194_aon_ports,
+  .name = "tegra194-gpio-aon",
+  .gte_info = tegra194_gte_info,
+  .gte_npins = ARRAY_SIZE(tegra194_gte_info),
+  .instance = 1,
+  .num_irqs_per_bank = 8,
+  .is_hw_ts_sup = true,
+  .do_vm_check = false,
 };
 
 #define TEGRA234_MAIN_GPIO_PORT(_name, _bank, _port, _pins) \
-	[TEGRA234_MAIN_GPIO_PORT_##_name] = {     \
-		.name = #_name,         \
-		.bank = _bank,          \
-		.port = _port,          \
-		.pins = _pins,          \
-	}
+  [TEGRA234_MAIN_GPIO_PORT_##_name] = {     \
+    .name = #_name,         \
+    .bank = _bank,          \
+    .port = _port,          \
+    .pins = _pins,          \
+  }
 
 static const struct tegra_gpio_port tegra234_main_ports[] = {
-	TEGRA234_MAIN_GPIO_PORT(A, 0, 0, 8),
-	TEGRA234_MAIN_GPIO_PORT(B, 0, 3, 1),
-	TEGRA234_MAIN_GPIO_PORT(C, 5, 1, 8),
-	TEGRA234_MAIN_GPIO_PORT(D, 5, 2, 4),
-	TEGRA234_MAIN_GPIO_PORT(E, 5, 3, 8),
-	TEGRA234_MAIN_GPIO_PORT(F, 5, 4, 6),
-	TEGRA234_MAIN_GPIO_PORT(G, 4, 0, 8),
-	TEGRA234_MAIN_GPIO_PORT(H, 4, 1, 8),
-	TEGRA234_MAIN_GPIO_PORT(I, 4, 2, 7),
-	TEGRA234_MAIN_GPIO_PORT(J, 5, 0, 6),
-	TEGRA234_MAIN_GPIO_PORT(K, 3, 0, 8),
-	TEGRA234_MAIN_GPIO_PORT(L, 3, 1, 4),
-	TEGRA234_MAIN_GPIO_PORT(M, 2, 0, 8),
-	TEGRA234_MAIN_GPIO_PORT(N, 2, 1, 8),
-	TEGRA234_MAIN_GPIO_PORT(P, 2, 2, 8),
-	TEGRA234_MAIN_GPIO_PORT(Q, 2, 3, 8),
-	TEGRA234_MAIN_GPIO_PORT(R, 2, 4, 6),
-	TEGRA234_MAIN_GPIO_PORT(X, 1, 0, 8),
-	TEGRA234_MAIN_GPIO_PORT(Y, 1, 1, 8),
-	TEGRA234_MAIN_GPIO_PORT(Z, 1, 2, 8),
-	TEGRA234_MAIN_GPIO_PORT(AC, 0, 1, 8),
-	TEGRA234_MAIN_GPIO_PORT(AD, 0, 2, 4),
-	TEGRA234_MAIN_GPIO_PORT(AE, 3, 3, 2),
-	TEGRA234_MAIN_GPIO_PORT(AF, 3, 4, 4),
-	TEGRA234_MAIN_GPIO_PORT(AG, 3, 2, 8)
+  TEGRA234_MAIN_GPIO_PORT(A, 0, 0, 8),
+  TEGRA234_MAIN_GPIO_PORT(B, 0, 3, 1),
+  TEGRA234_MAIN_GPIO_PORT(C, 5, 1, 8),
+  TEGRA234_MAIN_GPIO_PORT(D, 5, 2, 4),
+  TEGRA234_MAIN_GPIO_PORT(E, 5, 3, 8),
+  TEGRA234_MAIN_GPIO_PORT(F, 5, 4, 6),
+  TEGRA234_MAIN_GPIO_PORT(G, 4, 0, 8),
+  TEGRA234_MAIN_GPIO_PORT(H, 4, 1, 8),
+  TEGRA234_MAIN_GPIO_PORT(I, 4, 2, 7),
+  TEGRA234_MAIN_GPIO_PORT(J, 5, 0, 6),
+  TEGRA234_MAIN_GPIO_PORT(K, 3, 0, 8),
+  TEGRA234_MAIN_GPIO_PORT(L, 3, 1, 4),
+  TEGRA234_MAIN_GPIO_PORT(M, 2, 0, 8),
+  TEGRA234_MAIN_GPIO_PORT(N, 2, 1, 8),
+  TEGRA234_MAIN_GPIO_PORT(P, 2, 2, 8),
+  TEGRA234_MAIN_GPIO_PORT(Q, 2, 3, 8),
+  TEGRA234_MAIN_GPIO_PORT(R, 2, 4, 6),
+  TEGRA234_MAIN_GPIO_PORT(X, 1, 0, 8),
+  TEGRA234_MAIN_GPIO_PORT(Y, 1, 1, 8),
+  TEGRA234_MAIN_GPIO_PORT(Z, 1, 2, 8),
+  TEGRA234_MAIN_GPIO_PORT(AC, 0, 1, 8),
+  TEGRA234_MAIN_GPIO_PORT(AD, 0, 2, 4),
+  TEGRA234_MAIN_GPIO_PORT(AE, 3, 3, 2),
+  TEGRA234_MAIN_GPIO_PORT(AF, 3, 4, 4),
+  TEGRA234_MAIN_GPIO_PORT(AG, 3, 2, 8)
 };
 
 static const struct tegra_gpio_soc tegra234_main_soc = {
-	.num_ports = ARRAY_SIZE(tegra234_main_ports),
-	.ports = tegra234_main_ports,
-	.name = "tegra234-gpio",
-	.instance = 0,
-	.num_irqs_per_bank = 8,
-	.do_vm_check = true,
+  .num_ports = ARRAY_SIZE(tegra234_main_ports),
+  .ports = tegra234_main_ports,
+  .name = "tegra234-gpio",
+  .instance = 0,
+  .num_irqs_per_bank = 8,
+  .do_vm_check = true,
 };
 
 #define TEGRA234_AON_GPIO_PORT(_name, _bank, _port, _pins)  \
-	[TEGRA234_AON_GPIO_PORT_##_name] = {      \
-		.name = #_name,         \
-		.bank = _bank,          \
-		.port = _port,          \
-		.pins = _pins,          \
-	}
+  [TEGRA234_AON_GPIO_PORT_##_name] = {      \
+    .name = #_name,         \
+    .bank = _bank,          \
+    .port = _port,          \
+    .pins = _pins,          \
+  }
 
 static const struct tegra_gpio_port tegra234_aon_ports[] = {
-	TEGRA234_AON_GPIO_PORT(AA, 0, 4, 8),
-	TEGRA234_AON_GPIO_PORT(BB, 0, 5, 4),
-	TEGRA234_AON_GPIO_PORT(CC, 0, 2, 8),
-	TEGRA234_AON_GPIO_PORT(DD, 0, 3, 3),
-	TEGRA234_AON_GPIO_PORT(EE, 0, 0, 8),
-	TEGRA234_AON_GPIO_PORT(GG, 0, 1, 1)
+  TEGRA234_AON_GPIO_PORT(AA, 0, 4, 8),
+  TEGRA234_AON_GPIO_PORT(BB, 0, 5, 4),
+  TEGRA234_AON_GPIO_PORT(CC, 0, 2, 8),
+  TEGRA234_AON_GPIO_PORT(DD, 0, 3, 3),
+  TEGRA234_AON_GPIO_PORT(EE, 0, 0, 8),
+  TEGRA234_AON_GPIO_PORT(GG, 0, 1, 1)
 };
 
 static const struct tegra_gpio_soc tegra234_aon_soc = {
-	.num_ports = ARRAY_SIZE(tegra234_aon_ports),
-	.ports = tegra234_aon_ports,
-	.name = "tegra234-gpio-aon",
-	.instance = 1,
-	.num_irqs_per_bank = 8,
-	.is_hw_ts_sup = true,
-	.do_vm_check = false,
+  .num_ports = ARRAY_SIZE(tegra234_aon_ports),
+  .ports = tegra234_aon_ports,
+  .name = "tegra234-gpio-aon",
+  .instance = 1,
+  .num_irqs_per_bank = 8,
+  .is_hw_ts_sup = true,
+  .do_vm_check = false,
 };
 
 #define TEGRA239_MAIN_GPIO_PORT(_name, _bank, _port, _pins) \
-	[TEGRA239_MAIN_GPIO_PORT_##_name] = {     \
-		.name = #_name,         \
-		.bank = _bank,          \
-		.port = _port,          \
-		.pins = _pins,          \
-	}
+  [TEGRA239_MAIN_GPIO_PORT_##_name] = {     \
+    .name = #_name,         \
+    .bank = _bank,          \
+    .port = _port,          \
+    .pins = _pins,          \
+  }
 
 static const struct tegra_gpio_port tegra239_main_ports[] = {
-	TEGRA239_MAIN_GPIO_PORT(A, 0, 0, 8),
-	TEGRA239_MAIN_GPIO_PORT(B, 0, 1, 5),
-	TEGRA239_MAIN_GPIO_PORT(C, 0, 2, 8),
-	TEGRA239_MAIN_GPIO_PORT(D, 0, 3, 8),
-	TEGRA239_MAIN_GPIO_PORT(E, 0, 4, 4),
-	TEGRA239_MAIN_GPIO_PORT(F, 0, 5, 8),
-	TEGRA239_MAIN_GPIO_PORT(G, 0, 6, 8),
-	TEGRA239_MAIN_GPIO_PORT(H, 0, 7, 6),
-	TEGRA239_MAIN_GPIO_PORT(J, 1, 0, 8),
-	TEGRA239_MAIN_GPIO_PORT(K, 1, 1, 4),
-	TEGRA239_MAIN_GPIO_PORT(L, 1, 2, 8),
-	TEGRA239_MAIN_GPIO_PORT(M, 1, 3, 8),
-	TEGRA239_MAIN_GPIO_PORT(N, 1, 4, 3),
-	TEGRA239_MAIN_GPIO_PORT(P, 1, 5, 8),
-	TEGRA239_MAIN_GPIO_PORT(Q, 1, 6, 3),
-	TEGRA239_MAIN_GPIO_PORT(R, 2, 0, 8),
-	TEGRA239_MAIN_GPIO_PORT(S, 2, 1, 8),
-	TEGRA239_MAIN_GPIO_PORT(T, 2, 2, 8),
-	TEGRA239_MAIN_GPIO_PORT(U, 2, 3, 6),
-	TEGRA239_MAIN_GPIO_PORT(V, 2, 4, 2),
-	TEGRA239_MAIN_GPIO_PORT(W, 3, 0, 8),
-	TEGRA239_MAIN_GPIO_PORT(X, 3, 1, 2)
+  TEGRA239_MAIN_GPIO_PORT(A, 0, 0, 8),
+  TEGRA239_MAIN_GPIO_PORT(B, 0, 1, 5),
+  TEGRA239_MAIN_GPIO_PORT(C, 0, 2, 8),
+  TEGRA239_MAIN_GPIO_PORT(D, 0, 3, 8),
+  TEGRA239_MAIN_GPIO_PORT(E, 0, 4, 4),
+  TEGRA239_MAIN_GPIO_PORT(F, 0, 5, 8),
+  TEGRA239_MAIN_GPIO_PORT(G, 0, 6, 8),
+  TEGRA239_MAIN_GPIO_PORT(H, 0, 7, 6),
+  TEGRA239_MAIN_GPIO_PORT(J, 1, 0, 8),
+  TEGRA239_MAIN_GPIO_PORT(K, 1, 1, 4),
+  TEGRA239_MAIN_GPIO_PORT(L, 1, 2, 8),
+  TEGRA239_MAIN_GPIO_PORT(M, 1, 3, 8),
+  TEGRA239_MAIN_GPIO_PORT(N, 1, 4, 3),
+  TEGRA239_MAIN_GPIO_PORT(P, 1, 5, 8),
+  TEGRA239_MAIN_GPIO_PORT(Q, 1, 6, 3),
+  TEGRA239_MAIN_GPIO_PORT(R, 2, 0, 8),
+  TEGRA239_MAIN_GPIO_PORT(S, 2, 1, 8),
+  TEGRA239_MAIN_GPIO_PORT(T, 2, 2, 8),
+  TEGRA239_MAIN_GPIO_PORT(U, 2, 3, 6),
+  TEGRA239_MAIN_GPIO_PORT(V, 2, 4, 2),
+  TEGRA239_MAIN_GPIO_PORT(W, 3, 0, 8),
+  TEGRA239_MAIN_GPIO_PORT(X, 3, 1, 2)
 };
 
 static const struct tegra_gpio_soc tegra239_main_soc = {
-	.num_ports = ARRAY_SIZE(tegra239_main_ports),
-	.ports = tegra239_main_ports,
-	.name = "tegra239-gpio",
-	.instance = 0,
-	.num_irqs_per_bank = 8,
-	.do_vm_check = true,
+  .num_ports = ARRAY_SIZE(tegra239_main_ports),
+  .ports = tegra239_main_ports,
+  .name = "tegra239-gpio",
+  .instance = 0,
+  .num_irqs_per_bank = 8,
+  .do_vm_check = true,
 };
 
 #define TEGRA239_AON_GPIO_PORT(_name, _bank, _port, _pins)  \
-	[TEGRA239_AON_GPIO_PORT_##_name] = {      \
-		.name = #_name,         \
-		.bank = _bank,          \
-		.port = _port,          \
-		.pins = _pins,          \
-	}
+  [TEGRA239_AON_GPIO_PORT_##_name] = {      \
+    .name = #_name,         \
+    .bank = _bank,          \
+    .port = _port,          \
+    .pins = _pins,          \
+  }
 
 static const struct tegra_gpio_port tegra239_aon_ports[] = {
-	TEGRA239_AON_GPIO_PORT(AA, 0, 0, 8),
-	TEGRA239_AON_GPIO_PORT(BB, 0, 1, 1),
-	TEGRA239_AON_GPIO_PORT(CC, 0, 2, 8),
-	TEGRA239_AON_GPIO_PORT(DD, 0, 3, 8),
-	TEGRA239_AON_GPIO_PORT(EE, 0, 4, 6),
-	TEGRA239_AON_GPIO_PORT(FF, 0, 5, 8),
-	TEGRA239_AON_GPIO_PORT(GG, 0, 6, 8),
-	TEGRA239_AON_GPIO_PORT(HH, 0, 7, 4)
+  TEGRA239_AON_GPIO_PORT(AA, 0, 0, 8),
+  TEGRA239_AON_GPIO_PORT(BB, 0, 1, 1),
+  TEGRA239_AON_GPIO_PORT(CC, 0, 2, 8),
+  TEGRA239_AON_GPIO_PORT(DD, 0, 3, 8),
+  TEGRA239_AON_GPIO_PORT(EE, 0, 4, 6),
+  TEGRA239_AON_GPIO_PORT(FF, 0, 5, 8),
+  TEGRA239_AON_GPIO_PORT(GG, 0, 6, 8),
+  TEGRA239_AON_GPIO_PORT(HH, 0, 7, 4)
 };
 
 static const struct tegra_gpio_soc tegra239_aon_soc = {
-	.num_ports = ARRAY_SIZE(tegra239_aon_ports),
-	.ports = tegra239_aon_ports,
-	.name = "tegra239-gpio-aon",
-	.instance = 1,
-	.num_irqs_per_bank = 8,
-	.is_hw_ts_sup = true,
-	.do_vm_check = false,
+  .num_ports = ARRAY_SIZE(tegra239_aon_ports),
+  .ports = tegra239_aon_ports,
+  .name = "tegra239-gpio-aon",
+  .instance = 1,
+  .num_irqs_per_bank = 8,
+  .is_hw_ts_sup = true,
+  .do_vm_check = false,
 };
 
 static const struct of_device_id tegra186_gpio_of_match[] = {
-	{
-		.compatible = "nvidia,tegra186-gpio",
-		.data = &tegra186_main_soc
-	}, {
-		.compatible = "nvidia,tegra186-gpio-aon",
-		.data = &tegra186_aon_soc
-	}, {
-		.compatible = "nvidia,tegra194-gpio",
-		.data = &tegra194_main_soc
-	}, {
-		.compatible = "nvidia,tegra194-gpio-aon",
-		.data = &tegra194_aon_soc
-	}, {
-		.compatible = "nvidia,tegra234-gpio",
-		.data = &tegra234_main_soc
-	}, {
-		.compatible = "nvidia,tegra234-gpio-aon",
-		.data = &tegra234_aon_soc
-	}, {
-		.compatible = "nvidia,tegra239-gpio",
-		.data = &tegra239_main_soc
-	}, {
-		.compatible = "nvidia,tegra239-gpio-aon",
-		.data = &tegra239_aon_soc
-	}, {
-		/* sentinel */
-	}
+  {
+    .compatible = "nvidia,tegra186-gpio",
+    .data = &tegra186_main_soc
+  }, {
+    .compatible = "nvidia,tegra186-gpio-aon",
+    .data = &tegra186_aon_soc
+  }, {
+    .compatible = "nvidia,tegra194-gpio",
+    .data = &tegra194_main_soc
+  }, {
+    .compatible = "nvidia,tegra194-gpio-aon",
+    .data = &tegra194_aon_soc
+  }, {
+    .compatible = "nvidia,tegra234-gpio",
+    .data = &tegra234_main_soc
+  }, {
+    .compatible = "nvidia,tegra234-gpio-aon",
+    .data = &tegra234_aon_soc
+  }, {
+    .compatible = "nvidia,tegra239-gpio",
+    .data = &tegra239_main_soc
+  }, {
+    .compatible = "nvidia,tegra239-gpio-aon",
+    .data = &tegra239_aon_soc
+  }, {
+    /* sentinel */
+  }
 };
 MODULE_DEVICE_TABLE(of, tegra186_gpio_of_match);
 
 static struct platform_driver tegra186_gpio_driver = {
-	.driver = {
-		.name = "tegra186-gpio",
-		.of_match_table = tegra186_gpio_of_match,
-		.pm = TEGRA_GPIO_PM,
-	},
-	.probe = tegra186_gpio_probe,
-	.remove = tegra186_gpio_remove,
+  .driver = {
+    .name = "tegra186-gpio",
+    .of_match_table = tegra186_gpio_of_match,
+    .pm = TEGRA_GPIO_PM,
+  },
+  .probe = tegra186_gpio_probe,
+  .remove = tegra186_gpio_remove,
 };
 
 // module_platform_driver(tegra186_gpio_driver);

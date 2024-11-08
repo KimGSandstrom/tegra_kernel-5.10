@@ -68,7 +68,7 @@ static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
 	  return readl_x(pmx->regs[bank] + reg);
   else {
     deb_verbose("Debug exception %d R", GPIO_NOPT_TEST5);
-	  return readl(pmx->regs[bank] + reg);
+    return readl(pmx->regs[bank] + reg);
   }
   #else
 	return readl(pmx->regs[bank] + reg);
@@ -84,7 +84,7 @@ static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 	  writel_relaxed_x(val, pmx->regs[bank] + reg);
   else {
     deb_verbose("Debug exception %d W", GPIO_NOPT_TEST5);
-	  writel_relaxed(val, pmx->regs[bank] + reg);
+    writel_relaxed(val, pmx->regs[bank] + reg);
   }
   #else
 	writel_relaxed(val, pmx->regs[bank] + reg);
