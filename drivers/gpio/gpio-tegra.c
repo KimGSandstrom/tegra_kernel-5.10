@@ -76,7 +76,8 @@
 #endif
 
 // #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-#include "gpio-proxy.h"  // low level hooks for readl_x and writel_x
+#include <gpio-proxy.h>
+// low level hooks for readl_x and writel_x
 // #endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
 
 struct tegra_gpio_info;

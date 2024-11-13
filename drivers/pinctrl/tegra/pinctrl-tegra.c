@@ -56,7 +56,7 @@ extern uint32_t debug_exceptions;
 extern bool is_debug_exception(int off);
 
 // #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-#include "../../gpio/gpio-proxy.h"  // low level hooks for readl_x and writel_x
+#include <gpio-proxy.h>  // low level hooks for readl_x and writel_x
 // #endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
 
 static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
@@ -67,7 +67,7 @@ static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
   if (!is_debug_exception(GPIO_NOPT_TEST5))
 	  return readl_x(pmx->regs[bank] + reg);
   else {
-    deb_verbose("Debug exception %d R", GPIO_NOPT_TEST5);
+    // deb_verbose("Debug exception %d R", GPIO_NOPT_TEST5);
     return readl(pmx->regs[bank] + reg);
   }
   #else
@@ -83,7 +83,7 @@ static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
   if (!is_debug_exception(GPIO_NOPT_TEST5))
 	  writel_relaxed_x(val, pmx->regs[bank] + reg);
   else {
-    deb_verbose("Debug exception %d W", GPIO_NOPT_TEST5);
+    // deb_verbose("Debug exception %d W", GPIO_NOPT_TEST5);
     writel_relaxed(val, pmx->regs[bank] + reg);
   }
   #else

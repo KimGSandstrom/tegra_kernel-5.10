@@ -1,26 +1,28 @@
 #ifndef GPIO_PROXY_H
 #define GPIO_PROXY_H
 
-#ifdef GPIO_DEBUG
-#ifndef deb_debug
-#define deb_debug(fmt, ...)    printk(KERN_DEBUG "GPIO func \'%s\' -- " fmt, __func__, ##__VA_ARGS__)
-#endif
-#endif
-#ifdef GPIO_deb_verbose
-#ifndef deb_verbose
-#define deb_verbose            deb_debug
-#endif
-#endif
-
 /* passthrough hooks for low level functions such as readl and writel
  * functions are mainly intended for GPIO passthrough
  */
-
 extern bool kernel_is_on_guest;
 
-extern inline u32 readl_redirect( void * addr, unsigned char type);
-extern inline void writel_redirect( u32 value, void * addr, unsigned char type);
-extern void __iomem *tegra186_gpio_get_base_redirect(unsigned char id, unsigned int pin);
+#define GPIO_GET_HOST_VALUES		'H' // signal code
+#define GPIO_HOST_VALUE_SECURE				1
+#define GPIO_HOST_VALUE_BASE					2
+// #define GPIO_HOST_VALUE_GTE_REGS		3
+// #define GPIO_HOST_VALUE_GPIO_RVAL	4
+
+struct tegra_gpio_local_values {
+	void __iomem *secure;
+	void __iomem *base;
+	// void __iomem *gte_regs;
+	// struct tegra_gpio_saved_register *gpio_rval;
+	bool initialised;
+};
+
+inline u32 readl_redirect( void * addr, unsigned char type);
+inline void writel_redirect( u32 value, void * addr, unsigned char type);
+void __iomem *tegra186_gpio_get_base_redirect(unsigned char id, unsigned int pin);
 
 extern const unsigned char rwl_std_type;
 extern const unsigned char rwl_raw_type;
@@ -172,6 +174,9 @@ static inline u32 tegra_gte_readl( void * addr) { return 0; };
 static inline void tegra_gte_writel( u32 value, void * addr) {};
 */
 // note: adding more higher level functions migth take latency off the lower level functions
+
+// struct used to transfer setup values from host setup. Needed when guest accesses host. 
+
 #else
 
 static inline u32 readl_x( void * addr) {
