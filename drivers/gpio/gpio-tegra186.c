@@ -45,7 +45,7 @@
 #endif
 
 // #define GPIO_NOPT_TEST0 0			// pmx_readl pmx_writel - defined in pinctrl-tegra.c
-#define GPIO_NOPT_TEST1 1			// tegra_gte_readl tegra_gte_writel
+#define GPIO_NOPT_TEST1 1			// tegra_gte_read tegra_gte_writel
 #define GPIO_NOPT_TEST2 2			// tegra186_gpio_get_base_x
 #define GPIO_NOPT_TEST3 3			// tegra186_gpio_init_route_mapping
 #define GPIO_NOPT_TEST4 4			// tegra186_gpio_probe
@@ -67,7 +67,9 @@
 
 #ifdef GPIO_DEBUG_VERBOSE
 // Declare myexceptions as a module parameter
-static uint32_t debug_exceptions = 0xfd77;
+static uint32_t debug_exceptions = 0x0000f168;	// reasonable guess for correct value
+// TODO why do get_direction, direction_input and direction_output still need passthrough?
+
 module_param(debug_exceptions, uint, S_IRUGO);
 MODULE_PARM_DESC(debug_exceptions, "Debug boot parameter for setting exeptions to handling of GPIO passthrough");
 
