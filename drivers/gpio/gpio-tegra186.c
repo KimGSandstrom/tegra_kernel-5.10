@@ -44,6 +44,7 @@
   #define deb_verbose(fmt, ...)
 #endif
 
+// statring at first byte
 // #define GPIO_NOPT_TEST0 0			// pmx_readl pmx_writel - defined in pinctrl-tegra.c
 #define GPIO_NOPT_TEST1 1			// tegra_gte_read tegra_gte_writel
 #define GPIO_NOPT_TEST2 2			// tegra186_gpio_get_base_x
@@ -52,22 +53,29 @@
 #define GPIO_NOPT_TEST5 5			// tegra_gpio_resume_early
 #define GPIO_NOPT_TEST6 6			// gpio_is_accessible
 
-#define GPIO_NOFUNC_TEST 7		// redundant can be set off always, if on all functions are local
-#define GPIO_NOFUNC_TEST0 0+8  // request
-#define GPIO_NOFUNC_TEST1 0+8  // free
-#define GPIO_NOFUNC_TEST2 1+8  // get_direction
-#define GPIO_NOFUNC_TEST3 2+8  // direction_input
-#define GPIO_NOFUNC_TEST4 2+8  // direction_output
-#define GPIO_NOFUNC_TEST5 3+8  // get
-#define GPIO_NOFUNC_TEST6 4+8  // set
-#define GPIO_NOFUNC_TEST7 5+8  // timestamp_control
-#define GPIO_NOFUNC_TEST8 5+8  // timestamp_read
-#define GPIO_NOFUNC_TEST9 6+8  // suspend_configure
-#define GPIO_NOFUNC_TEST10 7+8 // add pin_ranges
+// statring at second byte
+#define GPIO_NOFUNC_TEST0A 0+8  // request
+#define GPIO_NOFUNC_TEST0B 0+8  // free
+#define GPIO_NOFUNC_TEST1 1+8  // get_direction
+#define GPIO_NOFUNC_TEST2A 2+8  // direction_input
+#define GPIO_NOFUNC_TEST2B 2+8  // direction_output
+#define GPIO_NOFUNC_TEST3 3+8  // get
+#define GPIO_NOFUNC_TEST4 4+8  // set
+#define GPIO_NOFUNC_TEST5A 5+8  // timestamp_control
+#define GPIO_NOFUNC_TEST5B 5+8  // timestamp_read
+#define GPIO_NOFUNC_TEST6 6+8  // suspend_configure
+#define GPIO_NOFUNC_TEST7 7+8 // add pin_ranges
+
+// GPIO_NOFUNC_TEST8-16 defined in gpio-tegra.c
+
+#define GPIO_BOTH_TEST 1+24      // allows setting 'both' test	
+#define GPIO_BOTHFUNC_TEST2 2+24  // get_direction
+#define GPIO_BOTHFUNC_TEST3 3+24  // direction_input
+#define GPIO_BOTHFUNC_TEST4 4+24  // direction_output
 
 #ifdef GPIO_DEBUG_VERBOSE
 // Declare myexceptions as a module parameter
-static uint32_t debug_exceptions = 0x0000f168;	// reasonable guess for correct value
+static uint32_t debug_exceptions = 0x0000f900;	// reasonable guess for correct value
 // TODO why do get_direction, direction_input and direction_output still need passthrough?
 
 module_param(debug_exceptions, uint, S_IRUGO);
@@ -1334,9 +1342,9 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
         else {  
           // deb_verbose("Debug exception %d", GPIO_NOPT_TEST3);
           if (j == 0) {
-            value = readl_x(base + offset);
+            value = readl(base + offset);
             value = BIT(port->pins) - 1;
-            writel_x(value, base + offset);
+            writel(value, base + offset);
           }
         }
         #else
@@ -1449,6 +1457,7 @@ error:
     gpiochip_generic_free_redirect(chip, offset);
     gpiochip_generic_free(chip, offset);
   }
+  */
 
   static inline int tegra186_gpio_get_direction_both(struct gpio_chip *chip, unsigned int offset) {
     int r1=0, r2=0;
@@ -1477,6 +1486,7 @@ error:
     return r2;
   }
 
+  /*
   static int tegra186_gpio_get_both(struct gpio_chip *chip, unsigned int offset) {
     int r1=0, r2=0;
     r1 = tegra186_gpio_get_redirect(chip, offset);
@@ -1559,63 +1569,45 @@ error:
   /* "normal" redirect version */
   static inline void gpio_hook(struct tegra_gpio *gpio) {
     deb_debug("Setting hooks for functions for %s", gpio->gpio.label);
-    // this test will not work. When debug exception is set this 'if' has already been evaluated
-    if(!is_debug_exception(GPIO_NOFUNC_TEST)) {
-			if(!is_debug_exception(GPIO_NOFUNC_TEST0))
-				gpio->gpio.request = gpiochip_generic_request_redirect;
-			else 
-				gpio->gpio.request = gpiochip_generic_request;
-			if(!is_debug_exception(GPIO_NOFUNC_TEST1))
-				gpio->gpio.free = gpiochip_generic_free_redirect;
-			else 
-				gpio->gpio.free = gpiochip_generic_free;
-			if(!is_debug_exception(GPIO_NOFUNC_TEST2))
-				gpio->gpio.get_direction = tegra186_gpio_get_direction_redirect;
-			else 
-				gpio->gpio.get_direction = tegra186_gpio_get_direction;
-			if(!is_debug_exception(GPIO_NOFUNC_TEST3))
-				gpio->gpio.direction_input = tegra186_gpio_direction_input_redirect;
-			else 
-				gpio->gpio.direction_input = tegra186_gpio_direction_input;
-			if(!is_debug_exception(GPIO_NOFUNC_TEST4))
-				gpio->gpio.direction_output = tegra186_gpio_direction_output_redirect;
-			else 
-				gpio->gpio.direction_output = tegra186_gpio_direction_output;
-			if(!is_debug_exception(GPIO_NOFUNC_TEST5))
-				gpio->gpio.get = tegra186_gpio_get_redirect;
-			else 
-				gpio->gpio.get = tegra186_gpio_get;
-			if(!is_debug_exception(GPIO_NOFUNC_TEST6))
-				gpio->gpio.set = tegra186_gpio_set_redirect;
-			else 
-				gpio->gpio.set = tegra186_gpio_set;
-				// gpio->gpio.get_multiple = N/A;
-				// gpio->gpio.set_multiple = N/A
-				// ??? = tegra186_gpio_get_port_redirect;   // not in struct
-				// ??? = tegra186_gpio_get_base_redirect;   // not in struct
-				// ??? = tegra186_gpio_get_secure_redirect; // not in struct
-			if(!is_debug_exception(GPIO_NOFUNC_TEST7))
-				gpio->gpio.timestamp_control = tegra_gpio_timestamp_control_redirect;
-			else 
-				gpio->gpio.timestamp_control = tegra_gpio_timestamp_control;
-			if(!is_debug_exception(GPIO_NOFUNC_TEST8))
-				gpio->gpio.timestamp_read = tegra_gpio_timestamp_read_redirect;
-			else 
-				gpio->gpio.timestamp_read = tegra_gpio_timestamp_read;
-			if(!is_debug_exception(GPIO_NOFUNC_TEST9))
-				gpio->gpio.suspend_configure = tegra_gpio_suspend_configure_redirect;	// don't do passthrough 
-			else 
-				gpio->gpio.suspend_configure = tegra_gpio_suspend_configure;	// don't do passthrough 
-			if(!is_debug_exception(GPIO_NOFUNC_TEST10))
-				gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges_redirect;
-			else 
-				gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges;
-      gpio->gpio.base = -1;
+		gpio_unhook(gpio);
+    if(!is_debug_exception(GPIO_NOFUNC_TEST0A))
+      gpio->gpio.request = gpiochip_generic_request_redirect;
+    if(!is_debug_exception(GPIO_NOFUNC_TEST0B))
+      gpio->gpio.free = gpiochip_generic_free_redirect;
+    if(!is_debug_exception(GPIO_NOFUNC_TEST1))
+      gpio->gpio.get_direction = tegra186_gpio_get_direction_redirect;
+    if(!is_debug_exception(GPIO_NOFUNC_TEST2A))
+      gpio->gpio.direction_input = tegra186_gpio_direction_input_redirect;
+    if(!is_debug_exception(GPIO_NOFUNC_TEST2B))
+      gpio->gpio.direction_output = tegra186_gpio_direction_output_redirect;
+    if(!is_debug_exception(GPIO_NOFUNC_TEST3))
+      gpio->gpio.get = tegra186_gpio_get_redirect;
+    if(!is_debug_exception(GPIO_NOFUNC_TEST4))
+      gpio->gpio.set = tegra186_gpio_set_redirect;
+      // gpio->gpio.get_multiple = N/A;
+      // gpio->gpio.set_multiple = N/A
+      // ??? = tegra186_gpio_get_port_redirect;   // not in struct
+      // ??? = tegra186_gpio_get_base_redirect;   // not in struct
+      // ??? = tegra186_gpio_get_secure_redirect; // not in struct
+    if(!is_debug_exception(GPIO_NOFUNC_TEST5A))
+      gpio->gpio.timestamp_control = tegra_gpio_timestamp_control_redirect;
+    if(!is_debug_exception(GPIO_NOFUNC_TEST5B))
+      gpio->gpio.timestamp_read = tegra_gpio_timestamp_read_redirect;
+    if(!is_debug_exception(GPIO_NOFUNC_TEST6))
+      gpio->gpio.suspend_configure = tegra_gpio_suspend_configure_redirect;	// don't do passthrough 
+    if(!is_debug_exception(GPIO_NOFUNC_TEST7))
+      gpio->gpio.add_pin_ranges = tegra186_gpio_add_pin_ranges_redirect;
+
+    if(!is_debug_exception(GPIO_BOTH_TEST)) {
+			if(is_debug_exception(GPIO_BOTHFUNC_TEST2))
+				gpio->gpio.get_direction = tegra186_gpio_get_direction_both;
+			if(is_debug_exception(GPIO_BOTHFUNC_TEST3))
+				gpio->gpio.direction_input = tegra186_gpio_direction_input_both;
+			if(is_debug_exception(GPIO_BOTHFUNC_TEST4))
+				gpio->gpio.direction_output = tegra186_gpio_direction_output_both;
     }
-    else {
-      // deb_verbose("Debug exception %d", GPIO_NOFUNC_TEST);
-      gpio_unhook(gpio);
-    }
+
+    gpio->gpio.base = -1;
   }
 
   extern int tegra_gpio_guest_init(void);
