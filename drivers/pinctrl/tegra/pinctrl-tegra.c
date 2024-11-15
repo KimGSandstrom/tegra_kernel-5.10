@@ -51,7 +51,7 @@
   #define deb_verbose(fmt, ...)
 #endif
 
-#define GPIO_NOPT_TEST5 5 
+#define GPIO_NOPT_TEST0 0 
 extern uint32_t debug_exceptions;
 extern bool is_debug_exception(int off);
 
@@ -64,10 +64,10 @@ static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
 	deb_debug("\n");
 
   #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-  if (!is_debug_exception(GPIO_NOPT_TEST5))
+  if (!is_debug_exception(GPIO_NOPT_TEST0))
 	  return readl_x(pmx->regs[bank] + reg);
   else {
-    // deb_verbose("Debug exception %d R", GPIO_NOPT_TEST5);
+    // deb_verbose("Debug exception %d R", GPIO_NOPT_TEST0);
     return readl(pmx->regs[bank] + reg);
   }
   #else
@@ -80,10 +80,10 @@ static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 	deb_debug("\n");
 
   #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
-  if (!is_debug_exception(GPIO_NOPT_TEST5))
+  if (!is_debug_exception(GPIO_NOPT_TEST0))
 	  writel_relaxed_x(val, pmx->regs[bank] + reg);
   else {
-    // deb_verbose("Debug exception %d W", GPIO_NOPT_TEST5);
+    // deb_verbose("Debug exception %d W", GPIO_NOPT_TEST0);
     writel_relaxed(val, pmx->regs[bank] + reg);
   }
   #else

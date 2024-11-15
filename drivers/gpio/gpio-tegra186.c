@@ -44,16 +44,16 @@
   #define deb_verbose(fmt, ...)
 #endif
 
-#define GPIO_NOPT_TEST0 0			// tegra_gte_readl tegra_gte_writel
-#define GPIO_NOPT_TEST1 1			// tegra186_gpio_get_base_x
-#define GPIO_NOPT_TEST2 2			// tegra186_gpio_init_route_mapping
-#define GPIO_NOPT_TEST3 3			// tegra186_gpio_probe
-#define GPIO_NOPT_TEST4 4			// tegra_gpio_resume_early
-															// pmx_readl pmx_writel - GPIO_NOPT_TEST5
+// #define GPIO_NOPT_TEST0 0			// pmx_readl pmx_writel - defined in pinctrl-tegra.c
+#define GPIO_NOPT_TEST1 1			// tegra_gte_readl tegra_gte_writel
+#define GPIO_NOPT_TEST2 2			// tegra186_gpio_get_base_x
+#define GPIO_NOPT_TEST3 3			// tegra186_gpio_init_route_mapping
+#define GPIO_NOPT_TEST4 4			// tegra186_gpio_probe
+#define GPIO_NOPT_TEST5 5			// tegra_gpio_resume_early
+#define GPIO_NOPT_TEST6 6			// gpio_is_accessible
 
 #define GPIO_NOFUNC_TEST 7		// redundant can be set off always, if on all functions are local
-#define GPIO_NOFUNC_TEST0 0+8
-#define GPIO_NOFUNC_TEST1 0+8
+#define GPIO_NOFUNC_TEST0 0+#define GPIO_NOFUNC_TEST1 0+8
 #define GPIO_NOFUNC_TEST2 1+8
 #define GPIO_NOFUNC_TEST3 2+8
 #define GPIO_NOFUNC_TEST4 2+8
@@ -63,7 +63,6 @@
 #define GPIO_NOFUNC_TEST8 5+8
 #define GPIO_NOFUNC_TEST9 5+8
 #define GPIO_NOFUNC_TEST10 6+8
-#define GPIO_NOFUNC_TEST11 7+8
 
 #ifdef GPIO_DEBUG_VERBOSE
 // Declare myexceptions as a module parameter
@@ -622,14 +621,34 @@ static inline bool gpio_is_accessible(struct tegra_gpio *gpio, u32 pin)
   
   secure = tegra186_gpio_get_secure(gpio, pin);
   if (gpio->soc->do_vm_check) {
-    val = __raw_readl(secure + GPIO_VM_REG);
+		
+		
+		
+		#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+		if (!is_debug_exception(GPIO_NOPT_TEST6))
+			val = __raw_readl_x(secure + GPIO_VM_REG);
+		else {
+			// deb_verbose("Debug exception %d", GPIO_NOPT_TEST6);
+		#endif
+			val = __raw_readl(secure + GPIO_VM_REG);
+		#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+		}
+		#endif
     deb_verbose("Access check reading 0x%p (secure=0x%p): %d", secure + GPIO_VM_REG, secure, val);
     if ((val & GPIO_VM_RW) != GPIO_VM_RW)
       return false;
   }
 
-  val = __raw_readl(secure + GPIO_SCR_REG);
-  // deb_verbose("val = 0x%X, val&mask = 0x%lX\n", val, (val & (GPIO_SCR_SEC_ENABLE)));
+	#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+	if (!is_debug_exception(GPIO_NOPT_TEST6))
+		val = __raw_readl_x(secure + GPIO_SCR_REG);
+	else {
+		// deb_verbose("Debug exception %d", GPIO_NOPT_TEST6);
+	#endif
+		val = __raw_readl(secure + GPIO_SCR_REG);
+	#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+	}
+	#endif
 
   if ((val & (GPIO_SCR_SEC_ENABLE)) == 0)
     return true;
