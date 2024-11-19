@@ -345,7 +345,7 @@ static int tegra_pinctrl_set_mux(struct pinctrl_dev *pctldev,
 	u32 val;
 	bool stash = kernel_is_on_guest;
 	 
-        if(kernel_is_on_guest && !is_debug_exception(GPIO_NOFUNC_TEST8))
+        if(kernel_is_on_guest && is_debug_exception(GPIO_NOFUNC_TEST8))
           kernel_is_on_guest = false; // tmp value for this function
           
 	// deb_debug("GPIO %s, device %s\n", pmx->dev->init_name);
@@ -385,7 +385,7 @@ static int tegra_pinctrl_gpio_save_config(struct pinctrl_dev *pctldev,
 	int ret;
 	bool stash = kernel_is_on_guest;
 	 
-        if(kernel_is_on_guest && !is_debug_exception(GPIO_NOFUNC_TEST9))
+        if(kernel_is_on_guest && is_debug_exception(GPIO_NOFUNC_TEST9))
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("device %s\n", pmx->dev->init_name);
@@ -422,7 +422,7 @@ static int tegra_pinctrl_gpio_restore_config(struct pinctrl_dev *pctldev,
 	int ret;
 	bool stash = kernel_is_on_guest;
 	 
-        if(kernel_is_on_guest && !is_debug_exception(GPIO_NOFUNC_TEST10))
+        if(kernel_is_on_guest && is_debug_exception(GPIO_NOFUNC_TEST10))
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("device %s\n", pmx->dev->init_name);
@@ -485,7 +485,7 @@ static int tegra_pinctrl_gpio_request_enable(struct pinctrl_dev *pctldev,
 	int ret;
 	bool stash = kernel_is_on_guest;
 	 
-        if(kernel_is_on_guest && !is_debug_exception(GPIO_NOFUNC_TEST11))
+        if(kernel_is_on_guest && is_debug_exception(GPIO_NOFUNC_TEST11))
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("device %s\n", pmx->dev->init_name);
@@ -535,7 +535,7 @@ static int tegra_pinctrl_gpio_set_input(struct tegra_pmx *pmx,
 	u32 value;
 	bool stash = kernel_is_on_guest;
 	 
-        if(kernel_is_on_guest && !is_debug_exception(GPIO_NOFUNC_TEST12))
+        if(kernel_is_on_guest && is_debug_exception(GPIO_NOFUNC_TEST12))
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("\n");
@@ -566,7 +566,7 @@ static int tegra_pinctrl_gpio_set_tristate(struct tegra_pmx *pmx,
 	u32 value;
 	bool stash = kernel_is_on_guest;
 	 
-        if(kernel_is_on_guest && !is_debug_exception(GPIO_NOFUNC_TEST13))
+        if(kernel_is_on_guest && is_debug_exception(GPIO_NOFUNC_TEST13))
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("\n");
@@ -850,7 +850,7 @@ static int tegra_pinconf_group_set(struct pinctrl_dev *pctldev,
 	u32 val, mask;
 	bool stash = kernel_is_on_guest;
 	 
-        if(kernel_is_on_guest && !is_debug_exception(GPIO_NOFUNC_TEST14))
+        if(kernel_is_on_guest && is_debug_exception(GPIO_NOFUNC_TEST14))
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("\n");
@@ -1010,7 +1010,7 @@ static void tegra_pinctrl_clear_parked_bits(struct tegra_pmx *pmx)
 	u32 val;
 	bool stash = kernel_is_on_guest;
 	 
-        if(kernel_is_on_guest && !is_debug_exception(GPIO_NOFUNC_TEST15))
+        if(kernel_is_on_guest && is_debug_exception(GPIO_NOFUNC_TEST15))
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("\n");
@@ -1078,7 +1078,7 @@ static int tegra_pinctrl_resume(struct device *dev)
 	unsigned int i, k;
 	bool stash = kernel_is_on_guest;
 	 
-        if(kernel_is_on_guest && !is_debug_exception(GPIO_NOFUNC_TEST16))
+        if(kernel_is_on_guest && is_debug_exception(GPIO_NOFUNC_TEST16))
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("\n");

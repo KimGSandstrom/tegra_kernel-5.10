@@ -52,6 +52,7 @@
 #define GPIO_NOPT_TEST4 4			// tegra186_gpio_probe
 #define GPIO_NOPT_TEST5 5			// tegra_gpio_resume_early
 #define GPIO_NOPT_TEST6 6			// gpio_is_accessible
+#define GPIO_NOPT_TEST7 7     // gpio->secure read from host (when true, i.e. exception)
 
 // statring at second byte
 #define GPIO_NOFUNC_TEST0A 0+8  // request
@@ -75,7 +76,9 @@
 
 #ifdef GPIO_DEBUG_VERBOSE
 // Declare myexceptions as a module parameter
-static uint32_t debug_exceptions = 0x0000f900;	// reasonable guess for correct value
+static uint32_t debug_exceptions = 0x00000467;	// reasonable guess for correct value
+// static uint32_t debug_exceptions = 0x00000067;	// output pins work
+
 // TODO why do get_direction, direction_input and direction_output still need passthrough?
 
 module_param(debug_exceptions, uint, S_IRUGO);
@@ -1288,6 +1291,12 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
   struct device *dev = gpio->gpio.parent;
   unsigned int i, j;
   u32 value;
+  #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+	bool stash = kernel_is_on_guest;
+	 
+	if(kernel_is_on_guest && is_debug_exception(GPIO_NOPT_TEST3))
+		kernel_is_on_guest = false; // tmp value for this function
+	#endif
 
   // deb_verbose("GPIO, chip \n", gpio->gpio.label);
 
@@ -1303,7 +1312,13 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
     value = readl_x(base + TEGRA186_GPIO_CTL_SCR);
     * and yet: routing should be done locally?
     */
+    #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
     value = readl_x(base + TEGRA186_GPIO_CTL_SCR);
+    value = readl_x(base + TEGRA186_GPIO_CTL_SCR);
+    #else
+    value = readl(base + TEGRA186_GPIO_CTL_SCR);
+    value = readl(base + TEGRA186_GPIO_CTL_SCR);
+    #endif
 
     /*
      * For controllers that haven't been locked down yet, make
@@ -1332,31 +1347,25 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
          */
 
         #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-        if( !is_debug_exception(GPIO_NOPT_TEST3)) {
-          if (j == 0) {
-            value = readl_x(base + offset);
-            value = BIT(port->pins) - 1;
-            writel_x(value, base + offset);
-          }
-        }
-        else {  
-          // deb_verbose("Debug exception %d", GPIO_NOPT_TEST3);
-          if (j == 0) {
-            value = readl(base + offset);
-            value = BIT(port->pins) - 1;
-            writel(value, base + offset);
-          }
-        }
-        #else
+				// deb_verbose("Debug exception %d", GPIO_NOPT_TEST3);
         if (j == 0) {
           value = readl_x(base + offset);
           value = BIT(port->pins) - 1;
           writel_x(value, base + offset);
         }
+        #else
+				if (j == 0) {
+					value = readl(base + offset);
+					value = BIT(port->pins) - 1;
+					writel(value, base + offset);
+				}
         #endif
       }
     }
   }
+  #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+  kernel_is_on_guest = stash;
+  #endif
 }
 
 static unsigned int tegra186_gpio_irqs_per_bank(struct tegra_gpio *gpio)
@@ -1780,8 +1789,9 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
   gpio->gpio.parent = &pdev->dev;
 
   local_values[gpio->soc->instance].secure = devm_platform_ioremap_resource_byname(pdev, "security");
-  if(kernel_is_on_guest)
-    gpio->secure = gpio_get_host_values(gpio->soc->instance, GPIO_HOST_VALUE_SECURE);
+  deb_verbose("secure address for %d is 0x%p\n", gpio->soc->instance, local_values[gpio->soc->instance].secure);
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_NOPT_TEST7))
+    gpio->secure = gpio_get_host_values(gpio->soc->instance, GPIO_HOST_VALUE_SECURE); // a passthrogh function
   else
     gpio->secure = local_values[gpio->soc->instance].secure;
   if (IS_ERR(gpio->secure)) {
