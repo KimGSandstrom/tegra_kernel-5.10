@@ -264,7 +264,7 @@ int gpiod_get_direction(struct gpio_desc *desc)
 	if (!gc->get_direction)
 		return -ENOTSUPP;
 
-	ret = gc->get_direction(gc, offset);
+	ret = gc->get_direction(gc, offset);	// this function is potentially redirected to host (depending on settings)
 	if (ret < 0)
 		return ret;
 
@@ -874,257 +874,6 @@ err_free_gdev:
 }
 EXPORT_SYMBOL_GPL(gpiochip_add_data_with_key);
 
-/* redirect function added for gpio passthrough in Guest VM
- * Virtual machine does not have psysical access to resources
- */
-
-extern int of_gpiochip_add__redirect(struct gpio_chip *chip);
-// extern int devm_gpiochip_add_data_with_key__redirect(struct device *dev, struct gpio_chip *gc, void *data);
-
-int gpiochip_add_data_with_key__redirect(struct gpio_chip *gc, void *data)
-{
-  struct lock_class_key *lock_key = NULL;
-  struct lock_class_key *request_key = NULL;
-	struct fwnode_handle *fwnode = gc->parent ? dev_fwnode(gc->parent) : NULL;
-	unsigned long	flags;
-	int		ret = 0;
-	unsigned	i;
-	int		base = gc->base;
-	struct gpio_device *gdev;
-
-	deb_verbose("\n");
-
-	/*
-	 * First: allocate and populate the internal stat container, and
-	 * set up the struct device.
-	 */
-	gdev = kzalloc(sizeof(*gdev), GFP_KERNEL);
-	if (!gdev)
-		return -ENOMEM;
-	gdev->dev.bus = &gpio_bus_type;
-	gdev->chip = gc;
-	gc->gpiodev = gdev;
-	if (gc->parent) {
-		gdev->dev.parent = gc->parent;
-		gdev->dev.of_node = gc->parent->of_node;
-	}
-
-#ifdef CONFIG_OF_GPIO
-	/* If the gpiochip has an assigned OF node this takes precedence */
-	if (gc->of_node)
-		gdev->dev.of_node = gc->of_node;
-	else
-		gc->of_node = gdev->dev.of_node;
-#endif
-
-	/*
-	 * Assign fwnode depending on the result of the previous calls,
-	 * if none of them succeed, assign it to the parent's one.
-	 */
-	gdev->dev.fwnode = dev_fwnode(&gdev->dev) ?: fwnode;
-
-	gdev->id = ida_alloc(&gpio_ida, GFP_KERNEL);
-	if (gdev->id < 0) {
-		ret = gdev->id;
-		goto err_free_gdev;
-	}
-
-	ret = dev_set_name(&gdev->dev, GPIOCHIP_NAME "%d", gdev->id);
-	if (ret)
-		goto err_free_ida;
-
-	device_initialize(&gdev->dev);
-	dev_set_drvdata(&gdev->dev, gdev);
-	if (gc->parent && gc->parent->driver)
-		gdev->owner = gc->parent->driver->owner;
-	else if (gc->owner)
-		/* TODO: remove chip->owner */
-		gdev->owner = gc->owner;
-	else
-		gdev->owner = THIS_MODULE;
-
-	gdev->descs = kcalloc(gc->ngpio, sizeof(gdev->descs[0]), GFP_KERNEL);
-	if (!gdev->descs) {
-		ret = -ENOMEM;
-		goto err_free_dev_name;
-	}
-
-	if (gc->ngpio == 0) {
-		chip_err(gc, "tried to insert a GPIO chip with zero lines\n");
-		ret = -EINVAL;
-		goto err_free_descs;
-	}
-
-	if (gc->ngpio > FASTPATH_NGPIO)
-		chip_warn(gc, "line cnt %u is greater than fast path cnt %u\n",
-			  gc->ngpio, FASTPATH_NGPIO);
-
-	gdev->label = kstrdup_const(gc->label ?: "unknown", GFP_KERNEL);
-	if (!gdev->label) {
-		ret = -ENOMEM;
-		goto err_free_descs;
-	}
-
-	gdev->ngpio = gc->ngpio;
-	gdev->data = data;
-
-	spin_lock_irqsave(&gpio_lock, flags);
-
-	/*
-	 * TODO: this allocates a Linux GPIO number base in the global
-	 * GPIO numberspace for this chip. In the long run we want to
-	 * get *rid* of this numberspace and use only descriptors, but
-	 * it may be a pipe dream. It will not happen before we get rid
-	 * of the sysfs interface anyways.
-	 */
-	if (base < 0) {
-		base = gpiochip_find_base(gc->ngpio);
-		if (base < 0) {
-			ret = base;
-			spin_unlock_irqrestore(&gpio_lock, flags);
-			goto err_free_label;
-		}
-		/*
-		 * TODO: it should not be necessary to reflect the assigned
-		 * base outside of the GPIO subsystem. Go over drivers and
-		 * see if anyone makes use of this, else drop this and assign
-		 * a poison instead.
-		 */
-		gc->base = base;
-	}
-	gdev->base = base;
-
-	deb_verbose("precheck number of lines: %d, list=0x%llx, next=0x%llx, prev=0x%llx", gdev->ngpio, (long long unsigned int)&gdev->list, (long long unsigned int)gdev->list.next, (long long unsigned int)gdev->list.prev);
-
-	ret = gpiodev_add_to_list(gdev);
-	if(WARN_ON(gdev->ngpio == 0))
-		deb_verbose("number of lines: %d", gdev->ngpio);
-	if (ret) {
-		spin_unlock_irqrestore(&gpio_lock, flags);
-		goto err_free_label;
-	}
-
-	for (i = 0; i < gc->ngpio; i++)
-		gdev->descs[i].gdev = gdev;
-
-	spin_unlock_irqrestore(&gpio_lock, flags);
-
-	BLOCKING_INIT_NOTIFIER_HEAD(&gdev->notifier);
-
-#ifdef CONFIG_PINCTRL
-	INIT_LIST_HEAD(&gdev->pin_ranges);
-#endif
-
-	if (gc->names)
-		ret = gpiochip_set_desc_names(gc);
-	else
-		ret = devprop_gpiochip_set_names(gc);
-	if (ret)
-		goto err_remove_from_list;
-
-	ret = gpiochip_alloc_valid_mask(gc);
-	if (ret)
-		goto err_remove_from_list;
-
-
-	/* TODO guest driver fails on of_gpiochip_add */
-	ret = of_gpiochip_add__redirect(gc);
-	if (ret)
-	{   deb_verbose("of_gpiochip_add__redirect fails, with: %d", ret);
-		goto err_free_gpiochip_mask;
-	}
-
-	ret = gpiochip_init_valid_mask(gc);
-	if (ret)
-	{   deb_verbose("gpiochip_init_valid_mask fails, with: %d", ret);
-		goto err_remove_of_chip;
-	}
-
-	for (i = 0; i < gc->ngpio; i++) {
-		struct gpio_desc *desc = &gdev->descs[i];
-
-		if (gc->get_direction && gpiochip_line_is_valid(gc, i)) {
-			assign_bit(FLAG_IS_OUT,
-				   &desc->flags, !gc->get_direction(gc, i));
-		} else {
-			assign_bit(FLAG_IS_OUT,
-				   &desc->flags, !gc->direction_input);
-		}
-	}
-
-	ret = gpiochip_add_pin_ranges(gc);
-	if (ret)
-	{   deb_verbose("gpiochip_add_pin_ranges, with: %d", ret);
-		goto err_remove_of_chip;
-	}
-
-	acpi_gpiochip_add(gc);
-
-	machine_gpiochip_add(gc);
-
-	ret = gpiochip_irqchip_init_valid_mask(gc);
-	if (ret)
-		goto err_remove_acpi_chip;
-
-	ret = gpiochip_irqchip_init_hw(gc);
-	if (ret)
-		goto err_remove_acpi_chip;
-
-	ret = gpiochip_add_irqchip(gc, lock_key, request_key);
-	if (ret)
-		goto err_remove_irqchip_mask;
-
-	/*
-	 * By first adding the chardev, and then adding the device,
-	 * we get a device node entry in sysfs under
-	 * /sys/bus/gpio/devices/gpiochipN/dev that can be used for
-	 * coldplug of device nodes and other udev business.
-	 * We can do this only if gpiolib has been initialized.
-	 * Otherwise, defer until later.
-	 */
-	if (gpiolib_initialized) {
-		// TODO check if it needs to be redirected
-		// ret = gpiochip_setup_dev__redirect(gdev);
-		ret = gpiochip_setup_dev(gdev);
-		if (ret)
-			goto err_remove_irqchip;
-	}
-	return 0;
-
-err_remove_irqchip:
-	gpiochip_irqchip_remove(gc);
-err_remove_irqchip_mask:
-	gpiochip_irqchip_free_valid_mask(gc);
-err_remove_acpi_chip:
-	acpi_gpiochip_remove(gc);
-err_remove_of_chip:
-	gpiochip_free_hogs(gc);
-	of_gpiochip_remove(gc);
-err_free_gpiochip_mask:
-	gpiochip_remove_pin_ranges(gc);
-	gpiochip_free_valid_mask(gc);
-err_remove_from_list:
-	spin_lock_irqsave(&gpio_lock, flags);
-	list_del(&gdev->list);
-	spin_unlock_irqrestore(&gpio_lock, flags);
-err_free_label:
-	kfree_const(gdev->label);
-err_free_descs:
-	kfree(gdev->descs);
-err_free_dev_name:
-	kfree(dev_name(&gdev->dev));
-err_free_ida:
-	ida_free(&gpio_ida, gdev->id);
-err_free_gdev:
-	/* failures here can mean systems won't boot... */
-	pr_err("%s: GPIOs %d..%d (%s) failed to register, %d\n", __func__,
-	       gdev->base, gdev->base + gdev->ngpio - 1,
-	       gc->label ? : "generic", ret);
-	kfree(gdev);
-	return ret;
-}
-EXPORT_SYMBOL_GPL(gpiochip_add_data_with_key__redirect);
-
 /**
  * gpiochip_get_data() - get per-subdriver data for the chip
  * @gc: GPIO chip
@@ -1492,6 +1241,8 @@ static int gpiochip_hierarchy_irq_domain_alloc(struct irq_domain *d,
 	unsigned int parent_type;
 	struct gpio_irq_chip *girq = &gc->irq;
 	int ret;
+	
+	deb_verbose("irq=%d, nr_irqs=%d\n", irq, nr_irqs);
 
 	/*
 	 * The nr_irqs parameter is always one except for PCI multi-MSI
@@ -1543,7 +1294,7 @@ static int gpiochip_hierarchy_irq_domain_alloc(struct irq_domain *d,
 		  irq, parent_hwirq);
 	irq_set_lockdep_class(irq, gc->irq.lock_key, gc->irq.request_key);
   deb_verbose("trace:%d, parent_arg=%p", __LINE__, parent_arg);
-	ret = irq_domain_alloc_irqs_parent(d, irq, 1, parent_arg);
+	ret = irq_domain_alloc_irqs_parent(d, irq, 1, parent_arg);			// BUG: Guest seems to fail here ?
 	/*
 	 * If the parent irqdomain is msi, the interrupts have already
 	 * been allocated, so the EEXIST is good.
@@ -1787,6 +1538,8 @@ void gpiochip_irq_domain_deactivate(struct irq_domain *domain,
 				    struct irq_data *data)
 {
 	struct gpio_chip *gc = domain->host_data;
+	
+	deb_verbose("\n");
 
 	return gpiochip_unlock_as_irq(gc, data->hwirq);
 }
@@ -1806,30 +1559,30 @@ static int gpiochip_to_irq(struct gpio_chip *gc, unsigned offset)
 	 * an IRQ before the irqchip has been properly registered,
 	 * i.e. while gpiochip is still being brought up.
 	 */
-	deb_verbose("trace A\n");
+	deb_verbose("trace A, line %d\n", __LINE__);
 	if (!gc->irq.initialized)
 		return -EPROBE_DEFER;
 #endif
-	deb_verbose("trace B\n");
+	deb_verbose("trace B, line %d\n", __LINE__);
 	if (!gpiochip_irqchip_irq_valid(gc, offset))
 		return -ENXIO;
-	deb_verbose("trace C\n");
+	deb_verbose("trace C, line %d\n", __LINE__);
 #ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
 	
-	deb_verbose("trace D\n");
+	deb_verbose("trace D, line %d\n", __LINE__);
 	if (irq_domain_is_hierarchy(domain)) {
 		struct irq_fwspec spec;
-		deb_verbose("trace E\n");
+		deb_verbose("trace E, line %d\n", __LINE__);
 
 		spec.fwnode = domain->fwnode;
 		spec.param_count = 2;
 		spec.param[0] = gc->irq.child_offset_to_irq(gc, offset);
 		spec.param[1] = IRQ_TYPE_NONE;
 		
-		deb_verbose("trace F; %p, count=%d, offset=%d, type=%d\n", spec.fwnode, spec.param_count, spec.param[0], spec.param[1]);
+		deb_verbose("trace F, line %d; %p, count=%d, offset=%d, type=%d\n", __LINE__, spec.fwnode, spec.param_count, spec.param[0], spec.param[1]);
 #ifdef GPIO_DEBUG_VERBOSE
 		ret = irq_create_fwspec_mapping(&spec);		// BUG Guest seems to fail here
-		deb_verbose("trace G: %d\n", ret);
+		deb_verbose("trace G, line %d: %d\n", __LINE__, ret);
     return ret;
 #else
 		return irq_create_fwspec_mapping(&spec);
@@ -1837,7 +1590,7 @@ static int gpiochip_to_irq(struct gpio_chip *gc, unsigned offset)
 	}
 #endif
 
-	deb_verbose("trace H\n");
+	deb_verbose("trace H, line %d\n", __LINE__);
 	return irq_create_mapping(domain, offset);
 }
 
@@ -1892,6 +1645,8 @@ static void gpiochip_irq_disable(struct irq_data *d)
 static void gpiochip_set_irq_hooks(struct gpio_chip *gc)
 {
 	struct irq_chip *irqchip = gc->irq.chip;
+	
+	deb_verbose("\n");
 
 	if (!irqchip->irq_request_resources &&
 	    !irqchip->irq_release_resources) {
@@ -2121,6 +1876,8 @@ int gpiochip_irqchip_add_key(struct gpio_chip *gc,
 			     struct lock_class_key *request_key)
 {
 	struct device_node *of_node;
+  
+  deb_verbose("\n");
 
 	if (!gc || !irqchip)
 		return -EINVAL;
@@ -3792,22 +3549,22 @@ int gpiod_to_irq(const struct gpio_desc *desc)
 	if (!desc || IS_ERR(desc) || !desc->gdev || !desc->gdev->chip)
 		return -EINVAL;
 
-	deb_verbose("trace A\n");
+	deb_verbose("trace %d\n", __LINE__);
 	gc = desc->gdev->chip;
 	offset = gpio_chip_hwgpio(desc);
-	deb_verbose("trace B %d\n", offset);
+	deb_verbose("trace %d\n", __LINE__);
 	if (gc->to_irq) {
-		int retirq = gc->to_irq(gc, offset); // WARNING in irq-gic-v3.c:1461 gic_irq_domain_translate
-		deb_verbose("trace C %d\n", retirq);
+		int retirq = gc->to_irq(gc, offset); // to_irq is set to 'gpiochip_to_irq' -- WARNING in irq-gic-v3.c:1461 gic_irq_domain_translate
+	  deb_verbose("trace %d\n", __LINE__);
 
 		/* Zero means NO_IRQ */
 		if (!retirq)
 			return -ENXIO;
 
-		deb_verbose("trace D %d\n", retirq);
+		deb_verbose("return irq=%d\n", retirq);
 		return retirq;
 	}
-	deb_verbose("trace E\n");
+	deb_verbose("trace %d\n", __LINE__);
 #ifdef CONFIG_GPIOLIB_IRQCHIP
 	if (gc->irq.chip) {
 		/*
@@ -3818,7 +3575,7 @@ int gpiod_to_irq(const struct gpio_desc *desc)
 		return -EPROBE_DEFER;
 	}
 #endif
-	deb_verbose("trace F\n");
+	deb_verbose("trace %d\n", __LINE__);
 	return -ENXIO;
 }
 EXPORT_SYMBOL_GPL(gpiod_to_irq);
@@ -3967,6 +3724,8 @@ EXPORT_SYMBOL_GPL(gpiochip_reqres_irq);
 
 void gpiochip_relres_irq(struct gpio_chip *gc, unsigned int offset)
 {
+	deb_verbose("\n");
+	
 	gpiochip_unlock_as_irq(gc, offset);
 	module_put(gc->gpiodev->owner);
 }

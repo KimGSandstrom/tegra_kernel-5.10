@@ -1186,39 +1186,3 @@ void of_gpiochip_remove(struct gpio_chip *chip)
 {
 	of_node_put(chip->of_node);
 }
-
-int of_gpiochip_add__redirect(struct gpio_chip *chip)
-{
-	int ret;
- 
-	if (!chip->of_node)
-		return 0;
-
-	if (!chip->of_xlate) {
-		chip->of_gpio_n_cells = 2;
-		chip->of_xlate = of_gpio_simple_xlate;
-	}
-
-	if (chip->of_gpio_n_cells > MAX_PHANDLE_ARGS)
-		return -EINVAL;
-
-	of_gpiochip_init_valid_mask(chip);
-
-	ret = of_gpiochip_add_pin_range(chip);
-	if (ret)
-		return ret;
-
-	of_node_get(chip->of_node);
-
-	ret = of_gpiochip_scan_gpios(chip);
-	if (ret)
-		of_node_put(chip->of_node);
-
-	return ret;
-}
-
-void of_gpiochip_remove_redirect(struct gpio_chip *chip)
-{
-	of_node_put(chip->of_node);
-}
-

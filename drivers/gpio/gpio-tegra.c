@@ -446,6 +446,8 @@ static int tegra_gpio_irq_set_type(struct irq_data *d, unsigned int type)
 	unsigned long flags;
 	u32 val;
 	int ret;
+	
+	deb_verbose("\n");
 
 	switch (type & IRQ_TYPE_SENSE_MASK) {
 	case IRQ_TYPE_EDGE_RISING:
@@ -508,6 +510,8 @@ static void tegra_gpio_irq_shutdown(struct irq_data *d)
 	struct tegra_gpio_bank *bank = irq_data_get_irq_chip_data(d);
 	struct tegra_gpio_info *tgi = bank->tgi;
 	unsigned int gpio = d->hwirq;
+	
+	deb_verbose("\n");
 
 	tegra_gpio_irq_mask(d);
 	gpiochip_unlock_as_irq(&tgi->gc, gpio);

@@ -52,20 +52,21 @@
 #define GPIO_NOPT_TEST4 4			// tegra186_gpio_probe
 #define GPIO_NOPT_TEST5 5			// tegra_gpio_resume_early
 #define GPIO_NOPT_TEST6 6			// gpio_is_accessible
-#define GPIO_NOPT_TEST7 7     // gpio->secure read from host (when true, i.e. exception)
+#define GPIO_NOPT_TEST7 7     // gpio->secure (when true, i.e. exception; no-pt)
 
 // statring at second byte
 #define GPIO_NOFUNC_TEST0A 0+8  // request
-#define GPIO_NOFUNC_TEST0B 0+8  // free
-#define GPIO_NOFUNC_TEST1 1+8  // get_direction
+#define GPIO_NOFUNC_TEST0B 0+8  // freer
+#define GPIO_NOFUNC_TEST1 1+8   // get_direction
 #define GPIO_NOFUNC_TEST2A 2+8  // direction_input
 #define GPIO_NOFUNC_TEST2B 2+8  // direction_output
-#define GPIO_NOFUNC_TEST3 3+8  // get
-#define GPIO_NOFUNC_TEST4 4+8  // set
+#define GPIO_NOFUNC_TEST3A 3+8  // get
+#define GPIO_NOFUNC_TEST3B 3+8  // set
+#define GPIO_NOFUNC_TEST4 4+8   // set_config
 #define GPIO_NOFUNC_TEST5A 5+8  // timestamp_control
 #define GPIO_NOFUNC_TEST5B 5+8  // timestamp_read
-#define GPIO_NOFUNC_TEST6 6+8  // suspend_configure
-#define GPIO_NOFUNC_TEST7 7+8 // add pin_ranges
+#define GPIO_NOFUNC_TEST6 6+8   // suspend_configure
+#define GPIO_NOFUNC_TEST7 7+8   // add pin_ranges
 
 // GPIO_NOFUNC_TEST8-16 defined in gpio-tegra.c
 
@@ -76,7 +77,7 @@
 
 #ifdef GPIO_DEBUG_VERBOSE
 // Declare myexceptions as a module parameter
-static uint32_t debug_exceptions = 0x00000467;	// reasonable guess for correct value
+static uint32_t debug_exceptions = 0x00000000;	// reasonable guess for correct value
 // static uint32_t debug_exceptions = 0x00000067;	// output pins work
 
 // TODO why do get_direction, direction_input and direction_output still need passthrough?
@@ -1589,10 +1590,12 @@ error:
       gpio->gpio.direction_input = tegra186_gpio_direction_input_redirect;
     if(!is_debug_exception(GPIO_NOFUNC_TEST2B))
       gpio->gpio.direction_output = tegra186_gpio_direction_output_redirect;
-    if(!is_debug_exception(GPIO_NOFUNC_TEST3))
+    if(!is_debug_exception(GPIO_NOFUNC_TEST3A))
       gpio->gpio.get = tegra186_gpio_get_redirect;
-    if(!is_debug_exception(GPIO_NOFUNC_TEST4))
+    if(!is_debug_exception(GPIO_NOFUNC_TEST3B))
       gpio->gpio.set = tegra186_gpio_set_redirect;
+    if(!is_debug_exception(GPIO_NOFUNC_TEST4))
+      gpio->gpio.set_config = tegra186_gpio_set_config_redirect;
       // gpio->gpio.get_multiple = N/A;
       // gpio->gpio.set_multiple = N/A
       // ??? = tegra186_gpio_get_port_redirect;   // not in struct
@@ -1971,7 +1974,6 @@ static int tegra186_gpio_probe(struct platform_device *pdev)
   irq->parent_handler_data = gpio;
   irq->num_parents = gpio->num_irq;
 
-  //DEBUG
   deb_verbose("gpio->gpio.of_node = 0x%llx, pdev->dev.of_node = 0x%llx", (long long unsigned int)gpio->gpio.of_node, (long long unsigned int)pdev->dev.of_node);
 
   /*
