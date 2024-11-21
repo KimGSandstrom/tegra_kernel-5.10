@@ -75,16 +75,6 @@
   #define deb_verbose(fmt, ...)
 #endif
 
-#define GPIO_NOFUNC_TEST8  8+8
-#define GPIO_NOFUNC_TEST9  9+8
-#define GPIO_NOFUNC_TEST10 10+8
-#define GPIO_NOFUNC_TEST11 11+8
-#define GPIO_NOFUNC_TEST12 12+8
-#define GPIO_NOFUNC_TEST13 13+8
-#define GPIO_NOFUNC_TEST14 14+8
-#define GPIO_NOFUNC_TEST15 15+8
-
-
 // #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 #include <gpio-proxy.h>
 // low level hooks for readl_x and writel_x

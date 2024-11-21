@@ -1581,7 +1581,7 @@ static int gpiochip_to_irq(struct gpio_chip *gc, unsigned offset)
 		
 		deb_verbose("trace F, line %d; %p, count=%d, offset=%d, type=%d\n", __LINE__, spec.fwnode, spec.param_count, spec.param[0], spec.param[1]);
 #ifdef GPIO_DEBUG_VERBOSE
-		ret = irq_create_fwspec_mapping(&spec);		// BUG Guest seems to fail here
+		ret = irq_create_fwspec_mapping(&spec);		// BUG Guest seems to fail here, NO fail *here* if we add exception for request/free
 		deb_verbose("trace G, line %d: %d\n", __LINE__, ret);
     return ret;
 #else

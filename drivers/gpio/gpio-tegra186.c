@@ -56,7 +56,7 @@
 
 // statring at second byte
 #define GPIO_NOFUNC_TEST0A 0+8  // request
-#define GPIO_NOFUNC_TEST0B 0+8  // freer
+#define GPIO_NOFUNC_TEST0B 0+8  // free
 #define GPIO_NOFUNC_TEST1 1+8   // get_direction
 #define GPIO_NOFUNC_TEST2A 2+8  // direction_input
 #define GPIO_NOFUNC_TEST2B 2+8  // direction_output

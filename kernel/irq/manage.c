@@ -2060,7 +2060,7 @@ int request_threaded_irq(unsigned int irq, irq_handler_t handler,
 	int retval;
 
   #ifdef GPIO_DEBUG_VERBOSE
-  deb_verbose("\n");
+  deb_verbose("dumping stack\n");
   dump_stack();
   #endif
 

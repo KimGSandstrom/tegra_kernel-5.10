@@ -1786,6 +1786,8 @@ static int lineevent_create(struct gpio_device *gdev, void __user *ip)
 	le->gdev = gdev;
 	get_device(&gdev->dev);
 
+	deb_verbose("id=%d, chip=%s, chip=%s", gdev->id, gdev->label, gdev->chip->label);
+
 	if (eventreq.consumer_label[0] != '\0') {
 		/* label is only initialized if consumer_label is set */
 		le->label = kstrndup(eventreq.consumer_label,
@@ -1798,16 +1800,20 @@ static int lineevent_create(struct gpio_device *gdev, void __user *ip)
 	}
 
 	ret = gpiod_request(desc, le->label);
-	if (ret)
+	if (ret) {
+		deb_verbose("fail at line %d", __LINE__);
 		goto out_free_le;
+	}
 	le->desc = desc;
 	le->eflags = eflags;
 
 	linehandle_flags_to_desc_flags(lflags, &desc->flags);
 
 	ret = gpiod_direction_input(desc);
-	if (ret)
+	if (ret) {
+		deb_verbose("fail at line %d", __LINE__);
 		goto out_free_le;
+	}
 
 	blocking_notifier_call_chain(&desc->gdev->notifier,
 				     GPIO_V2_LINE_CHANGED_REQUESTED, desc);
@@ -1815,6 +1821,7 @@ static int lineevent_create(struct gpio_device *gdev, void __user *ip)
 	irq = gpiod_to_irq(desc);
 	if (irq <= 0) {
 		ret = -ENODEV;
+		deb_verbose("fail at line %d", __LINE__);
 		goto out_free_le;
 	}
 	le->irq = irq;
@@ -1842,12 +1849,15 @@ static int lineevent_create(struct gpio_device *gdev, void __user *ip)
 				   irqflags,
 				   le->label,
 				   le);
-	if (ret)
+	if (ret) {
+		deb_verbose("fail at line %d", __LINE__);
 		goto out_free_le;
+	}
 
 	fd = get_unused_fd_flags(O_RDONLY | O_CLOEXEC);
 	if (fd < 0) {
 		ret = fd;
+		deb_verbose("fail at line %d", __LINE__);
 		goto out_free_le;
 	}
 
