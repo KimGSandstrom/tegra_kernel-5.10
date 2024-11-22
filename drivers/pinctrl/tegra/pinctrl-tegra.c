@@ -67,9 +67,6 @@
 // in fourth byte
 #define GPIO_NOPT_TEST16 16+TEST_OFFSET     // tegra_pinctrl_resume
 
-extern uint32_t debug_exceptions;
-extern bool is_debug_exception(int off);
-
 // #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 #include <gpio-proxy.h>  // low level hooks for readl_x and writel_x
 // #endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY

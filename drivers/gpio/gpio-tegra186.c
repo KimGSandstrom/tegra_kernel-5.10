@@ -44,22 +44,27 @@
   #define deb_verbose(fmt, ...)
 #endif
 
-// statring at first byte
+// starting at first byte
 // #define GPIO_NOPT_TEST0 0			// pmx_readl pmx_writel - defined in pinctrl-tegra.c
+<<<<<<< HEAD
+#define GPIO_NOPT_TEST0 0			// tegra_gte_read tegra_gte_writel -- Note shared with pinctrl-tegra.c
+#define GPIO_NOPT_TEST1 1			// tegra186_gpio_probe gpio->base (when true, i.e. exception; no-pt)
+=======
 #define GPIO_NOPT_TEST1 1			// tegra_gte_read tegra_gte_writel
+>>>>>>> parent of d41e5844b9c1 (further refinement of debugging with gpio_tegra186.debug_exceptions kernel param)
 #define GPIO_NOPT_TEST2 2			// tegra186_gpio_get_base_x
 #define GPIO_NOPT_TEST3 3			// tegra186_gpio_init_route_mapping
-#define GPIO_NOPT_TEST4 4			// tegra186_gpio_probe
+#define GPIO_NOPT_TEST4 4			// tegra186_gpio_probe (enable config part)
 #define GPIO_NOPT_TEST5 5			// tegra_gpio_resume_early
 #define GPIO_NOPT_TEST6 6			// gpio_is_accessible
-#define GPIO_NOPT_TEST7 7     // gpio->secure (when true, i.e. exception; no-pt)
+#define GPIO_NOPT_TEST7 7     // tegra186_gpio_probe gpio->secure (when true, i.e. exception; no-pt)
 
-// statring at second byte
+// starting at second byte
 #define GPIO_NOFUNC_TEST0A 0+8  // request
 #define GPIO_NOFUNC_TEST0B 0+8  // free
-#define GPIO_NOFUNC_TEST1 1+8   // get_direction
-#define GPIO_NOFUNC_TEST2A 2+8  // direction_input
-#define GPIO_NOFUNC_TEST2B 2+8  // direction_output
+#define GPIO_NOFUNC_TEST1 1+8   // get_direction				// must be set, exception/local?
+#define GPIO_NOFUNC_TEST2A 2+8  // direction_input			// must be PT? (thus input access will not work locally?)
+#define GPIO_NOFUNC_TEST2B 2+8  // direction_output			// must be PT?
 #define GPIO_NOFUNC_TEST3A 3+8  // get
 #define GPIO_NOFUNC_TEST3B 3+8  // set
 #define GPIO_NOFUNC_TEST4 4+8   // set_config
@@ -76,12 +81,22 @@
 #define GPIO_BOTHFUNC_TEST4 4+24  // direction_output
 
 #ifdef GPIO_DEBUG_VERBOSE
+<<<<<<< HEAD
+static uint32_t debug_exceptions=0x81fff2ff;    // reasonable guess for correct value,
+// static uint32_t debug_exceptions = 0x01fff8ef;	// alternative guess for correct value,
+                                                // 0x0000f800 request, free, get_direction, direction_input, direction_output are PT
+																								// 0x000000ef tegra186_gpio_probe has PT access
+																								// 0x01ff0000 all func in gpio-tegra.c are local
+																								
+// older code comments
+// static uint32_t debug_exceptions = 0x00000000;	// all zero works for output
+=======
 // Declare myexceptions as a module parameter
 static uint32_t debug_exceptions = 0x00000000;	// reasonable guess for correct value
+>>>>>>> parent of d41e5844b9c1 (further refinement of debugging with gpio_tegra186.debug_exceptions kernel param)
 // static uint32_t debug_exceptions = 0x00000067;	// output pins work
 
-// TODO why do get_direction, direction_input and direction_output still need passthrough?
-
+// Declare debug_exceptions as a module parameter
 module_param(debug_exceptions, uint, S_IRUGO);
 MODULE_PARM_DESC(debug_exceptions, "Debug boot parameter for setting exeptions to handling of GPIO passthrough");
 
@@ -91,7 +106,7 @@ void set_debug_exceptions(uint32_t exceptions) {
   debug_exceptions = exceptions;
 }
 #else
-static inline bool is_debug_exception(int off) { return false; }
+inline bool is_debug_exception(int off) { return false; }
 #endif
 
 // possibly/probably declare this in gpio-tegra.c instead
@@ -378,10 +393,10 @@ static struct tegra_gte_info tegra194_gte_info[] = {
 static inline u32 tegra_gte_readl(struct tegra_gpio *tgi, u32 reg)
 {
   #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-  if (!is_debug_exception(GPIO_NOPT_TEST1))
+  if (!is_debug_exception(GPIO_NOPT_TEST0))
     return __raw_readl_x(tgi->gte_regs + reg);
   else {
-    // deb_verbose("Debug exception %d R", GPIO_NOPT_TEST1);
+    // deb_verbose("Debug exception %d R", GPIO_NOPT_TEST0);
     return __raw_readl(tgi->gte_regs + reg);
   }
   #else
@@ -393,10 +408,10 @@ static inline void tegra_gte_writel(struct tegra_gpio *tgi, u32 reg,
     u32 val)
 {
   #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-  if (!is_debug_exception(GPIO_NOPT_TEST1))
+  if (!is_debug_exception(GPIO_NOPT_TEST0))
     __raw_writel_x(val, tgi->gte_regs + reg);
   else {
-    // deb_verbose("Debug exception %d W", GPIO_NOPT_TEST1);
+    // deb_verbose("Debug exception %d W", GPIO_NOPT_TEST0);
     __raw_writel(val, tgi->gte_regs + reg);
   }
   #else
@@ -595,6 +610,8 @@ static inline void __iomem *tegra186_gpio_get_base_r(struct tegra_gpio *tgpio, u
 };
 #endif
 
+<<<<<<< HEAD
+=======
 //checks if we are on host or guest. Guest calls the redirect function
 static inline void __iomem *tegra186_gpio_get_base_x(struct tegra_gpio *tgpio, unsigned int pin) {
 #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
@@ -610,6 +627,7 @@ static inline void __iomem *tegra186_gpio_get_base_x(struct tegra_gpio *tgpio, u
 #endif
 };
 
+>>>>>>> parent of d41e5844b9c1 (further refinement of debugging with gpio_tegra186.debug_exceptions kernel param)
 static void __iomem *tegra186_gpio_get_secure(struct tegra_gpio *gpio,
               unsigned int pin)
 {
@@ -797,7 +815,17 @@ static int tegra_gpio_suspend_configure(struct gpio_chip *chip, unsigned offset,
     return -EPERM;
   }
 
-  base = tegra186_gpio_get_base_x(gpio, offset);
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_NOPT_TEST2) ) {
+    base = tegra186_gpio_get_base_r(gpio, offset);
+  }
+  else {
+    // deb_verbose("Debug exception %d get base", GPIO_NOPT_TEST2);
+#endif
+    base = tegra186_gpio_get_base(gpio, offset);
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+  }
+#endif
   if (WARN_ON(base == NULL))
     return -EINVAL;
 

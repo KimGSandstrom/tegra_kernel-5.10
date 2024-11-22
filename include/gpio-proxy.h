@@ -6,6 +6,11 @@
  */
 extern bool kernel_is_on_guest;
 
+extern uint32_t debug_exceptions;
+extern bool is_debug_exception(int off);
+
+#define GPIO_RW_TEST31 31    // last bit of 
+
 #define GPIO_GET_HOST_VALUES		'H' // signal code
 #define GPIO_HOST_VALUE_SECURE				1
 #define GPIO_HOST_VALUE_BASE					2
@@ -34,7 +39,7 @@ static inline u32 readl_both_local( void * addr) {
   u32 ret, ret_l;
   deb_verbose("\n");
   ret_l = readl(addr);
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     ret = readl_redirect(addr, rwl_std_type);
   }
   if( ret_l != ret ) deb_debug("return values differ %d/%d", ret_l , ret);
@@ -45,7 +50,7 @@ static inline u32 readl_both( void * addr) {
   u32 ret, ret_l;
   deb_verbose("\n");
   ret_l = readl(addr);
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     ret = readl_redirect(addr, rwl_std_type);
   }
   if( ret_l != ret ) deb_debug("return values differ %d/%d", ret_l , ret);
@@ -55,7 +60,7 @@ static inline u32 readl_both( void * addr) {
 static inline void writel_both( u32 value, void * addr) {
   deb_verbose("\n");
   writel(value, addr);
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     writel_redirect(value, addr, rwl_std_type);
   }
 };
@@ -64,7 +69,7 @@ static inline u32 __raw_readl_both( void * addr) {
   u32 ret, ret_l;
   deb_verbose("\n");
   ret_l = __raw_readl(addr);
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     ret = readl_redirect(addr, rwl_raw_type);
   }
   if( ret_l != ret ) deb_debug("return values differ %d/%d", ret_l , ret);
@@ -74,7 +79,7 @@ static inline u32 __raw_readl_both( void * addr) {
 static inline void __raw_writel_both( u32 value, void * addr) {
   deb_verbose("\n");
   __raw_writel(value, addr);
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     writel_redirect(value, addr, rwl_raw_type);
   }
 };
@@ -83,7 +88,7 @@ static inline u32 readl_relaxed_both( void * addr) {
   u32 ret, ret_l;
   deb_verbose("\n");
   ret_l = readl_relaxed(addr);
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     ret = readl_redirect(addr, rwl_relaxed_type);
   }
   if( ret_l != ret ) deb_debug("return values differ %d/%d", ret_l , ret);
@@ -93,7 +98,7 @@ static inline u32 readl_relaxed_both( void * addr) {
 static inline void writel_relaxed_both( u32 value, void * addr) {
   deb_verbose("\n");
   writel_relaxed(value, addr);
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     writel_redirect(value, addr, rwl_relaxed_type);
   }
 };
@@ -101,7 +106,7 @@ static inline void writel_relaxed_both( u32 value, void * addr) {
 static inline u32 readl_x( void * addr) {
   u32 ret;
   deb_verbose("\n");
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     ret = readl_redirect(addr, rwl_std_type);
   }
   else {
@@ -112,7 +117,7 @@ static inline u32 readl_x( void * addr) {
 
 static inline void writel_x( u32 value, void * addr) {
   deb_verbose("\n");
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     writel_redirect(value, addr, rwl_std_type);
   }
   else {
@@ -123,7 +128,7 @@ static inline void writel_x( u32 value, void * addr) {
 static inline u32 __raw_readl_x( void * addr) {
   u32 ret;
   deb_verbose("\n");
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     ret = readl_redirect(addr, rwl_raw_type);
   }
   else {
@@ -134,7 +139,7 @@ static inline u32 __raw_readl_x( void * addr) {
 
 static inline void __raw_writel_x( u32 value, void * addr) {
   deb_verbose("\n");
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     writel_redirect(value, addr, rwl_raw_type);
   }
   else {
@@ -145,7 +150,7 @@ static inline void __raw_writel_x( u32 value, void * addr) {
 static inline u32 readl_relaxed_x( void * addr) {
   u32 ret;
   deb_verbose("\n");
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     ret = readl_redirect(addr, rwl_relaxed_type);
   }
   else {
@@ -156,7 +161,7 @@ static inline u32 readl_relaxed_x( void * addr) {
 
 static inline void writel_relaxed_x( u32 value, void * addr) {
   deb_verbose("\n");
-  if(kernel_is_on_guest) {
+  if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     writel_redirect(value, addr, rwl_relaxed_type);
   }
   else {
