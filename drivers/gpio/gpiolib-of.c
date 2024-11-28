@@ -24,8 +24,8 @@
 #include "gpiolib.h"
 #include "gpiolib-of.h"
 
-#define GPIO_DEBUG
-#define GPIO_DEBUG_VERBOSE
+// #define GPIO_DEBUG
+// #define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)

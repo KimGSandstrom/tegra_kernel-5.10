@@ -84,8 +84,8 @@ struct linehandle_state {
 	GPIOHANDLE_REQUEST_OPEN_SOURCE)
 
 // define Debug  
-#define GPIO_DEBUG
-#define GPIO_DEBUG_VERBOSE
+// #define GPIO_DEBUG
+// #define GPIO_DEBUG_VERBOSE
 
 #ifdef GPIO_DEBUG
   /*

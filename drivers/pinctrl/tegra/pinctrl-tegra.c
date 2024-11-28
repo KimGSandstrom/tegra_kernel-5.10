@@ -34,8 +34,15 @@
 #define EMMC_DPD_PARKING(x)		(x << EMMC_PARKING_BIT)
 #define EMMC_PARKING_SET		0x1FFF
 
-#define GPIO_DEBUG
-#define GPIO_DEBUG_VERBOSE
+// #define GPIO_DEBUG
+// #define GPIO_DEBUG_VERBOSE
+// #define GPIO_DEBUG_EXCEPTIONS
+
+// Compiler error directive
+#if defined(GPIO_DEBUG_EXCEPTIONS) && \
+    !(defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY))
+    #error "GPIO_DEBUG_EXCEPTIONS is defined, but neither CONFIG_TEGRA_GPIO_GUEST_PROXY nor CONFIG_TEGRA_GPIO_HOST_PROXY is defined."
+#endif
 
 #ifdef GPIO_DEBUG
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)
@@ -67,40 +74,33 @@
 // in fourth byte
 #define GPIO_NOPT_TEST16 16+TEST_OFFSET     // tegra_pinctrl_resume
 
-// #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
 #include <gpio-proxy.h>  // low level hooks for readl_x and writel_x
-// #endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
+#endif // CONFIG_TEGRA_GPIO_GUEST_PROXY and CONFIG_TEGRA_GPIO_HOST_PROXY
 
 static inline u32 pmx_readl(struct tegra_pmx *pmx, u32 bank, u32 reg)
 {
 	deb_debug("\n");
 
-  #if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
-  if (!is_debug_exception(GPIO_NOPT_TEST0))
-	  return readl_x(pmx->regs[bank] + reg);
-  else {
-    // deb_verbose("Debug exception %d R", GPIO_NOPT_TEST0);
-    return readl(pmx->regs[bank] + reg);
-  }
-  #else
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
+	if (!is_debug_exception(GPIO_NOPT_TEST0))
+		return readl_x(pmx->regs[bank] + reg);
+	else
+	#endif
 	return readl(pmx->regs[bank] + reg);
-  #endif
 }
 
 static inline void pmx_writel(struct tegra_pmx *pmx, u32 val, u32 bank, u32 reg)
 {
 	deb_debug("\n");
 
-  #if !defined(GPIO_NOPT_TEST) && ( defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY) )
-  if (!is_debug_exception(GPIO_NOPT_TEST0))
-	  writel_relaxed_x(val, pmx->regs[bank] + reg);
-  else {
-    // deb_verbose("Debug exception %d W", GPIO_NOPT_TEST0);
-    writel_relaxed(val, pmx->regs[bank] + reg);
-  }
-  #else
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
+	if (!is_debug_exception(GPIO_NOPT_TEST0))
+	writel_relaxed_x(val, pmx->regs[bank] + reg);
+	else
+	#endif
 	writel_relaxed(val, pmx->regs[bank] + reg);
-  #endif
+
 	/* make sure pinmux register write completed */
 	pmx_readl(pmx, bank, reg);
 }
@@ -343,9 +343,11 @@ static int tegra_pinctrl_set_mux(struct pinctrl_dev *pctldev,
 	const struct tegra_pingroup *g;
 	int i;
 	u32 val;
+
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	bool stash = kernel_is_on_guest;
-	 
         if(kernel_is_on_guest && is_debug_exception(GPIO_NOPT_TEST8))
+	#endif
           kernel_is_on_guest = false; // tmp value for this function
           
 	// deb_debug("GPIO %s, device %s\n", pmx->dev->init_name);
@@ -370,7 +372,9 @@ static int tegra_pinctrl_set_mux(struct pinctrl_dev *pctldev,
                 val |= (1 << g->sfsel_bit);
 	pmx_writel(pmx, val, g->mux_bank, g->mux_reg);
 
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	kernel_is_on_guest = stash;
+	#endif // CONFIG_TEGRA_GPIO_GUEST_PROXY CONFIG_TEGRA_GPIO_HOST_PROXY     
 	return 0;
 }
 
@@ -383,13 +387,15 @@ static int tegra_pinctrl_gpio_save_config(struct pinctrl_dev *pctldev,
 	unsigned group, num_pins;
 	const unsigned *pins;
 	int ret;
+
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	bool stash = kernel_is_on_guest;
-	 
         if(kernel_is_on_guest && is_debug_exception(GPIO_NOPT_TEST9))
-          kernel_is_on_guest = false; // tmp value for this function
-
+	#endif
+          kernel_is_on_guest = false; // tmp value for this function  
+	
 	deb_debug("device %s\n", pmx->dev->init_name);
-
+	
 	for (group = 0; group < pmx->soc->ngroups; ++group) {
 		ret = tegra_pinctrl_get_group_pins(pctldev, group, &pins, &num_pins);
 		if (ret < 0 || num_pins != 1)
@@ -407,7 +413,9 @@ static int tegra_pinctrl_gpio_save_config(struct pinctrl_dev *pctldev,
 	if (g->mux_reg >= 0)
 		pmx->gpio_conf[offset] = pmx_readl(pmx, g->mux_bank, g->mux_reg);
 
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	kernel_is_on_guest = stash;
+	#endif
 	return 0;
 }
 
@@ -420,9 +428,11 @@ static int tegra_pinctrl_gpio_restore_config(struct pinctrl_dev *pctldev,
 	unsigned group, num_pins;
 	const unsigned *pins;
 	int ret;
-	bool stash = kernel_is_on_guest;
-	 
+
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
+	bool stash = kernel_is_on_guest; 
         if(kernel_is_on_guest && is_debug_exception(GPIO_NOPT_TEST10))
+	#endif
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("device %s\n", pmx->dev->init_name);
@@ -444,7 +454,9 @@ static int tegra_pinctrl_gpio_restore_config(struct pinctrl_dev *pctldev,
 	if (g->mux_reg >= 0)
 		pmx_writel(pmx, pmx->gpio_conf[offset], g->mux_bank, g->mux_reg);
 
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	kernel_is_on_guest = stash;
+	#endif
 	return 0;
 }
 
@@ -483,9 +495,11 @@ static int tegra_pinctrl_gpio_request_enable(struct pinctrl_dev *pctldev,
 	const unsigned int *pins;
 	u32 value;
 	int ret;
-	bool stash = kernel_is_on_guest;
-	 
+
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
+	bool stash = kernel_is_on_guest; 
         if(kernel_is_on_guest && is_debug_exception(GPIO_NOPT_TEST11))
+	#endif
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("device %s\n", pmx->dev->init_name);
@@ -515,7 +529,9 @@ static int tegra_pinctrl_gpio_request_enable(struct pinctrl_dev *pctldev,
 	value &= ~BIT(g->sfsel_bit);
 	pmx_writel(pmx, value, g->mux_bank, g->mux_reg);
 
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	kernel_is_on_guest = stash;
+	#endif
 	return 0;
 }
 
@@ -533,9 +549,11 @@ static int tegra_pinctrl_gpio_set_input(struct tegra_pmx *pmx,
 					bool enable)
 {
 	u32 value;
-	bool stash = kernel_is_on_guest;
-	 
+
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
+	bool stash = kernel_is_on_guest; 
         if(kernel_is_on_guest && is_debug_exception(GPIO_NOPT_TEST12))
+	#endif
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("\n");
@@ -555,7 +573,9 @@ static int tegra_pinctrl_gpio_set_input(struct tegra_pmx *pmx,
 
 	pmx_writel(pmx, value, group->mux_bank, group->mux_reg);
 
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	kernel_is_on_guest = stash;
+	#endif
 	return 0;
 }
 
@@ -564,9 +584,11 @@ static int tegra_pinctrl_gpio_set_tristate(struct tegra_pmx *pmx,
 					 bool enable)
 {
 	u32 value;
-	bool stash = kernel_is_on_guest;
-	 
+
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
+	bool stash = kernel_is_on_guest;	 
         if(kernel_is_on_guest && is_debug_exception(GPIO_NOPT_TEST13))
+	#endif
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("\n");
@@ -583,7 +605,9 @@ static int tegra_pinctrl_gpio_set_tristate(struct tegra_pmx *pmx,
 
 	pmx_writel(pmx, value, group->tri_bank, group->tri_reg);
 
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	kernel_is_on_guest = stash;
+	#endif
 	return 0;
 }
 
@@ -848,11 +872,12 @@ static int tegra_pinconf_group_set(struct pinctrl_dev *pctldev,
 	s8 bank, bit, width;
 	s32 reg;
 	u32 val, mask;
+	
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	bool stash = kernel_is_on_guest;
-	 
         if(kernel_is_on_guest && is_debug_exception(GPIO_NOPT_TEST14))
+	#endif
           kernel_is_on_guest = false; // tmp value for this function
-
 	deb_debug("\n");
 
 	g = &pmx->soc->groups[group];
@@ -899,7 +924,9 @@ static int tegra_pinconf_group_set(struct pinctrl_dev *pctldev,
 		pmx_writel(pmx, val, bank, reg);
 	} /* for each config */
 
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	kernel_is_on_guest = stash;
+	#endif
 	return 0;
 }
 
@@ -1008,9 +1035,11 @@ static void tegra_pinctrl_clear_parked_bits(struct tegra_pmx *pmx)
 	int i = 0;
 	const struct tegra_pingroup *g;
 	u32 val;
-	bool stash = kernel_is_on_guest;
-	 
+
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
+	bool stash = kernel_is_on_guest; 
         if(kernel_is_on_guest && is_debug_exception(GPIO_NOPT_TEST15))
+	#endif
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("\n");
@@ -1033,7 +1062,9 @@ static void tegra_pinctrl_clear_parked_bits(struct tegra_pmx *pmx)
 			pmx_writel(pmx, val, bank, reg);
 		}
 	}
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	kernel_is_on_guest = stash;
+	#endif
 }
 
 static size_t tegra_pinctrl_get_bank_size(struct device *dev,
@@ -1063,7 +1094,7 @@ static int tegra_pinctrl_suspend(struct device *dev)
 		bank_size = tegra_pinctrl_get_bank_size(dev, i);
 		regs = pmx->regs[i];
 		for (k = 0; k < bank_size; k++)
-			*backup_regs++ = readl_relaxed_both(regs++);
+			*backup_regs++ = readl_relaxed(regs++);
 	}
 
 	return pinctrl_force_sleep(pmx->pctl);
@@ -1076,9 +1107,11 @@ static int tegra_pinctrl_resume(struct device *dev)
 	u32 __iomem *regs;
 	size_t bank_size;
 	unsigned int i, k;
-	bool stash = kernel_is_on_guest;
-	 
+
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
+	bool stash = kernel_is_on_guest;	 
         if(kernel_is_on_guest && is_debug_exception(GPIO_NOPT_TEST16))
+	#endif
           kernel_is_on_guest = false; // tmp value for this function
 
 	deb_debug("\n");
@@ -1087,11 +1120,11 @@ static int tegra_pinctrl_resume(struct device *dev)
 		bank_size = tegra_pinctrl_get_bank_size(dev, i);
 		regs = pmx->regs[i];
 		for (k = 0; k < bank_size; k++)
-		writel_relaxed_both(*backup_regs++, regs++);
+		writel_relaxed(*backup_regs++, regs++);
 	}
 
 	/* flush all the prior writes */
-  readl_relaxed_both(pmx->regs[0]);
+  readl_relaxed(pmx->regs[0]);
 	/* wait for pinctrl register read to complete */
 	rmb();
 
@@ -1108,7 +1141,9 @@ static int tegra_pinctrl_resume(struct device *dev)
 		pmx_writel(pmx, val, 0, EMMC4_PAD_CFGPADCTRL_OFFSET);
 	}
 
+	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	kernel_is_on_guest = stash;
+	#endif
 	return 0;
 }
 

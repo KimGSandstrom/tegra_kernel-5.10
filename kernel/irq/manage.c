@@ -24,8 +24,8 @@
 
 #include "internals.h"
 
-#define GPIO_DEBUG
-#define GPIO_DEBUG_VERBOSE       // also activates deb_verbose commands
+// #define GPIO_DEBUG
+// #define GPIO_DEBUG_VERBOSE       // also activates deb_verbose commands
 
 #ifdef GPIO_DEBUG
   #define deb_info(fmt, ...)     printk(KERN_INFO "GPIO func \'%s\' in file \'%s\' -- " fmt, __func__, kbasename(__FILE__), ##__VA_ARGS__)

@@ -6,9 +6,6 @@
  */
 extern bool kernel_is_on_guest;
 
-extern uint32_t debug_exceptions;
-extern bool is_debug_exception(int off);
-
 #define GPIO_RW_TEST31 31    // last bit of 
 
 #define GPIO_GET_HOST_VALUES		'H' // signal code
@@ -33,7 +30,17 @@ extern const unsigned char rwl_std_type;
 extern const unsigned char rwl_raw_type;
 extern const unsigned char rwl_relaxed_type;
 
-#if defined(CONFIG_TEGRA_GPIO_GUEST_PROXY) || defined(CONFIG_TEGRA_GPIO_HOST_PROXY)
+// ifdef directives are assumed to be defined in the files that include gpio-proxy.h, this file 
+#if defined(GPIO_DEBUG_EXCEPTIONS)
+
+extern uint32_t debug_exceptions;
+extern bool is_debug_exception(int off);
+
+#else
+#define is_debug_exception(...) false
+#endif
+
+#if defined(GPIO_DEBUG_EXCEPTIONS)
 
 static inline u32 readl_both_local( void * addr) {
   u32 ret, ret_l;
@@ -41,8 +48,8 @@ static inline u32 readl_both_local( void * addr) {
   ret_l = readl(addr);
   if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     ret = readl_redirect(addr, rwl_std_type);
+    if( ret_l != ret ) deb_debug("return values differ %d/%d", ret_l , ret);
   }
-  if( ret_l != ret ) deb_debug("return values differ %d/%d", ret_l , ret);
   return ret_l; 
 }
 
@@ -52,9 +59,9 @@ static inline u32 readl_both( void * addr) {
   ret_l = readl(addr);
   if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     ret = readl_redirect(addr, rwl_std_type);
+    if( ret_l != ret ) deb_debug("return values differ %d/%d", ret_l , ret);
   }
-  if( ret_l != ret ) deb_debug("return values differ %d/%d", ret_l , ret);
-  return ret; 
+  return ret_l; 
 }
 
 static inline void writel_both( u32 value, void * addr) {
@@ -71,9 +78,9 @@ static inline u32 __raw_readl_both( void * addr) {
   ret_l = __raw_readl(addr);
   if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     ret = readl_redirect(addr, rwl_raw_type);
+    if( ret_l != ret ) deb_debug("return values differ %d/%d", ret_l , ret);
   }
-  if( ret_l != ret ) deb_debug("return values differ %d/%d", ret_l , ret);
-  return ret; 
+  return ret_l; 
 };
 
 static inline void __raw_writel_both( u32 value, void * addr) {
@@ -90,9 +97,9 @@ static inline u32 readl_relaxed_both( void * addr) {
   ret_l = readl_relaxed(addr);
   if(kernel_is_on_guest && !is_debug_exception(GPIO_RW_TEST31)) {
     ret = readl_redirect(addr, rwl_relaxed_type);
+    if( ret_l != ret ) deb_debug("return values differ %d/%d", ret_l , ret);
   }
-  if( ret_l != ret ) deb_debug("return values differ %d/%d", ret_l , ret);
-  return ret; 
+  return ret_l; 
 };
 
 static inline void writel_relaxed_both( u32 value, void * addr) {
@@ -196,7 +203,7 @@ static inline u32 __raw_readl_x( void * addr) {
     return __raw_readl(addr);
 };
 
-static inliae void __raw_writel_x( u32 value, void * addr) {
+static inline void __raw_writel_x( u32 value, void * addr) {
     __raw_writel(value, addr);
 };
 
@@ -207,6 +214,7 @@ static inline u32 readl_relaxed_x( void * addr) {
 static inline void writel_relaxed_x( u32 value, void * addr) {
     writel_relaxed(value, addr);
 };
-#endif
 
-#endif
+#endif // GPIO_DEBUG_EXCEPTIONS
+
+#endif // GPIO_PROXY_H
