@@ -53,6 +53,21 @@
 
 #if defined(GPIO_DEBUG_EXCEPTIONS)
 
+/* if compiled with GPIO_DEBUG_EXCEPTIONS, then
+ *  GPIO_NOPT_TEST1-7   set means; no-PT
+ *  GPIO_NOFUNC_TEST0-7 set means; no-PT
+ *  GPIO_NOPT_TEST8-16  set means; no-PT
+ *  GPIO_RW_TEST31 31		set means; no-PT
+ *  GPIO_NOPT_TEST0 0 	set means; no-PT
+
+ *  if compiled without GPIO_DEBUG_EXCEPTIONS, then
+ *  GPIO_NOPT_TEST1-7   is no-PT
+ *  GPIO_NOFUNC_TEST0-7 is PT
+ *  GPIO_NOPT_TEST8-16  is no-PT
+ *  GPIO_RW_TEST31 31		is no-PT
+ *  GPIO_NOPT_TEST0 0 	is no-PT
+ */
+
 // starting at first byte
 // #define GPIO_NOPT_TEST0 0			// pmx_readl pmx_writel - defined in pinctrl-tegra.c
 #define GPIO_NOPT_TEST1 1			// tegra_gte_read tegra_gte_writel -- Note shared with pinctrl-tegra.c
@@ -65,11 +80,11 @@
 
 // starting at second byte
 // if NOFUNC_TEST2 is set; error setting the GPIO line values: Operation not permitted
-#define GPIO_NOFUNC_TEST0A 0+8  // request				  // unset, passthrough ?	
-#define GPIO_NOFUNC_TEST0B 0+8  // free						  // unset, passthrough ?	
-#define GPIO_NOFUNC_TEST1 1+8   // get_direction	  // unset, passthrough ?
-#define GPIO_NOFUNC_TEST2A 2+8  // direction_input	// unset, passthrough ?
-#define GPIO_NOFUNC_TEST2B 2+8  // direction_output	// unset, passthrough ?	
+#define GPIO_NOFUNC_TEST0A 0+8  // request				  // should be unset, chardev-passthrough ?	
+#define GPIO_NOFUNC_TEST0B 0+8  // free						  // should be unset, chardev-passthrough ?	
+#define GPIO_NOFUNC_TEST1 1+8   // get_direction	  // should be unset, chardev-passthrough ?
+#define GPIO_NOFUNC_TEST2A 2+8  // direction_input	// should be unset, chardev-passthrough ?
+#define GPIO_NOFUNC_TEST2B 2+8  // direction_output	// should be unset, chardev-passthrough ?	
 #define GPIO_NOFUNC_TEST3A 3+8  // get
 #define GPIO_NOFUNC_TEST3B 3+8  // set
 #define GPIO_NOFUNC_TEST4 4+8   // set_config
@@ -80,14 +95,15 @@
 
 // GPIO_NOFUNC_TEST8-16 defined in gpio-tegra.c
 
+// 'BOTH' test structure is not used
 #define GPIO_BOTH_TEST 1+24      // allows setting 'both' test	
 #define GPIO_BOTHFUNC_TEST2 2+24  // get_direction
 #define GPIO_BOTHFUNC_TEST3 3+24  // direction_input
 #define GPIO_BOTHFUNC_TEST4 4+24  // direction_output
 
 /* note further declarations in gpio-proxy.c and pinctrl-tegra.c
- * #define GPIO_RW_TEST31 31
- * #define GPIO_NOPT_TEST0 0 
+ * #define GPIO_RW_TEST31 31		// compiled with no debug exception we have no PT
+ * #define GPIO_NOPT_TEST0 0 		// compiled with no debug exception we have no PT
  * 
  * // continuing in second part of second section (third byte)
  * #define TEST_OFFSET      8
@@ -109,8 +125,9 @@
  * kernel boot parameter
  */
 
-static uint32_t debug_exceptions=0x81fff8ff;    // alternative guess for correct value,
-// static uint32_t debug_exceptions=0x81ff00ff;    // alternativr guess for correct value,
+static uint32_t debug_exceptions=0x800000ff;       // guess for correct value,
+// static uint32_t debug_exceptions=0x81fff8ff;    // alternative guess for correct value,
+// static uint32_t debug_exceptions=0x81ff00ff;    // alternative guess for correct value,
 // static uint32_t debug_exceptions=0x81ff88ff;    // alternative guess for correct value,
 																								
 // Declare debug_exceptions as a module parameter
@@ -1302,7 +1319,7 @@ static void tegra186_gpio_init_route_mapping(struct tegra_gpio *gpio)
   
 	#if defined(GPIO_DEBUG_EXCEPTIONS)
 	bool stash = kernel_is_on_guest; 
-	if(kernel_is_on_guest && is_debug_exception(GPIO_NOPT_TEST3))
+	if(kernel_is_on_guest && !is_debug_exception(GPIO_NOPT_TEST3))
 	#endif
 		kernel_is_on_guest = false; // tmp value for this function
 

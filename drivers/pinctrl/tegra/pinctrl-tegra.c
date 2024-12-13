@@ -348,7 +348,7 @@ static int tegra_pinctrl_set_mux(struct pinctrl_dev *pctldev,
 	bool stash = kernel_is_on_guest;
         if(kernel_is_on_guest && is_debug_exception(GPIO_NOPT_TEST8))
 	#endif
-          kernel_is_on_guest = false; // tmp value for this function
+          kernel_is_on_guest = false;
           
 	// deb_debug("GPIO %s, device %s\n", pmx->dev->init_name);
 

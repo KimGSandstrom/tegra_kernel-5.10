@@ -189,7 +189,8 @@ static inline void tegra_gte_writel( u32 value, void * addr) {};
 
 // struct used to transfer setup values from host setup. Needed when guest accesses host. 
 
-#else
+#else // GPIO_DEBUG_EXCEPTIONS
+// no PT by default
 
 static inline u32 readl_x( void * addr) {
     return readl(addr);
